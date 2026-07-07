@@ -39,3 +39,4 @@ Para colaborar, invita a otras personas en **Settings → Collaborators**.
 ## Estado
 
 Rediseñadas: **Login · Home · Productos · Detalle de producto**. Navegación validada (QA sin rutas rotas).
+# mockup-blu-empresas
