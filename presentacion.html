@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLU Empresas · Rediseño UX/UI — Presentación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blu-900:#0A277E; --blu-700:#124CFD; --blu-600:#2C55F5; --blu-500:#4C71FC; --blu-50:#EDF1FF;
+    --ink:#14182B; --slate:#3A4152; --muted:#6D7278; --line:#E6E9F2; --surface:#fff; --bg:#F5F7FC;
+    --success:#107549; --success-bg:#E7F6EF; --warn:#B7791F; --warn-bg:#FEF3E2;
+    --grad:linear-gradient(135deg,#0A277E 0%,#124CFD 55%,#32C5FF 135%);
+    --r:20px; --r-sm:12px; --e:0 12px 30px rgba(16,22,51,.10),0 4px 10px rgba(16,22,51,.05);
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:Roboto,system-ui,sans-serif;background:var(--bg);color:var(--ink);overflow:hidden}
+  .deck{position:relative;height:100dvh;width:100%;overflow:hidden}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(28px,6vw,88px);opacity:0;transform:translateX(40px);pointer-events:none;
+    transition:opacity .5s var(--ease),transform .5s var(--ease);overflow-y:auto;
+  }
+  .slide.is-active{opacity:1;transform:none;pointer-events:auto}
+  .slide.is-prev{transform:translateX(-40px)}
+  .wrap{width:100%;max-width:1080px;margin:0 auto}
+
+  /* Eyebrow / titles */
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blu-600);margin-bottom:18px}
+  .eyebrow::before{content:"";width:26px;height:3px;border-radius:3px;background:var(--blu-600)}
+  h1{font-size:clamp(30px,5vw,58px);font-weight:900;letter-spacing:-.03em;line-height:1.04}
+  h2{font-size:clamp(24px,3.6vw,42px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin-bottom:14px}
+  .lead{font-size:clamp(16px,1.7vw,20px);color:var(--slate);line-height:1.55;max-width:60ch}
+  .muted{color:var(--muted)}
+
+  /* Cover */
+  .cover{background:var(--grad);color:#fff}
+  .cover .eyebrow{color:#fff}
+  .cover .eyebrow::before{background:#fff}
+  .cover h1{max-width:16ch}
+  .cover .lead{color:rgba(255,255,255,.9)}
+  .mark{display:inline-flex;align-items:center;gap:14px;margin-bottom:34px}
+  .mark__ic{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-weight:900;font-size:26px;letter-spacing:-1px}
+  .mark__t{font-weight:900;font-size:24px;letter-spacing:-.02em}
+  .mark__t span{opacity:.75;font-weight:500;font-size:13px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-top:2px}
+  .cover .meta{margin-top:40px;display:flex;gap:28px;flex-wrap:wrap;font-size:14px;color:rgba(255,255,255,.82)}
+  .cover .meta b{color:#fff;font-weight:700}
+
+  /* Cards / grids */
+  .cards{display:grid;gap:16px;margin-top:26px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px 22px;box-shadow:var(--e)}
+  .card h3{font-size:17px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+  .card p{font-size:14px;color:var(--slate);line-height:1.5}
+  .ic{width:38px;height:38px;border-radius:11px;background:var(--blu-50);color:var(--blu-600);display:grid;place-items:center;flex-shrink:0}
+  .ic svg{width:20px;height:20px}
+  .card--accent{background:var(--grad);color:#fff;border:0}
+  .card--accent h3,.card--accent p{color:#fff}
+  .card--accent p{opacity:.9}
+  .card--accent .ic{background:rgba(255,255,255,.16);color:#fff}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;color:var(--slate);box-shadow:var(--e)}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--blu-600)}
+  .chip.ok .dot{background:var(--success)}
+
+  /* before/after */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
+  .ba__col{border-radius:var(--r);padding:22px;border:1px solid var(--line)}
+  .ba__col--before{background:#fff}
+  .ba__col--after{background:var(--blu-50);border-color:var(--blu-500)}
+  .ba__tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+  .ba__col--before .ba__tag{color:var(--muted)}
+  .ba__col--after .ba__tag{color:var(--blu-700)}
+  .ba li{list-style:none;font-size:14.5px;color:var(--slate);line-height:1.5;padding:7px 0 7px 26px;position:relative}
+  .ba li::before{content:"";position:absolute;left:0;top:13px;width:14px;height:14px;border-radius:50%;background:var(--line)}
+  .ba__col--after li::before{background:var(--success);box-shadow:0 0 0 4px var(--success-bg)}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;box-shadow:var(--e)}
+  .stat b{display:block;font-size:clamp(30px,4vw,44px);font-weight:900;letter-spacing:-.02em;color:var(--blu-700);line-height:1}
+  .stat span{display:block;margin-top:8px;font-size:14px;color:var(--slate)}
+
+  /* controls */
+  .hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:16px;padding:16px clamp(20px,4vw,44px);pointer-events:none}
+  .hud > *{pointer-events:auto}
+  .progress{flex:1;height:5px;background:rgba(18,76,253,.14);border-radius:5px;overflow:hidden}
+  .progress__bar{height:100%;width:0;background:var(--grad);border-radius:5px;transition:width .4s var(--ease)}
+  .nav{display:flex;gap:8px}
+  .nav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--blu-700);cursor:pointer;display:grid;place-items:center;box-shadow:var(--e);transition:transform .15s var(--ease),background .15s}
+  .nav button:hover{background:var(--blu-50);transform:translateY(-2px)}
+  .nav button:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  .count{font-size:13px;font-weight:700;color:var(--muted);min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+  .back-home{position:fixed;top:18px;right:20px;z-index:20;display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;color:var(--blu-700);text-decoration:none;box-shadow:var(--e)}
+  .cover ~ .back-home{}
+  svg{stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+
+  @media (max-width:820px){
+    .g2,.g3,.g4,.ba,.stats{grid-template-columns:1fr}
+    .slide{padding:64px 22px 96px;justify-content:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){ .slide{transition:opacity .2s} }
+</style>
+</head>
+<body>
+<a class="back-home" href="index.html#/inicio">← Volver a la app</a>
+<div class="deck" id="deck">
+
+  <!-- 1 · Cover -->
+  <section class="slide cover">
+    <div class="wrap">
+      <div class="mark"><span class="mark__ic">b</span><span class="mark__t">BLU Empresas<span>Diners Club · Ecuador</span></span></div>
+      <div class="eyebrow">Rediseño UX/UI · Prototipo</div>
+      <h1>Una banca digital empresarial a la altura de los mejores del mundo.</h1>
+      <p class="lead">Modernización del home, productos, detalle y acceso — con base en el código real del producto y las mejores prácticas de banca internacional.</p>
+      <div class="meta"><span><b>Alcance:</b> Home · Login · Productos · Detalle</span><span><b>Método:</b> ui-ux-pro-max</span><span><b>Base:</b> Azure DevOps · BluPersonasWeb</span></div>
+    </div>
+  </section>
+
+  <!-- 2 · Reto -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">El reto</div>
+      <h2>Modernizar sin perder la identidad Diners / BLU.</h2>
+      <p class="lead">El home se sentía cargado y poco jerárquico, el detalle de producto no seguía patrones reconocibles y había elementos redundantes. El objetivo: claridad, foco y una experiencia "premium" coherente con la marca.</p>
+      <div class="cards g3">
+        <div class="card"><h3><span class="ic" data-icon="layout"></span>Jerarquía</h3><p>Priorizar saldo, acciones y productos; reducir ruido visual.</p></div>
+        <div class="card"><h3><span class="ic" data-icon="star"></span>Percepción premium</h3><p>Tarjetas con imagen, tipografía y espaciado consistentes.</p></div>
+        <div class="card"><h3><span class="ic" data-icon="check"></span>Patrones probados</h3><p>Reutilizar convenciones que el usuario ya conoce de otras apps.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Estudio de mercado -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Estudio de mercado</div>
+      <h2>Referencias: banca líder + el producto real.</h2>
+      <p class="lead">Analizamos apps de banca digital de referencia mundial y, sobre todo, el <b>código fuente real de BLU</b> en Azure DevOps para respetar el modelo y la identidad existentes.</p>
+      <div class="cards g4">
+        <div class="card"><h3>Revolut · N26</h3><p>Detalle de producto: imagen a la izquierda + barra de acciones compacta.</p></div>
+        <div class="card"><h3>Monzo · BBVA</h3><p>Movimientos a lo ancho al final; un solo CTA primario por pantalla.</p></div>
+        <div class="card"><h3>Neobancos</h3><p>Cards de cuenta con tasa e interés ganado visibles y directos.</p></div>
+        <div class="card card--accent"><h3><span class="ic" data-icon="code"></span>BluPersonasWeb</h3><p>Fuente real (Next.js) en Azure DevOps: estructura "Tus productos", tabs y carrusel.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Metodología / skill -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Metodología</div>
+      <h2>Decisiones guiadas por <span style="color:var(--blu-700)">/ui-ux-pro-max</span>.</h2>
+      <p class="lead">Cada cambio se validó contra una base de reglas de UX y accesibilidad, priorizando lo crítico primero.</p>
+      <div class="chips">
+        <span class="chip ok"><span class="dot"></span>Una sola acción primaria por pantalla</span>
+        <span class="chip ok"><span class="dot"></span>Touch targets ≥ 44px</span>
+        <span class="chip ok"><span class="dot"></span>Jerarquía por tamaño y espacio, no solo color</span>
+        <span class="chip ok"><span class="dot"></span>Íconos SVG (sin emojis estructurales)</span>
+        <span class="chip ok"><span class="dot"></span>Contraste AA en texto y estados</span>
+        <span class="chip ok"><span class="dot"></span>Feedback en cada acción</span>
+        <span class="chip ok"><span class="dot"></span>Tokens de marca (sin hex sueltos)</span>
+        <span class="chip ok"><span class="dot"></span>Mobile-first y responsive</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Home -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Home</div>
+      <h2>Un inicio enfocado y accionable.</h2>
+      <div class="ba">
+        <div class="ba__col ba__col--before"><div class="ba__tag">Antes</div><ul>
+          <li>Dos columnas con "Gastos del mes" y "Mis productos" redundantes</li>
+          <li>Productos en tarjetas pequeñas, poca presencia visual</li>
+          <li>Ruido que competía con la posición consolidada</li>
+        </ul></div>
+        <div class="ba__col ba__col--after"><div class="ba__tag">Después</div><ul>
+          <li>Sección "Tus productos" con tabs arriba (estructura app real)</li>
+          <li>Tarjetas de producto con imagen grande y carrusel</li>
+          <li>Posición consolidada + accesos rápidos como foco principal</li>
+        </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Cards de producto -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Cards de producto</div>
+      <h2>Cada producto, claro de un vistazo.</h2>
+      <p class="lead">Tabs tipo pill (Tarjetas · Cuentas · Créditos · Inversiones), imágenes de producto y datos clave por categoría.</p>
+      <div class="cards g3">
+        <div class="card"><h3><span class="ic" data-icon="card"></span>Tarjetas</h3><p>Arte de tarjeta a tamaño real, cupo disponible y estado de pago.</p></div>
+        <div class="card"><h3><span class="ic" data-icon="wallet"></span>Cuentas</h3><p><b>Tasa de interés y "cuánto has ganado"</b> visibles con etiqueta de alto contraste.</p></div>
+        <div class="card"><h3><span class="ic" data-icon="chart"></span>Inversiones</h3><p>Cover de marca con rendimiento estimado y vencimiento.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Detalle -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Detalle de producto</div>
+      <h2>El patrón internacional, aplicado.</h2>
+      <div class="ba">
+        <div class="ba__col ba__col--before"><div class="ba__tag">Antes</div><ul>
+          <li>Acciones en tiles enormes que dominaban la pantalla</li>
+          <li>"Total a pagar" como cuadro aislado suelto</li>
+          <li>Movimientos comprimidos en una columna lateral</li>
+        </ul></div>
+        <div class="ba__col ba__col--after"><div class="ba__tag">Después</div><ul>
+          <li>Imagen del producto a la izquierda (Revolut / N26)</li>
+          <li>Barra de acciones compacta de íconos circulares</li>
+          <li>Pago total integrado en el detalle, con su botón</li>
+          <li>Movimientos a lo ancho, al final de la pantalla</li>
+        </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Login -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Acceso</div>
+      <h2>Login web correcto y sin fricción.</h2>
+      <div class="cards g2">
+        <div class="card"><h3><span class="ic" data-icon="shield"></span>Sin biometría en web</h3><p>La biometría es un patrón nativo del móvil, ligado al hardware del dispositivo. En web se elimina y se deja usuario + contraseña.</p></div>
+        <div class="card card--accent"><h3><span class="ic" data-icon="check"></span>Una acción primaria</h3><p>Un único CTA "Ingresar" claro; acciones secundarias subordinadas. Menos decisiones, más conversión.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · Usabilidad -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow">Principios de usabilidad</div>
+      <h2>Detrás de cada decisión.</h2>
+      <div class="cards g3">
+        <div class="card"><h3><span class="ic" data-icon="eye"></span>Accesibilidad</h3><p>Contraste AA, foco visible, etiquetas aria y color nunca como único indicador.</p></div>
+        <div class="card"><h3><span class="ic" data-icon="layers"></span>Consistencia</h3><p>Mismos tokens, tipografía y componentes en todas las pantallas.</p></div>
+        <div class="card"><h3><span class="ic" data-icon="bolt"></span>Feedback</h3><p>Estados de carga, confirmaciones y toasts en cada acción del usuario.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · Cierre -->
+  <section class="slide cover">
+    <div class="wrap">
+      <div class="eyebrow">Impacto</div>
+      <h1>Una experiencia más clara, premium y reconocible.</h1>
+      <div class="stats" style="margin-top:34px">
+        <div class="stat" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)"><b style="color:#fff">4</b><span style="color:rgba(255,255,255,.85)">pantallas rediseñadas</span></div>
+        <div class="stat" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)"><b style="color:#fff">1</b><span style="color:rgba(255,255,255,.85)">CTA primario por pantalla</span></div>
+        <div class="stat" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)"><b style="color:#fff">100%</b><span style="color:rgba(255,255,255,.85)">tokens de marca BLU</span></div>
+      </div>
+      <p class="lead" style="margin-top:30px">Próximos pasos: extender el patrón a Transferencias y Aprobaciones, y validar con usuarios reales.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="hud">
+  <div class="nav"><button id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button></div>
+  <div class="progress"><div class="progress__bar" id="bar"></div></div>
+  <div class="count" id="count">1 / 10</div>
+  <div class="nav"><button id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+</div>
+
+<script>
+  // Íconos SVG inline (sin dependencias) — referenciados en el HTML con ${I('name')} vía plantilla previa
+  function I(n){ return ICONS[n]||''; }
+  const ICONS = {
+    layout:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
+    star:'<svg viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9.5 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.5 9 9"/></svg>',
+    check:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+    code:'<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    card:'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    wallet:'<svg viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><circle cx="16" cy="14" r="1.4"/></svg>',
+    chart:'<svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="6"/><rect x="11" y="8" width="3" height="10"/><rect x="16" y="4" width="3" height="14"/></svg>',
+    shield:'<svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4.5-3 7.5-8 9-5-1.5-8-4.5-8-9V7z"/></svg>',
+    eye:'<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    layers:'<svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 12 15 2 8.5 12 2"/><polyline points="2 15.5 12 22 22 15.5"/></svg>',
+    bolt:'<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'
+  };
+  // Rellena los íconos por data-icon
+  document.querySelectorAll('.ic[data-icon]').forEach(el=>{ el.innerHTML = I(el.dataset.icon); });
+
+  const slides = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar');
+  const count = document.getElementById('count');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  let i = 0;
+  function show(n){
+    i = Math.max(0, Math.min(slides.length-1, n));
+    slides.forEach((s,x)=>{ s.classList.toggle('is-active', x===i); s.classList.toggle('is-prev', x<i); });
+    bar.style.width = ((i+1)/slides.length*100)+'%';
+    count.textContent = (i+1)+' / '+slides.length;
+    prev.disabled = i===0; next.disabled = i===slides.length-1;
+  }
+  next.onclick = ()=>show(i+1);
+  prev.onclick = ()=>show(i-1);
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); show(i+1); }
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); show(i-1); }
+    if(e.key==='Home'){ show(0); } if(e.key==='End'){ show(slides.length-1); }
+  });
+  // swipe táctil
+  let sx=null;
+  document.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{ if(sx===null)return; const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>50) show(dx<0?i+1:i-1); sx=null; });
+  show(0);
+</script>
+</body>
+</html>

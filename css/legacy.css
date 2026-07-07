@@ -1,0 +1,119 @@
+/* ============================================================
+   BLU Web — Réplica "Antes": app ACTUAL del repo Azure
+   Basada en: NavBar/style.sass, MyProducts/style.sass,
+   _components/FormSignIn/style.sass y util/theme.sass
+   Prefijo .lgc- (legacy current) — aislada del design system nuevo.
+   ============================================================ */
+
+.lgc { font-family: 'Roboto', sans-serif; font-size: 14px; color: #4A4A4A; background: #fff; min-height: 100dvh; }
+.lgc * { box-sizing: border-box; }
+.lgc a, .lgc-link { color: #4C71FC; cursor: pointer; text-decoration: none; background: none; border: none; font: inherit; font-weight: 500; }
+.lgc-link:hover { text-decoration: underline; }
+
+/* ---- NavBar real: barra blanca, menú horizontal 40px, perfil derecha (NavBar/style.sass) ---- */
+.lgc-topbar { display: flex; align-items: center; justify-content: space-between; height: 60px; padding: 0 24px; background: #fff; }
+.lgc-logo { display: flex; align-items: center; gap: 10px; }
+.lgc-logo__text { font-weight: 700; font-size: 19px; color: #4A4A4A; letter-spacing: -.01em; }
+.lgc-logo__text small { display: block; font-size: 9px; letter-spacing: .08em; color: #6D7278; font-weight: 400; }
+.lgc-profile { display: flex; align-items: center; gap: 10px; min-width: 205px; justify-content: flex-end; font-size: 14px; color: #4A4A4A; cursor: pointer; }
+.lgc-avatar { width: 34px; height: 34px; border-radius: 50%; background: #ECF0FF; color: #4C71FC; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.lgc-menu { display: flex; justify-content: center; align-items: center; height: 40px; background: #fff; border-bottom: 1px solid rgba(109,114,120,.15); }
+.lgc-menu button { background: none; border: none; height: 40px; padding: 0 10px; margin: 0 10px; font: inherit; font-size: 14px; color: #4A4A4A; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.lgc-menu button:hover { color: #4C71FC; }
+.lgc-menu button.act { color: #4C71FC; box-shadow: inset 0 -2px 0 #4C71FC; font-weight: 500; }
+
+/* ---- MyProducts real (max-width 1000, Tengo/Debo, aval, paneles 450) ---- */
+.lgc-main { max-width: 1000px; min-width: 290px; margin: 0 auto; padding: 30px 20px 60px; }
+.lgc-h1 { font-size: 20px; font-weight: 500; color: #4A4A4A; margin: 0 0 20px; }
+.lgc-amounts { display: table; width: 100%; }
+.lgc-amt { display: table-cell; vertical-align: middle; width: 450px; }
+.lgc-amt--btn { display: table-cell; vertical-align: middle; min-width: 80px; text-align: center; }
+.lgc-amt__label { font-size: 12px; color: #6D7278; display: flex; align-items: center; gap: 6px; }
+.lgc-amt__label svg { width: 14px; height: 14px; fill: #4C71FC; }
+.lgc-amt__value { font-size: 30px; font-weight: 700; color: #4A4A4A; margin: 6px 0 10px; font-variant-numeric: tabular-nums; }
+.lgc-meter { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #d8d8d8; max-width: 440px; }
+.lgc-meter span { height: 100%; }
+.lgc-toggle {
+  width: 40px; height: 40px; padding: 5px 9px; border-radius: 50%;
+  border: 1px solid #4C71FC; background: #fff; color: #4C71FC; cursor: pointer;
+  display: inline-grid; place-items: center; transition: transform .2s linear;
+}
+.lgc-toggle svg { width: 18px; height: 18px; }
+.lgc-toggle.open { transform: rotate(90deg); }
+
+/* Detalle expandible (my-products__amounts-detail: card__have | card__debt) */
+.lgc-detail { display: none; margin-top: 15px; }
+.lgc-detail.open { display: flex; }
+.lgc-detail__col { width: 50%; display: flex; flex-direction: column; gap: 15px; }
+.lgc-detail__col--have { padding-right: 40px; }
+.lgc-detail__col--debt { padding-left: 40px; }
+
+/* Aval / patrimonio centrado + fecha #A0A0A0 */
+.lgc-aval { margin-top: 35px; text-align: center; }
+.lgc-aval__label { font-size: 12px; color: #6D7278; }
+.lgc-aval__value { font-size: 26px; font-weight: 400; color: #4A4A4A; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.lgc-aval__date { margin-top: 10px; font-size: 12px; color: #A0A0A0; }
+
+/* Paneles (panel-wrapper 450px, sombra $color__box-shadow, headers a 23px) */
+.lgc-cards { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; }
+.lgc-cards__title { width: 100%; margin: 20px 0; font-size: 20px; font-weight: 500; color: #6D7278; }
+.lgc-panel-wrapper { width: 450px; max-width: 464px; margin-bottom: 55px; display: flex; flex-direction: column; }
+.lgc-panel { background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(76,113,252,.2); min-height: 145px; }
+.lgc-panel__header { margin: 0 23px; padding: 16px 0 6px; font-size: 16px; font-weight: 500; color: #4A4A4A; display: flex; justify-content: space-between; align-items: center; }
+.lgc-panel__content { margin: 0 23px; padding-bottom: 14px; }
+.lgc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(109,114,120,.15); }
+.lgc-row:last-child { border-bottom: none; }
+.lgc-row__name { font-size: 14px; color: #4A4A4A; }
+.lgc-row__sub { font-size: 12px; color: #6D7278; }
+.lgc-row__amt { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Botones del design system viejo */
+.lgc-btn-line { border: 1px solid #4C71FC; color: #4C71FC; background: #fff; border-radius: 17px; padding: 6px 18px; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.lgc-btn-line:hover { box-shadow: 0 2px 6px rgba(76,113,252,.3); }
+.lgc-btn-primary { background: #4C71FC; color: #fff; border: none; border-radius: 24px; height: 48px; width: 100%; font: inherit; font-size: 16px; font-weight: 500; cursor: pointer; }
+.lgc-btn-primary:hover { background: #124CFD; }
+.lgc-btn-primary:disabled { background: #ECF0FF; color: #b2b2b2; cursor: default; }
+
+/* ---- Login real (FormSignIn/style.sass: card 444px, footer #ecf0ffb3 partido) ---- */
+.lgc-login-page { min-height: 100dvh; background: #F0F3FF; display: flex; align-items: center; justify-content: center; padding: 24px; font-family: 'Roboto', sans-serif; }
+.lgc-login-card { width: 100%; max-width: 444px; background: #fff; border-radius: 20px; box-shadow: 0 2px 20px rgba(76,113,252,.2); overflow: hidden; }
+.lgc-login-body { padding: 30px 40px 0; }
+.lgc-login-logo { display: flex; justify-content: center; padding-bottom: 60px; }
+.lgc-login-title { display: block; font-size: 20px; font-weight: 500; color: #4A4A4A; margin-bottom: 20px; }
+.lgc-field { margin-bottom: 20px; }
+.lgc-field label { display: block; font-size: 12px; color: #6D7278; margin-bottom: 6px; }
+.lgc-input { position: relative; }
+.lgc-input input {
+  width: 100%; height: 42px; padding: 0 40px 0 12px; font: inherit; font-size: 14px; color: #4A4A4A;
+  border: 1px solid rgba(109,114,120,.5); border-radius: 5px; outline: none; background: #fff;
+}
+.lgc-input input:focus { border-color: #4C71FC; }
+.lgc-input .eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6D7278; padding: 4px; }
+.lgc-input .eye svg { width: 18px; height: 18px; }
+.lgc-forget { text-align: center; padding: 20px 0; }
+.lgc-login-footer { height: 47px; background: #ecf0ffb3; display: flex; align-items: center; }
+.lgc-login-footer > div { flex: 1; text-align: center; }
+.lgc-login-footer > div:first-child { border-right: 1px solid #979797; }
+.lgc-login-footer button { background: none; border: none; font: inherit; font-size: 14px; font-weight: 500; color: #4C71FC; cursor: pointer; height: 24px; }
+
+/* Chip flotante para volver al rediseño */
+.lgc-compare {
+  position: fixed; right: 20px; bottom: 20px; z-index: 500;
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
+  background: linear-gradient(135deg, #2C55F5, #4C71FC); color: #fff; border: none; border-radius: 999px;
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(44,85,245,.4);
+}
+.lgc-compare svg { width: 16px; height: 16px; }
+.lgc-flag { position: fixed; left: 20px; bottom: 20px; z-index: 500; padding: 8px 14px; background: #FFF8EC; color: #A28211; border: 1px solid rgba(162,130,17,.3); border-radius: 999px; font-size: 12px; font-weight: 700; }
+
+/* Responsive básico (como el repo: colapsa a 1 columna <md) */
+@media (max-width: 900px) {
+  .lgc-menu { overflow-x: auto; justify-content: flex-start; }
+  .lgc-profile { min-width: 0; }
+  .lgc-amounts, .lgc-amt, .lgc-amt--btn { display: block; width: 100%; }
+  .lgc-amt--btn { text-align: center; margin: 10px 0; }
+  .lgc-detail { flex-direction: column; }
+  .lgc-detail__col { width: 100%; padding: 0 !important; }
+  .lgc-panel-wrapper { width: 100%; max-width: 500px; margin: 0 auto 50px; }
+  .lgc-login-body { padding: 30px 24px 0; }
+}

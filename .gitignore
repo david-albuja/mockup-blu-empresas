@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Configuración local del harness (no publicar)
+.claude/settings.local.json
+
+# Dependencias / temporales
+node_modules/
+*.log
