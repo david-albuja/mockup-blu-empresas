@@ -84,6 +84,8 @@
 .notif-dot::after { content: ""; position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--error); border: 2px solid var(--bg); }
 
 .content { padding: var(--s-7); max-width: calc(var(--content-max) + var(--s-7) * 2); width: 100%; margin: 0 auto; }
+/* En pantallas anchas, usar todo el ancho disponible junto al menú */
+@media (min-width: 1280px) { .content { max-width: none; } }
 .page-head { margin-bottom: var(--s-6); }
 .page-head h1 { font-size: var(--fs-24); font-weight: 700; letter-spacing: -.01em; }
 .page-head p { color: var(--muted); margin-top: 2px; }
