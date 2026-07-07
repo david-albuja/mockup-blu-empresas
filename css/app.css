@@ -454,7 +454,7 @@
   .topbar__title { font-size: var(--fs-16); }
 }
 @media (max-width: 560px) {
-  .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .qa-grid { grid-template-columns: repeat(4, 1fr); }
   .qa__label { font-size: 10px; }
   .modal__foot { flex-direction: column; }
@@ -571,3 +571,25 @@
 .detail-cta .btn { flex-shrink: 0; }
 .detail-cta--ok { background: var(--success-bg); color: var(--success); font-size: 13px; font-weight: 600; justify-content: flex-start; }
 .detail-cta--ok svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* ============================================================
+   Responsive móvil — correcciones de overflow (≤ 860px)
+   ============================================================ */
+@media (max-width: 860px) {
+  /* Grids de 2+ columnas con estilo inline → una sola columna */
+  .content .grid[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+  .content .grid[style*="grid-template-columns"] > * { min-width: 0; }
+
+  /* Tablas: permitir scroll horizontal dentro de su tarjeta */
+  .content .card, .content .list-card__body { max-width: 100%; }
+  .content table.tbl { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Bottom-nav: los 5 botones se encogen para caber en el viewport */
+  .bottom-nav button { min-width: 0; padding: 4px 2px; }
+  .bottom-nav button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Topbar: menos gap y botón "Ver app actual" solo con ícono */
+  .topbar { gap: var(--s-2); }
+  .topbar .tb-btn-label { display: none; }
+  .topbar .tb-legacy { padding: 0 10px; }
+}

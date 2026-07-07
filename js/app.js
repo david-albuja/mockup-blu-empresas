@@ -882,7 +882,7 @@ function shell(activeRoute, title) {
         <div class="topbar__title">${title}</div>
         <div class="topbar__spacer"></div>
         <div class="search">${icon('search')}<input placeholder="Buscar movimientos, servicios…" aria-label="Buscar"></div>
-        <button class="btn btn--secondary btn--sm" data-nav="${legacyEquivalent(activeRoute)}" title="Ver cómo es hoy esta pantalla en la app actual (repo Azure)" style="min-height:38px">${icon('clock')} Ver app actual</button>
+        <button class="btn btn--secondary btn--sm tb-legacy" data-nav="${legacyEquivalent(activeRoute)}" title="Ver cómo es hoy esta pantalla en la app actual (repo Azure)" style="min-height:38px">${icon('clock')} <span class="tb-btn-label">Ver app actual</span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Cambiar tema" title="Modo ${State.theme==='dark'?'claro':'oscuro'}">${icon(State.theme==='dark'?'sun':'moon')}</button>
         <button class="icon-btn notif-dot" aria-label="Notificaciones" id="notifBtn">${icon('bell')}</button>
         <span class="avatar" style="cursor:pointer" data-nav="perfil">${DB.user.initials}</span>
