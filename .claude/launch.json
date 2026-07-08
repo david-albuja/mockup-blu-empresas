@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "blu-web", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "4599"], "port": 4599 }
+    { "name": "blu-web", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "4599"], "port": 4599 },
+    { "name": "web-personas", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "4173", "-d", "/Users/q2025335/Documents/1-canales/web-personas"], "port": 4173 }
   ]
 }

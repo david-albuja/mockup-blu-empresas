@@ -19,22 +19,47 @@ Screens['detalle-producto'] = {
     const actBar = (acts) => `<div class="card card--pad" style="padding:14px 10px"><div class="act-bar">${acts.map(a=>`<button class="act-bar__btn" data-nav="${a[2]}" aria-label="${a[1]}"><span class="act-bar__ic">${icon(a[0])}</span><span class="act-bar__lbl">${a[1]}</span></button>`).join('')}</div></div>`;
 
     if (type === 'card') {
+      const esAdic = p.principal === false;
       view.innerHTML = `
-      ${pageHead(p.name, `${p.type} · ···${p.last4}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="toast({title:'Estado de cuenta',msg:'${p.name}: enviado a tu correo.',type:'info'})">${icon('download')} Estado de cuenta</button>`)}
+      ${pageHead(p.name, `${esAdic ? 'Tarjeta adicional' : 'Tarjeta principal'} · ···${p.last4}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="toast({title:'Estado de cuenta',msg:'${p.name}: enviado a tu correo.',type:'info'})">${icon('download')} Estado de cuenta</button>`)}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid" style="gap:16px">
           ${UI.bankCard(p)}
           ${actBar([['receipt','Diferir','diferir'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo'],['gift','Beneficios','beneficios']])}
         </div>
         <div class="grid" style="gap:20px">
-          ${panel('Detalle de la tarjeta', `<div class="row between" style="padding-bottom:8px"><span class="text-muted" style="font-size:13px">Cupo utilizado</span><span class="num" style="font-weight:700">${money(p.usado)} / ${money(p.cupo)}</span></div><div class="progress"><span style="width:${usedPct}%"></span></div>`
-            + kv('Disponible',money(p.disponible),1)+kv('Fecha de corte',p.corte)+kv('Fecha de pago',p.pago)+kv('Pago mínimo',money(p.pagoMin),1)+kv('Pago total',money(p.pagoTotal),1)
+          ${panel('Detalle de la tarjeta',
+            kv('Titular', esAdic ? (p.titular||'Adicional') : DB.user.name)
+            + kv('Tipo', esAdic ? 'Adicional' : 'Principal')
+            + kv('Pago mínimo', money(p.pagoMin), 1)
+            + kv('Pago total', money(p.pagoTotal), 1)
+            + kv('Fecha máxima de pago', p.pago)
             + (p.pagoTotal>0
-                ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Pago total · ${p.pago}</div><div class="detail-cta__amt num">${money(p.pagoTotal)}</div></div><button class="btn btn--primary" data-nav="pago-tarjeta">Pagar tarjeta</button></div>`
+                ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Total a pagar · hasta ${p.pago}</div><div class="detail-cta__amt num">${money(p.pagoTotal)}</div></div><button class="btn btn--primary" data-nav="pago-tarjeta">Pagar tarjeta</button></div>`
                 : `<div class="detail-cta detail-cta--ok">${icon('shield')}<span>Tu tarjeta está al día. No tienes pagos pendientes este mes.</span></div>`))}
+          ${infoBanner('El cupo de crédito es global y compartido entre todas las tarjetas Diners de la empresa; por eso no se muestra un cupo por tarjeta.','card')}
         </div>
       </div>
       ${movsSection(p.name, `<div class="segmented"><button class="is-active">Todos</button><button>Consumos</button><button>Diferidos</button></div>`)}`;
+      return;
+    }
+
+    if (type === 'prepaid') {
+      view.innerHTML = `
+      ${pageHead(p.name, `Tarjeta prepago · ···${p.last4}`, 'inicio')}
+      <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
+        <div class="grid" style="gap:16px">
+          ${UI.bankCard(p)}
+          ${actBar([['send','Recargar','transferencias'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo']])}
+        </div>
+        <div class="grid" style="gap:20px">
+          ${panel('Detalle de la prepago',
+            kv('Tipo', p.type)+kv('Número', '•••• '+p.last4)+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
+            + `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Saldo disponible · recargable</div><div class="detail-cta__amt num">${State.masked?'••••':money(p.saldo)}</div></div><button class="btn btn--primary" data-nav="transferencias">Recargar</button></div>`)}
+          ${infoBanner('La tarjeta prepago funciona con saldo cargado, no consume cupo de crédito.','card')}
+        </div>
+      </div>
+      ${movsSection(p.name)}`;
       return;
     }
 
@@ -65,6 +90,11 @@ Screens['detalle-producto'] = {
     }
 
     if (type === 'credit') {
+      const e = creditEstado(p.estado);
+      // CTA: en legal/judicial no hay botón de pago; se debe contactar a Diners.
+      const cta = e.consultarDiners
+        ? `<div class="detail-cta" style="background:var(--warn-bg,#FEF3E2);color:var(--warn,#B7791F)">${icon('alert')}<span style="font-size:13px;font-weight:600">Crédito ${e.label.toLowerCase()}. Comunícate con Diners para conocer tu deuda total y regularizar.</span></div>`
+        : `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">${e.pagoLabel ? e.pagoLabel : 'Próxima cuota · '+p.prox}</div><div class="detail-cta__amt num">${money(p.cuota)}</div></div>${e.pagable?`<button class="btn btn--primary" data-nav="pago-credito">Pagar ${p.estado==='mora'?'ahora':'cuota'}</button>`:''}</div>`;
       view.innerHTML = `
       ${pageHead(p.name, `Crédito · ${p.num}`, 'inicio')}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
@@ -72,15 +102,19 @@ Screens['detalle-producto'] = {
           <div class="card card--pad" style="background:var(--grad-card);color:#fff">
             <div class="row between"><span style="font-size:13px;opacity:.85">Crédito · ${p.num}</span>${icon('coins')}</div>
             <div class="text-white" style="font-size:13px;opacity:.85;margin-top:16px">Saldo pendiente</div>
-            <div class="num" style="font-size:32px;font-weight:800">${money(p.saldo)}</div>
+            <div class="num" style="font-size:32px;font-weight:800">${e.consultarDiners ? 'Consultar' : money(p.saldo)}</div>
+            <div style="margin-top:12px"><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
           </div>
-          ${actBar([['coins','Abonar','precancelacion'],['certificate','Certificado','certificados']])}
+          ${e.consultarDiners ? actBar([['certificate','Certificado','certificados'],['services','Contactar','contactenos']]) : actBar([['coins','Abonar','precancelacion'],['certificate','Certificado','certificados']])}
         </div>
         <div class="grid" style="gap:20px">
-          ${panel('Estado del crédito', `<div class="row between mb-2"><span class="text-muted">Saldo pendiente</span><span class="h3 num">${money(p.saldo)}</span></div><div class="progress mb-2"><span style="width:37%"></span></div><div class="text-muted" style="font-size:12px">18 de 48 cuotas pagadas</div><div class="divider"></div>`
-            + kv('Cuota mensual',money(p.cuota),1)+kv('Plazo',p.plazo)+kv('Próximo pago',p.prox)
-            + `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Próxima cuota · ${p.prox}</div><div class="detail-cta__amt num">${money(p.cuota)}</div></div><button class="btn btn--primary" data-nav="pago-credito">Pagar cuota</button></div>`)}
-          ${infoBanner('Puedes abonar a capital para reducir tu plazo o cuota. Consúltalo en Pago de crédito.','coins')}
+          ${panel('Estado del crédito',
+            (e.consultarDiners ? '' : `<div class="row between mb-2"><span class="text-muted">Saldo pendiente</span><span class="h3 num">${money(p.saldo)}</span></div><div class="progress mb-2"><span style="width:37%"></span></div><div class="text-muted" style="font-size:12px">${p.plazo!=='—'?p.plazo.replace('/',' de ')+' cuotas pagadas':''}</div><div class="divider"></div>`)
+            + kv('Estado', `<span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span>`)
+            + (p.cuota>0 ? kv('Cuota mensual',money(p.cuota),1) : '')
+            + kv('Fecha máxima de pago', p.prox)
+            + cta)}
+          ${e.consultarDiners ? infoBanner(`Este crédito está ${e.label.toLowerCase()}. El saldo total y las condiciones se gestionan directamente con Diners Club.`,'alert') : infoBanner('Puedes abonar a capital para reducir tu plazo o cuota.','coins')}
         </div>
       </div>
       ${movsSection(p.name)}`;
@@ -166,7 +200,7 @@ Screens['config-tarjeta'] = {
       $('#cfgPanel').innerHTML = `
       <div class="card card--pad section">
         <div class="row" style="gap:14px;align-items:center;margin-bottom:8px">
-          <div class="pcard__art" style="width:74px;height:48px;background:${grad(c.variant)}"><span class="mini-chip"></span><span class="mini-brand">BLU</span></div>
+          <div class="pcard__art" style="width:74px;height:48px;background:${grad(c.variant)}"><span class="mini-chip"></span><span class="mini-brand">blu</span></div>
           <div><div class="h4">${c.name}</div><div class="text-muted" style="font-size:13px">${c.type} · ···${c.last4}</div></div>
           <span class="badge badge--success" style="margin-left:auto"><span class="dot"></span>Activa</span>
         </div>

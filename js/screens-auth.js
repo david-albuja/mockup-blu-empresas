@@ -6,7 +6,7 @@ Screens['registro'] = {
   render(view) {
     const steps=['Identidad','Verificación','Crea tu acceso'];
     let step=0;
-    view.innerHTML = `<div class="auth"><aside class="auth__aside"><div class="brand"><div class="brand__mark">B</div><div><div class="brand__name" style="color:#fff">BLU</div><div class="brand__sub" style="color:rgba(255,255,255,.7)">Diners Club</div></div></div><div><h1 class="auth__pitch">Únete a BLU en 3 pasos.</h1><div class="auth__feats"><div class="auth__feat"><span class="ic">${icon('shield')}</span> 100% digital y seguro</div><div class="auth__feat"><span class="ic">${icon('clock')}</span> Menos de 5 minutos</div></div></div><div style="font-size:12px;color:rgba(255,255,255,.6)">© 2026 Diners Club del Ecuador</div></aside>
+    view.innerHTML = `<div class="auth"><aside class="auth__aside"><div class="brand"><div class="brand__mark">b</div><div><div class="brand__name" style="color:#fff">blu</div><div class="brand__sub" style="color:rgba(255,255,255,.7)">Diners Club</div></div></div><div><h1 class="auth__pitch">Únete a blu en 3 pasos.</h1><div class="auth__feats"><div class="auth__feat"><span class="ic">${icon('shield')}</span> 100% digital y seguro</div><div class="auth__feat"><span class="ic">${icon('clock')}</span> Menos de 5 minutos</div></div></div><div style="font-size:12px;color:rgba(255,255,255,.6)">© 2026 Diners Club del Ecuador</div></aside>
     <section class="auth__panel"><div class="auth__form"><a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;font-size:13px;margin-bottom:16px">${icon('back')} Ya tengo cuenta</a><div class="stepper mb-6" id="regStep"></div><div id="regBody"></div></div></section></div>`;
 
     function renderStep() {
@@ -37,7 +37,7 @@ Screens['registro'] = {
 Screens['crear-usuario'] = {
   title: 'Crear usuario', full: true,
   render(view) {
-    view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><form class="auth__form"><div class="brand" style="padding-left:0"><div class="brand__mark">B</div><div class="brand__name">BLU</div></div><h2 class="h2 mt-4">Crea tu usuario y clave</h2><p class="text-muted mb-6">Configura tus credenciales de acceso.</p>
+    view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><form class="auth__form"><div class="brand" style="padding-left:0"><div class="brand__mark">b</div><div class="brand__name">blu</div></div><h2 class="h2 mt-4">Crea tu usuario y clave</h2><p class="text-muted mb-6">Configura tus credenciales de acceso.</p>
       <div class="field"><label>Usuario</label><div class="control">${icon('user')}<input placeholder="Elige un usuario"></div><span class="hint">Entre 6 y 20 caracteres, sin espacios.</span></div>
       <div class="field"><label>Contraseña</label><div class="control">${icon('lock')}<input type="password" id="p1" placeholder="••••••••"><button type="button" class="eye-toggle" onclick="const i=this.previousElementSibling;i.type=i.type==='password'?'text':'password'">${icon('eye')}</button></div></div>
       <div class="field"><label>Confirmar contraseña</label><div class="control">${icon('lock')}<input type="password" id="p2" placeholder="••••••••"></div><span class="error-text">${icon('alert')} Las contraseñas no coinciden.</span></div>

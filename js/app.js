@@ -43,16 +43,17 @@ function routeProgress() {
 /* ---------- Componentes reutilizables (HTML factories) ---------- */
 const UI = {
   bankCard(c, mini=false) {
+    const isPrepaid = c.saldo !== undefined;   // prepago: funciona con saldo, no con cupo
+    const foot = isPrepaid
+      ? `<div><small>Saldo disponible</small><strong class="num">${State.masked?'••••••':money(c.saldo)}</strong></div><div style="text-align:right"><small>Prepago</small><strong>Recargable</strong></div>`
+      : `<div><small>Total a pagar</small><strong class="num">${c.pagoTotal>0?(State.masked?'••••••':money(c.pagoTotal)):'Al día'}</strong></div><div style="text-align:right"><small>Pagar hasta</small><strong>${c.pago||'—'}</strong></div>`;
     return `<div class="bank-card ${mini?'bank-card--mini':''} ${c.variant?'bank-card--'+c.variant:''}" tabindex="0" role="group" aria-label="Tarjeta ${c.name} terminación ${c.last4}">
       <div class="row between">
-        <div><div class="bank-card__brand">BLU</div><div class="bank-card__type">${c.name} · ${c.type}</div></div>
+        <div><div class="bank-card__brand">blu</div><div class="bank-card__type">${c.name} · ${c.type}</div></div>
         <div class="bank-card__chip"></div>
       </div>
       <div class="bank-card__number num">${c.number}</div>
-      <div class="bank-card__foot">
-        <div><small>Cupo disponible</small><strong class="num">${State.masked?'••••••':money(c.disponible)}</strong></div>
-        <div style="text-align:right"><small>Vence</small><strong>${c.corte}</strong></div>
-      </div>
+      <div class="bank-card__foot">${foot}</div>
     </div>`;
   },
   quickAction(ic, label, route) {
@@ -76,6 +77,15 @@ function errorState(title='Algo salió mal', msg='No pudimos cargar la informaci
   return `<div class="state state--error"><div class="state__art">${icon('alert')}</div><h3>${title}</h3><p>${msg}</p><button class="btn btn--secondary mt-4" ${onRetry?`onclick="${onRetry}"`:''}>${icon('clock')} Reintentar</button></div>`;
 }
 
+/* Estado de un crédito (al día / mora / legal / judicial) — lógica de negocio Diners */
+function creditEstado(estado) {
+  const map = {
+    'mora':     { label: 'En mora',    cls: 'badge--warning', pagable: true,  consultarDiners: false, pagoLabel: 'Pago inmediato' },
+    'legal':    { label: 'En legal',    cls: 'badge--error',   pagable: false, consultarDiners: true,  pagoLabel: 'Pago inmediato' },
+    'judicial': { label: 'En judicial', cls: 'badge--error',   pagable: false, consultarDiners: true,  pagoLabel: 'Pago inmediato' },
+  };
+  return map[estado] || { label: 'Al día', cls: 'badge--success', pagable: true, consultarDiners: false, pagoLabel: '' };
+}
 /* Volver a la pantalla anterior real (historial); si no hay, cae al fallback. */
 function goBack(fallback) {
   const cur = location.hash;
@@ -167,7 +177,7 @@ Screens.login = {
     view.innerHTML = `
     <div class="auth">
       <aside class="auth__aside premium">
-        <div class="brand" style="padding:0"><div class="brand__mark">B</div><div class="brand__name" style="color:#fff">BLU</div></div>
+        <div class="brand" style="padding:0"><div class="brand__mark">b</div><div class="brand__name" style="color:#fff">blu</div></div>
         <div>
           <span class="badge badge--glass mb-4">${icon('building')} Banca Empresas</span>
           <h1 class="auth__pitch">Banca empresarial<br>simple, segura y a tu medida.</h1>
@@ -182,7 +192,7 @@ Screens.login = {
       </aside>
       <section class="auth__panel">
         <form class="auth__form" id="loginForm" novalidate>
-          <div class="brand" style="padding-left:0"><div class="brand__mark">B</div><div class="brand__name">BLU</div><span class="badge badge--info" style="margin-left:auto">Empresas</span></div>
+          <div class="brand" style="padding-left:0"><div class="brand__mark">b</div><div class="brand__name">blu</div><span class="badge badge--info" style="margin-left:auto">Empresas</span></div>
           <h2 class="h2 mt-4">Bienvenido de nuevo</h2>
           <p class="text-muted mb-6">Ingresa a tu banca empresarial.</p>
 
@@ -199,9 +209,8 @@ Screens.login = {
             <span class="error-text">${icon('alert')} Ingresa tu contraseña.</span>
           </div>
 
-          <div class="row between mb-6">
-            <label class="row" style="gap:8px;cursor:pointer"><span class="switch"><input type="checkbox" checked><span class="track"></span></span><span style="font-size:13px">Recordar usuario</span></label>
-            <a href="#/recuperar" style="font-size:13px;font-weight:600;color:var(--primary)">¿Olvidaste tu clave?</a>
+          <div class="row" style="justify-content:flex-end;margin-bottom:var(--s-6)">
+            <a href="#/recuperar" style="font-size:13px;font-weight:600;color:var(--primary)">¿Olvidaste tu usuario o clave?</a>
           </div>
 
           <button class="btn btn--primary btn--lg btn--block" type="submit" id="loginBtn">Ingresar</button>
@@ -219,7 +228,7 @@ Screens.login = {
       $('#fPass').classList.toggle('has-error', !p.value.trim()); if(!p.value.trim()) ok=false;
       if(!ok){ u.value.trim()||u.focus()||p.focus(); return; }
       const btn=$('#loginBtn'); btn.classList.add('is-loading');
-      setTimeout(()=>{ btn.classList.remove('is-loading'); location.hash='#/inicio'; toast({title:'Bienvenida, '+DB.user.first, msg:'Ingreso verificado con token seguro.', type:'success'}); }, 1100);
+      setTimeout(()=>{ btn.classList.remove('is-loading'); loginSoftToken(); }, 800);
     };
   }
 };
@@ -232,7 +241,8 @@ Screens.inicio = {
     withSkeleton(view, sk, build);
 
     function build(v) {
-      const p = moneyParts(DB.net.patrimonio);
+      const N = DB.net;
+      const p = moneyParts(N.activo);
 
       v.innerHTML = `
       <div class="page-head section">
@@ -245,7 +255,7 @@ Screens.inicio = {
         </div>
       </div>
 
-      <!-- Posición consolidada + accesos -->
+      <!-- Posición consolidada: total en productos (activo), deuda (pasivo), cupo global -->
       <div class="card card--pad section mb-6">
         <div class="row wrap" style="gap:10px;align-items:center">
           <span class="eyebrow" style="margin:0">Posición consolidada</span>
@@ -255,23 +265,25 @@ Screens.inicio = {
           <div class="kpi__value num" id="mainBalance" style="font-size:34px">${State.masked?'••••••':`${p.int}<span class="cents">,${p.dec}</span>`}</div>
           <button class="eye-toggle" id="maskBtn" aria-label="Ocultar saldos">${icon(State.masked?'eyeOff':'eye')}</button>
         </div>
-        <div class="row wrap" style="gap:28px;margin-top:14px">
-          <div><div class="text-muted" style="font-size:12px">Liquidez disponible</div><div class="num" style="font-weight:700;font-size:18px">${State.masked?'••••':money(DB.net.disponible)}</div></div>
-          <div><div class="text-muted" style="font-size:12px">Por aprobar</div><div class="num" style="font-weight:700;font-size:18px">3 · ${money(31232.40)}</div></div>
+        <div class="text-muted" style="font-size:12px">Total en productos · lo que tu empresa tiene</div>
+        <div class="grid grid-3 mt-4" style="gap:12px">
+          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Total deuda</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.pasivo)}</div><div class="text-muted" style="font-size:11px">productos de pasivo</div></div>
+          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Deuda en tarjetas</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.deudaTarjetas)}</div><div class="text-muted" style="font-size:11px">crédito rotativo</div></div>
+          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Cupo disponible</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:11px">de ${money(N.cupoGlobal)} · global Diners</div></div>
         </div>
         <div class="qa-grid mt-6">
           <button class="qa" data-nav="transferencias"><span class="qa__ic">${icon('send')}</span><span class="qa__label">Transferir</span></button>
           <button class="qa" data-nav="carga-archivo"><span class="qa__ic">${icon('upload')}</span><span class="qa__label">Pago masivo</span></button>
           <button class="qa" data-nav="aprobaciones" style="position:relative"><span class="qa__ic">${icon('approve')}</span><span class="qa__label">Aprobaciones</span><span class="badge badge--error" style="position:absolute;top:8px;right:12px;padding:2px 7px">3</span></button>
-          <button class="qa" data-nav="caja"><span class="qa__ic">${icon('store')}</span><span class="qa__label">Consulta de caja</span></button>
+          <button class="qa" data-nav="pagos"><span class="qa__ic">${icon('receipt')}</span><span class="qa__label">Pagar servicios</span></button>
         </div>
       </div>
 
-      <!-- Tus productos (tarjeta con tabs arriba · imágenes grandes) -->
+      <!-- Tus productos: tarjetas, prepago, cuentas, créditos, inversiones y caja al mismo nivel -->
       <div class="card card--pad section mb-6">
         <div class="row between wrap mb-4" style="gap:10px">
           <div class="scroll-x" style="max-width:100%;padding-bottom:0"><div class="prod-tabs prod-tabs--inline" id="prodTabs" role="tablist">
-            ${[['tarjeta','Tarjetas'],['cuenta','Cuentas'],['credito','Créditos'],['inversion','Inversiones']].map((t,i)=>`<button class="${i===0?'is-active':''}" data-c="${t[0]}" role="tab" aria-selected="${i===0?'true':'false'}">${t[1]}</button>`).join('')}
+            ${[['tarjeta','Tarjetas'],['prepago','Prepago'],['cuenta','Cuentas'],['credito','Créditos'],['inversion','Inversiones'],['caja','Caja']].map((t,i)=>`<button class="${i===0?'is-active':''}" data-c="${t[0]}" role="tab" aria-selected="${i===0?'true':'false'}">${t[1]}</button>`).join('')}
           </div></div>
           <a class="row" id="prodSeeAll" style="gap:4px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer">Ver todo ${icon('chevron')}</a>
         </div>
@@ -287,71 +299,115 @@ Screens.inicio = {
 
       $('#maskBtn').onclick = toggleMask;
 
-      // Tus productos — tarjetas grandes con imagen (estructura app real BLU)
       const coverIcon = { cuenta: 'wallet', credito: 'coins', inversion: 'chart' };
-      const prodData  = { tarjeta: DB.cards, cuenta: DB.accounts, credito: DB.credits, inversion: DB.investments };
-      const prodNav   = { cuenta: 'cuentas', credito: 'cuentas', inversion: 'cuentas' };
+      const prodData  = { tarjeta: DB.cards, prepago: DB.prepaid, cuenta: DB.accounts, credito: DB.credits, inversion: DB.investments };
       const detailNav = (it) => `detalle-producto?id=${it.id}`;
+      // "Ver todo" consistente: cada categoría lleva a ver todos los productos de ESA categoría
+      const seeAllNav = { tarjeta:'tarjetas', prepago:'tarjetas', cuenta:'cuentas?cat=cuenta', credito:'cuentas?cat=credito', inversion:'cuentas?cat=inversion', caja:'caja' };
 
       function prodXl(kind, item) {
+        // Tarjetas de crédito y prepago comparten el arte de tarjeta (sin cupo por tarjeta)
         if (kind === 'tarjeta') {
           const c = item;
           const badge = c.pagoTotal > 0
-            ? `<span class="badge badge--warning"><span class="dot"></span>Vence ${c.pago}</span>`
+            ? `<span class="badge badge--warning"><span class="dot"></span>Pagar hasta ${c.pago}</span>`
             : `<span class="badge badge--success">Al día</span>`;
-          return `<button class="prod-xl" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
+          return `<button class="prod-xl" data-nav="${detailNav(c)}" aria-label="Abrir ${c.name}">
             <div class="prod-xl__media">${UI.bankCard(c)}</div>
             <div class="prod-xl__body">
-              <div class="row between" style="gap:8px;align-items:flex-start"><div><div class="prod-xl__name">${c.name}</div><div class="prod-xl__id num">•••• ${c.last4}</div></div>${badge}</div>
-              <div class="prod-xl__amt num">${State.masked ? '$ ••••••' : money(c.disponible)}</div>
-              <div class="prod-xl__sub">Cupo disponible${c.pagoTotal > 0 ? ` · Pago total ${State.masked ? '••••' : money(c.pagoTotal)}` : ''}</div>
+              <div class="row between" style="gap:8px;align-items:flex-start"><div><div class="prod-xl__name">${c.name}</div><div class="prod-xl__id num">•••• ${c.last4}${c.principal===false?` · ${c.titular||'Adicional'}`:''}</div></div>${badge}</div>
+              <div class="prod-xl__amt num">${c.pagoTotal>0?(State.masked?'$ ••••••':money(c.pagoTotal)):'Al día'}</div>
+              <div class="prod-xl__sub">${c.pagoTotal>0?`Total a pagar · mínimo ${State.masked?'••••':money(c.pagoMin)}`:'Sin pagos pendientes'}</div>
+            </div>
+          </button>`;
+        }
+        if (kind === 'prepago') {
+          const c = item;
+          return `<button class="prod-xl" data-nav="${detailNav(c)}" aria-label="Abrir ${c.name}">
+            <div class="prod-xl__media">${UI.bankCard(c)}</div>
+            <div class="prod-xl__body">
+              <div><div class="prod-xl__name">${c.name}</div><div class="prod-xl__id num">•••• ${c.last4}</div></div>
+              <div class="prod-xl__amt num">${State.masked?'$ ••••••':money(c.saldo)}</div>
+              <div class="prod-xl__sub">Saldo disponible · recargable</div>
             </div>
           </button>`;
         }
         if (kind === 'cuenta') {
           const a = item;
+          const cancelada = a.estado === 'cancelada';
           const amt = State.masked ? '$ ••••••' : money(a.saldo);
           return `<button class="prod-xl" data-nav="${detailNav(a)}" aria-label="Abrir ${a.name}">
-            <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--cuenta">
-              <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">BLU</span>${a.tasa ? `<span class="prod-xl__cover-rate">${a.tasa}</span>` : icon('wallet')}</div>
+            <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--cuenta" ${cancelada?'style="filter:grayscale(.5);opacity:.85"':''}>
+              <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span>${cancelada?`<span class="prod-xl__cover-rate" style="color:var(--muted)">Cancelada</span>`:(a.tasa ? `<span class="prod-xl__cover-rate">${a.tasa}</span>` : icon('wallet'))}</div>
               <div><div class="prod-xl__cover-name">${a.name}</div><div class="prod-xl__cover-id num">${a.num}</div></div>
               <span class="prod-xl__cover-wm" aria-hidden="true">${icon('wallet')}</span>
             </div></div>
             <div class="prod-xl__body">
               <div class="prod-xl__amt num">${amt}</div>
-              <div class="prod-xl__sub">Saldo disponible</div>
-              ${a.interesMes ? `<div class="prod-acct__pill"><span class="dot"></span><strong class="num">${money(a.interesMes, true)}</strong>&nbsp;interés del mes</div>` : ''}
+              <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}</div>
+              ${cancelada ? `<div class="prod-acct__pill" style="background:var(--warn-bg,#FEF3E2);color:var(--warn,#B7791F)"><span class="dot" style="background:currentColor"></span>Retira tu saldo</div>` : (a.interesMes ? `<div class="prod-acct__pill"><span class="dot"></span><strong class="num">${money(a.interesMes, true)}</strong>&nbsp;interés del mes</div>` : '')}
             </div>
           </button>`;
         }
+        if (kind === 'credito') {
+          const c = item, e = creditEstado(c.estado);
+          const sub = e.consultarDiners ? `${e.pagoLabel} · consulta el total con Diners` : (c.estado==='mora' ? `${e.pagoLabel} · cuota ${money(c.cuota)}` : `Cuota ${money(c.cuota)} · vence ${c.prox}`);
+          return `<button class="prod-xl" data-nav="${detailNav(c)}" aria-label="Abrir ${c.name}">
+            <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--credito">
+              <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
+              <div><div class="prod-xl__cover-name">${c.name}</div><div class="prod-xl__cover-id num">${c.num}</div></div>
+              <span class="prod-xl__cover-wm" aria-hidden="true">${icon('coins')}</span>
+            </div></div>
+            <div class="prod-xl__body">
+              <div class="prod-xl__amt num">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
+              <div class="prod-xl__sub">${sub}</div>
+            </div>
+          </button>`;
+        }
+        // inversion
         const ic = coverIcon[kind];
-        const idLine = item.num || item.vence || '';
-        let amt, sub;
-        if (kind === 'credito'){ amt = money(item.saldo); sub = `Cuota ${money(item.cuota)} · próx. ${item.prox}`; }
-        else                   { amt = State.masked ? '$ ••••••' : money(item.monto); sub = `Tasa ${item.tasa} · vence ${item.vence}`; }
         return `<button class="prod-xl" data-nav="${detailNav(item)}" aria-label="Abrir ${item.name}">
           <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--${kind}">
-            <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">BLU</span>${icon(ic)}</div>
-            <div><div class="prod-xl__cover-name">${item.name}</div><div class="prod-xl__cover-id num">${idLine}</div></div>
+            <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span>${icon(ic)}</div>
+            <div><div class="prod-xl__cover-name">${item.name}</div><div class="prod-xl__cover-id num">${item.vence||''}</div></div>
             <span class="prod-xl__cover-wm" aria-hidden="true">${icon(ic)}</span>
           </div></div>
           <div class="prod-xl__body">
-            <div class="prod-xl__amt num">${amt}</div>
-            <div class="prod-xl__sub">${sub}</div>
+            <div class="prod-xl__amt num">${State.masked ? '$ ••••••' : money(item.monto)}</div>
+            <div class="prod-xl__sub">Tasa ${item.tasa} · vence ${item.vence}</div>
           </div>
         </button>`;
       }
 
       const prodExtra = (kind) => {
-        if (kind === 'tarjeta') { const t=DB.cards.reduce((s,c)=>s+c.pagoTotal,0), n=DB.cards.filter(c=>c.pagoTotal>0).length; return `<div class="card card--pad row between" style="gap:14px;align-items:center"><div style="flex:1;min-width:0"><div class="row wrap" style="gap:8px;align-items:center"><span class="text-muted" style="font-size:13px">Total a pagar este mes</span><span class="badge badge--warning"><span class="dot"></span>Próx. 02 ago</span></div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${money(t)}</div><div class="text-muted" style="font-size:12px">${n} tarjetas con saldo pendiente</div></div><button class="btn btn--primary" style="flex-shrink:0" data-nav="pago-tarjeta">Pagar</button></div>`; }
-        if (kind === 'cuenta') { const t=DB.accounts.reduce((s,a)=>s+a.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Saldo total en cuentas</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--secondary" data-nav="cuentas">Ver cuentas</button></div>`; }
-        if (kind === 'credito') { const t=DB.credits.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Deuda total</div><div class="kpi__value num" style="font-size:22px">${money(t)}</div></div><button class="btn btn--primary" data-nav="pago-credito">Pagar cuota</button></div>`; }
-        const t=DB.investments.reduce((s,i)=>s+i.monto,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Total invertido</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--secondary" data-nav="sim-credito">Simular</button></div>`;
+        // Tarjetas: cupo GLOBAL (no total consolidado; el pago es por tarjeta)
+        if (kind === 'tarjeta') return `<div class="card card--pad row between wrap" style="gap:12px;align-items:center"><div style="flex:1;min-width:0"><div class="text-muted" style="font-size:13px">Cupo de crédito disponible <span style="font-size:11px">· global Diners</span></div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(DB.net.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:12px">de ${money(DB.net.cupoGlobal)} · compartido entre todas tus tarjetas. El pago es por tarjeta.</div></div></div>`;
+        if (kind === 'prepago') { const t=DB.prepaid.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Saldo total prepago</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--primary" data-nav="transferencias">Recargar</button></div>`; }
+        if (kind === 'cuenta') { const t=DB.accounts.filter(a=>a.estado!=='cancelada').reduce((s,a)=>s+a.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Saldo total en cuentas</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--secondary" data-nav="cuentas?cat=cuenta">Ver cuentas</button></div>`; }
+        if (kind === 'credito') { const t=DB.credits.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Deuda total en créditos</div><div class="kpi__value num" style="font-size:22px">${money(t)}</div><div class="text-muted" style="font-size:12px">El pago es por crédito, según su estado.</div></div><button class="btn btn--secondary" data-nav="cuentas?cat=credito">Ver créditos</button></div>`; }
+        if (kind === 'inversion') { const t=DB.investments.reduce((s,i)=>s+i.monto,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Total invertido</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--secondary" data-nav="sim-credito">Simular</button></div>`; }
+        return '';
       };
+
+      // Sección Caja (adquirencia) al mismo nivel que los productos
+      const cajaCard = () => `<div class="card card--pad section">
+        <div class="row between wrap" style="gap:12px">
+          <div><div class="text-muted" style="font-size:13px">${icon('store')} Ventas de hoy</div><div class="kpi__value num" style="font-size:26px;margin-top:4px">${money(12480.50)}</div><div class="text-success" style="font-size:12px;font-weight:600">+12,4% vs. ayer · 148 transacciones</div></div>
+          <div><div class="text-muted" style="font-size:13px">Por liquidar</div><div class="kpi__value num" style="font-size:26px;margin-top:4px">${money(8920.30)}</div><div class="text-muted" style="font-size:12px">próximo depósito · mañana</div></div>
+        </div>
+        <button class="btn btn--primary btn--block mt-4" data-nav="caja">Abrir consulta de caja</button>
+      </div>`;
 
       let curKind = 'tarjeta';
       function renderProducts(kind) {
         curKind = kind;
+        if (kind === 'caja') {
+          $('#prodXlHost').innerHTML = cajaCard();
+          $('#prodXlExtra').innerHTML = '';
+          $('#prodSeeAll').style.display = 'none';
+          return;
+        }
+        $('#prodSeeAll').style.display = '';
         const items = (prodData[kind] || []).map(it => prodXl(kind, it));
         $('#prodXlHost').innerHTML = `<div class="prod-strip">${items.join('')}</div>`;
         $('#prodXlExtra').innerHTML = prodExtra(kind);
@@ -360,7 +416,7 @@ Screens.inicio = {
         view.querySelectorAll('#prodTabs [data-c]').forEach(x => { x.classList.remove('is-active'); x.setAttribute('aria-selected','false'); });
         b.classList.add('is-active'); b.setAttribute('aria-selected','true'); renderProducts(b.dataset.c);
       });
-      $('#prodSeeAll').onclick = () => { location.hash = '#/' + (curKind === 'tarjeta' ? 'tarjetas' : prodNav[curKind]); };
+      $('#prodSeeAll').onclick = () => { location.hash = '#/' + (seeAllNav[curKind] || 'tarjetas'); };
       renderProducts('tarjeta');
     }
   }
@@ -401,18 +457,29 @@ const CARD_GRAD = {
   teal:   'linear-gradient(135deg, #063C57 0%, #1B7BA6 55%, #32C5FF 130%)',
 };
 function miniCardArt(c) {
-  return `<div class="pcard__art" style="background:${CARD_GRAD[c.variant] || CARD_GRAD.diners}"><span class="mini-chip"></span><span class="mini-brand">BLU</span></div>`;
+  return `<div class="pcard__art" style="background:${CARD_GRAD[c.variant] || CARD_GRAD.diners}"><span class="mini-chip"></span><span class="mini-brand">blu</span></div>`;
 }
 function cardRow(c) {
-  const usedPct = Math.round(c.usado / c.cupo * 100);
+  const alDia = c.pagoTotal <= 0;
+  return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
+    ${miniCardArt(c)}
+    <div class="pcard__body">
+      <div class="pcard__name">${c.name}</div>
+      <div class="pcard__num">${c.principal===false ? 'Adicional' : 'Principal'} · ···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
+      <div class="pcard__num" style="margin-top:2px">${alDia ? 'Sin pago pendiente' : `Mínimo ${money(c.pagoMin)} · pagar hasta ${c.pago}`}</div>
+    </div>
+    <div class="pcard__value"><div class="pcard__amt num">${alDia ? 'Al día' : (State.masked ? '••••' : money(c.pagoTotal))}</div><div class="pcard__lbl">${alDia ? '' : 'total a pagar'}</div></div>
+  </button>`;
+}
+function prepaidRow(c) {
   return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
     ${miniCardArt(c)}
     <div class="pcard__body">
       <div class="pcard__name">${c.name}</div>
       <div class="pcard__num">${c.type} · ···${c.last4}</div>
-      <div class="pcard__bar"><div class="lbls"><span>Utilizado ${money(c.usado)}</span><span>${usedPct}%</span></div><div class="progress" style="height:6px"><span style="width:${usedPct}%"></span></div></div>
+      <div class="pcard__num" style="margin-top:2px">Recargable · sin cupo de crédito</div>
     </div>
-    <div class="pcard__value"><div class="pcard__amt num">${State.masked ? '••••' : money(c.disponible)}</div><div class="pcard__lbl">disponible</div></div>
+    <div class="pcard__value"><div class="pcard__amt num">${State.masked ? '••••' : money(c.saldo)}</div><div class="pcard__lbl">saldo</div></div>
   </button>`;
 }
 const ACCT_GRAD = {
@@ -421,11 +488,17 @@ const ACCT_GRAD = {
   investment: 'linear-gradient(135deg, #1E1B48 0%, #322C82 55%, #463F9C 120%)',
 };
 function acctRow(item, kind) {
-  const cfg = {
-    account:    { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}`,       amt:money(item.saldo), lbl:'saldo',     mask:true },
-    credit:     { ic:'coins',  name:item.name, sub:`Crédito · ${item.num}`,             amt:money(item.saldo), lbl:'pendiente', mask:false, bar:{pct:37, l:`Cuota ${item.plazo}`} },
-    investment: { ic:'chart',  name:item.name, sub:`Inversión · tasa ${item.tasa}`,     amt:money(item.monto), lbl:'invertido', mask:true },
-  }[kind];
+  let cfg;
+  if (kind === 'account') {
+    const cancelada = item.estado === 'cancelada';
+    cfg = { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'saldo por retirar':'saldo', mask:true };
+  } else if (kind === 'credit') {
+    const e = creditEstado(item.estado);
+    cfg = { ic:'coins', name:item.name, sub:`Crédito · ${item.num} · ${e.label}`, amt:e.consultarDiners?'Consultar':money(item.saldo), lbl:e.consultarDiners?'con Diners':'pendiente', mask:false,
+            bar:(item.estado==='al-dia') ? {pct:37, l:`Cuota ${item.plazo}`} : null };
+  } else {
+    cfg = { ic:'chart', name:item.name, sub:`Inversión · tasa ${item.tasa}`, amt:money(item.monto), lbl:'invertido', mask:true };
+  }
   return `<button class="pcard" data-nav="detalle-producto?id=${item.id}" aria-label="Abrir ${cfg.name}">
     <div class="pcard__art pcard__art--ic" style="background:${ACCT_GRAD[kind]};color:#fff"><span class="mini-chip"></span>${icon(cfg.ic)}</div>
     <div class="pcard__body">
@@ -441,25 +514,29 @@ function addProductCard(route, label) {
 }
 
 Screens.tarjetas = {
-  title: 'Mis tarjetas',
+  title: 'Tarjetas de crédito',
   render(view) {
-    const cupo = DB.cards.reduce((s,c)=>s+c.cupo,0), disp = DB.cards.reduce((s,c)=>s+c.disponible,0), usado = DB.cards.reduce((s,c)=>s+c.usado,0);
+    const N = DB.net;
+    const principales = DB.cards.filter(c => c.principal !== false);
+    const adicionales = DB.cards.filter(c => c.principal === false);
+    const deuda = DB.cards.reduce((s,c)=>s+c.pagoTotal,0);
     view.innerHTML = `
-    ${premiumHead('Mis tarjetas de crédito', `${DB.cards.length} tarjetas activas`, 'inicio',
+    ${premiumHead('Tarjetas de crédito de la empresa', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio',
       `<button class="btn btn--primary btn--sm" data-nav="onboarding-signature">${icon('plus')} Solicitar tarjeta</button>`, 'Productos')}
     <div class="stat-tiles section mb-6">
-      ${statTile('card', 'card', 'Cupo total', State.masked?'••••':money(cupo))}
-      ${statTile('wallet', 'navy', 'Disponible', State.masked?'••••':money(disp))}
-      ${statTile('coins', 'graphite', 'Utilizado', State.masked?'••••':money(usado))}
+      ${statTile('card', 'card', 'Cupo global', State.masked?'••••':money(N.cupoGlobal))}
+      ${statTile('wallet', 'navy', 'Cupo disponible', State.masked?'••••':money(N.cupoGlobalDisp))}
+      ${statTile('coins', 'graphite', 'Deuda en tarjetas', State.masked?'••••':money(deuda))}
     </div>
-    <h2 class="h4 mb-4">Tus tarjetas</h2>
-    <div class="pcard-grid section mb-6">
-      ${DB.cards.map(cardRow).join('')}
-      ${addProductCard('onboarding-signature', 'Solicitar nueva tarjeta')}
-    </div>
+    <h2 class="h4 mb-4">Tarjetas principales <span class="text-muted" style="font-weight:400">· ${principales.length}</span></h2>
+    <div class="pcard-grid section mb-6">${principales.map(cardRow).join('')}</div>
+    <h2 class="h4 mb-4">Tarjetas adicionales <span class="text-muted" style="font-weight:400">· ${adicionales.length}</span></h2>
+    <div class="pcard-grid section mb-6">${adicionales.map(cardRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>
+    ${(DB.prepaid && DB.prepaid.length) ? `<h2 class="h4 mb-4">Tarjetas prepago <span class="text-muted" style="font-weight:400">· ${DB.prepaid.length}</span></h2>
+    <div class="pcard-grid section mb-6">${DB.prepaid.map(prepaidRow).join('')}</div>` : ''}
     <div class="list-card section">
       <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2><button class="chip" onclick="toast({title:'Filtros avanzados',msg:'Rango de fechas, montos y categorías.',type:'info'})">${icon('filter')} Filtrar</button></div>
-      <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Diners Club'||m.card==='Visa BLU').map(UI.txRow).join('')}</div>
+      <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Diners Club'||m.card==='Visa blu').map(UI.txRow).join('')}</div>
     </div>`;
   }
 };
@@ -491,27 +568,28 @@ function acctCard(item, kind, extraCls = '') {
 
 /* ---------- CUENTAS Y CRÉDITOS (mismo patrón que Tarjetas) ---------- */
 Screens.cuentas = {
-  title: 'Mis cuentas',
+  title: 'Cuentas y créditos',
   render(view) {
+    const cat = getParam('cat'); // 'cuenta' | 'credito' | 'inversion' | null (todas)
     const saldo = DB.accounts.reduce((s,a)=>s+a.saldo,0), credito = DB.credits.reduce((s,c)=>s+c.saldo,0), invertido = DB.investments.reduce((s,i)=>s+i.monto,0);
     const total = DB.accounts.length + DB.credits.length + DB.investments.length;
+    const titulo = cat==='cuenta' ? 'Cuentas' : cat==='credito' ? 'Créditos' : cat==='inversion' ? 'Inversiones' : 'Cuentas y créditos';
+    const secCuentas = `<div class="section mb-6"><h2 class="h4 mb-4">Cuentas <span class="text-muted" style="font-weight:400">· ${DB.accounts.length}</span></h2>
+      <div class="pcard-grid">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta blu+')}</div></div>`;
+    const secCreditos = `<div class="section mb-6"><h2 class="h4 mb-4">Créditos <span class="text-muted" style="font-weight:400">· ${DB.credits.length}</span></h2>
+      <div class="pcard-grid">${DB.credits.map(cr=>acctRow(cr,'credit')).join('')}</div></div>`;
+    const secInv = `<div class="section mb-6"><h2 class="h4 mb-4">Inversiones <span class="text-muted" style="font-weight:400">· ${DB.investments.length}</span></h2>
+      <div class="pcard-grid">${DB.investments.map(iv=>acctRow(iv,'investment')).join('')}</div></div>`;
+    const secciones = cat==='cuenta' ? secCuentas : cat==='credito' ? secCreditos : cat==='inversion' ? secInv : (secCuentas+secCreditos+secInv);
+    const tiles = cat==='cuenta' ? statTile('wallet','navy','Saldo en cuentas',State.masked?'••••':money(saldo))
+      : cat==='credito' ? statTile('coins','graphite','Deuda en créditos',money(credito))
+      : cat==='inversion' ? statTile('chart','indigo','Total invertido',State.masked?'••••':money(invertido))
+      : statTile('wallet','navy','Saldo en cuentas',State.masked?'••••':money(saldo))+statTile('coins','graphite','Deuda en créditos',money(credito))+statTile('chart','indigo','Invertido',State.masked?'••••':money(invertido));
     view.innerHTML = `
-    ${premiumHead('Mis cuentas y créditos', `${total} productos`, 'inicio',
+    ${premiumHead(titulo, cat ? '' : `${total} productos`, 'inicio',
       `<button class="btn btn--primary btn--sm" data-nav="ofertas">${icon('plus')} Abrir producto</button>`, 'Productos')}
-    <div class="stat-tiles section mb-6">
-      ${statTile('wallet', 'navy', 'Saldo en cuentas', State.masked?'••••':money(saldo))}
-      ${statTile('coins', 'graphite', 'Crédito pendiente', money(credito))}
-      ${statTile('chart', 'indigo', 'Invertido', State.masked?'••••':money(invertido))}
-    </div>
-    <div class="section mb-6"><h2 class="h4 mb-4">Cuentas <span class="text-muted" style="font-weight:400">· ${DB.accounts.length}</span></h2>
-      <div class="pcard-grid">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta BLU+')}</div>
-    </div>
-    <div class="section mb-6"><h2 class="h4 mb-4">Créditos <span class="text-muted" style="font-weight:400">· ${DB.credits.length}</span></h2>
-      <div class="pcard-grid">${DB.credits.map(cr=>acctRow(cr,'credit')).join('')}</div>
-    </div>
-    <div class="section mb-6"><h2 class="h4 mb-4">Inversiones <span class="text-muted" style="font-weight:400">· ${DB.investments.length}</span></h2>
-      <div class="pcard-grid">${DB.investments.map(iv=>acctRow(iv,'investment')).join('')}</div>
-    </div>
+    <div class="stat-tiles section mb-6">${tiles}</div>
+    ${secciones}
     <div class="list-card section">
       <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2></div>
       <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Ahorros').map(UI.txRow).join('')}</div>
@@ -607,6 +685,38 @@ function successModal(title, msg, back) {
   ov.querySelector('#ok').onclick=()=>{ closeModal(ov); if(back) location.hash='#/'+back; };
 }
 
+/* Soft token — paso obligatorio del login (usuario + contraseña + token) */
+function loginSoftToken() {
+  const ov = openModal(`
+    <div class="modal__body" style="text-align:center;padding-top:28px">
+      <div class="state__art" style="margin:0 auto 14px;background:var(--blu-50);color:var(--primary)">${icon('shield')}</div>
+      <h3 class="h3">Token de seguridad</h3>
+      <p class="text-muted mt-2" style="max-width:36ch;margin-left:auto;margin-right:auto">Ingresa el código de 6 dígitos de tu <strong>token blu</strong> para completar tu ingreso.</p>
+      <div class="row" style="justify-content:center;gap:8px;margin-top:20px" id="otpRow">
+        ${[0,1,2,3,4,5].map(()=>'<input class="otp-box" maxlength="1" inputmode="numeric" autocomplete="one-time-code" aria-label="Dígito del token">').join('')}
+      </div>
+      <div class="error-text" id="otpErr" style="display:none;justify-content:center;margin-top:10px">${icon('alert')} Ingresa los 6 dígitos del token.</div>
+      <div class="text-muted" style="font-size:12px;margin-top:12px">¿No lo tienes a mano? <a id="otpResend" style="color:var(--primary);font-weight:600;cursor:pointer">Reenviar código</a> <span id="otpTimer"></span></div>
+      <div class="text-muted" style="font-size:11px;margin-top:6px;opacity:.8">Demo: ingresa cualquier código de 6 dígitos.</div>
+    </div>
+    <div class="modal__foot"><button class="btn btn--ghost" id="otpCancel">Cancelar</button><button class="btn btn--primary" id="otpValidate">Validar e ingresar</button></div>`);
+  const boxes = [...ov.querySelectorAll('.otp-box')];
+  const err = ov.querySelector('#otpErr');
+  boxes.forEach((b,i)=>{
+    b.oninput = () => { b.value = b.value.replace(/\D/g,'').slice(0,1); if (b.value && boxes[i+1]) boxes[i+1].focus(); err.style.display='none'; };
+    b.onkeydown = (e) => { if (e.key==='Backspace' && !b.value && boxes[i-1]) boxes[i-1].focus(); };
+  });
+  let t = 30; const tm = ov.querySelector('#otpTimer');
+  const iv = setInterval(()=>{ if(!document.body.contains(ov)){ clearInterval(iv); return; } t--; tm.textContent = t>0 ? '· 00:'+String(t).padStart(2,'0') : ''; if(t<=0) clearInterval(iv); }, 1000);
+  ov.querySelector('#otpResend').onclick = () => { t=30; toast({title:'Código reenviado', msg:'Revisa tu token blu.', type:'info'}); };
+  ov.querySelector('#otpCancel').onclick = () => { clearInterval(iv); closeModal(ov); };
+  ov.querySelector('#otpValidate').onclick = (e) => {
+    if (boxes.map(b=>b.value).join('').length < 6) { err.style.display='flex'; (boxes.find(b=>!b.value)||boxes[0]).focus(); return; }
+    const btn = e.currentTarget; btn.classList.add('is-loading');
+    setTimeout(()=>{ clearInterval(iv); closeModal(ov); location.hash='#/inicio'; toast({title:'Bienvenida, '+DB.user.first, msg:'Ingreso verificado con token de seguridad.', type:'success'}); }, 900);
+  };
+}
+
 /* ---------- PAGO DE SERVICIOS ---------- */
 Screens.pagos = {
   title: 'Pagos de servicios',
@@ -685,21 +795,20 @@ Screens['pago-tarjeta'] = {
     const amountFor = () => optIdx===0 ? sel.pagoTotal : optIdx===1 ? sel.pagoMin : otherVal;
 
     function renderStmt() {
-      const c = sel, usedPct = Math.round(c.usado/c.cupo*100);
+      const c = sel;
       $('#pcStmt').innerHTML = `
         <div class="row between wrap" style="gap:16px">
           <div class="row" style="gap:16px;align-items:center">
             <div style="width:110px">${UI.bankCard(c)}</div>
-            <div><div class="eyebrow" style="margin:0">Estado de cuenta</div><div class="h3">${c.name}</div><div class="text-muted" style="font-size:13px">···${c.last4} · corte ${c.corte}</div></div>
+            <div><div class="eyebrow" style="margin:0">Estado de cuenta</div><div class="h3">${c.name}</div><div class="text-muted" style="font-size:13px">···${c.last4} · ${c.principal===false?'adicional':'principal'}</div></div>
           </div>
           ${daysBadge(c)}
         </div>
         <div class="grid grid-3 mt-6" style="gap:12px">
-          <div><div class="text-muted" style="font-size:12px">Saldo del estado</div><div class="num" style="font-weight:800;font-size:22px">${money(c.pagoTotal)}</div></div>
+          <div><div class="text-muted" style="font-size:12px">Pago total</div><div class="num" style="font-weight:800;font-size:22px">${money(c.pagoTotal)}</div></div>
           <div><div class="text-muted" style="font-size:12px">Pago mínimo</div><div class="num" style="font-weight:700;font-size:18px">${money(c.pagoMin)}</div></div>
-          <div><div class="text-muted" style="font-size:12px">Fecha de pago</div><div style="font-weight:700;font-size:18px">${c.pago}</div></div>
-        </div>
-        <div class="mt-4"><div class="row between" style="font-size:12px;color:var(--muted);margin-bottom:6px"><span>Cupo utilizado</span><span class="num">${money(c.usado)} / ${money(c.cupo)}</span></div><div class="progress"><span style="width:${usedPct}%"></span></div></div>`;
+          <div><div class="text-muted" style="font-size:12px">Fecha máxima de pago</div><div style="font-weight:700;font-size:18px">${c.pago}</div></div>
+        </div>`;
     }
 
     function renderOpts() {
@@ -838,7 +947,16 @@ Screens.perfil = {
 Screens.recuperar = {
   title: 'Recuperar acceso', full: true,
   render(view) {
-    view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><form class="auth__form"><a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;margin-bottom:16px">${icon('back')} Volver</a><h2 class="h2">Recuperar contraseña</h2><p class="text-muted mb-6">Te enviaremos un código para restablecerla.</p><div class="field"><label>Usuario o cédula</label><div class="control">${icon('user')}<input placeholder="Ingresa tu usuario"></div></div><button class="btn btn--primary btn--lg btn--block" type="button" onclick="toast({title:'Código enviado',msg:'Revisa tu correo y SMS.',type:'success'})">Enviar código</button></form></section></div>`;
+    view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><div class="auth__form" style="text-align:center">
+      <a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;margin-bottom:16px">${icon('back')} Volver</a>
+      <div style="width:64px;height:64px;border-radius:20px;background:var(--blu-50);color:var(--primary);display:grid;place-items:center;margin:8px auto 18px">${icon('phone')}</div>
+      <h2 class="h2">Recupera tu acceso desde la app</h2>
+      <p class="text-muted mb-6" style="max-width:42ch;margin-left:auto;margin-right:auto">Por tu seguridad, la recuperación de usuario y contraseña se realiza únicamente en la <strong>app blu Empresas</strong>. Ábrela y elige <em>“Olvidé mi usuario o contraseña”</em>; ahí validaremos tu identidad con tu cédula y el RUC de tu empresa.</p>
+      <div class="card card--pad" style="text-align:left;background:var(--blu-50);border-color:var(--blu-100);max-width:420px;margin:0 auto">
+        <div class="row" style="gap:10px;align-items:flex-start">${icon('shield')}<div class="text-slate" style="font-size:13px">No pedimos tu cédula ni usuario en la web: así evitamos suplantación y phishing. El proceso seguro vive en la app.</div></div>
+      </div>
+      <a class="btn btn--primary btn--lg btn--block mt-6" href="#/login" style="max-width:420px;margin-left:auto;margin-right:auto">Entendido, volver al inicio</a>
+    </div></section></div>`;
   }
 };
 
@@ -872,7 +990,7 @@ function shell(activeRoute, title) {
   <a href="#main" class="skip-link">Saltar al contenido</a>
   <div class="app">
     <aside class="sidebar">
-      <div class="brand"><div class="brand__mark">B</div><div><div class="brand__name">BLU</div><div class="brand__sub">Diners Club · Empresas</div></div></div>
+      <div class="brand"><div class="brand__mark">b</div><div><div class="brand__name">blu</div><div class="brand__sub">Diners Club · Empresas</div></div></div>
       <nav class="nav" aria-label="Menú principal">${nav}</nav>
       <div class="sidebar__foot"><div class="user-chip" data-nav="perfil"><span class="avatar">${DB.user.initials}</span><div><div class="user-chip__name">${DB.user.first}</div><div class="user-chip__role">${DB.user.role}</div></div></div></div>
     </aside>
@@ -898,6 +1016,7 @@ function getRoute() { const h=location.hash.replace(/^#\/?/,'').split('?')[0]; r
 function getParam(k) { const q=(location.hash.split('?')[1])||''; return new URLSearchParams(q).get(k); }
 function findProduct(id) {
   return DB.cards.find(x=>x.id===id) && {type:'card', item:DB.cards.find(x=>x.id===id)}
+    || (DB.prepaid||[]).find(x=>x.id===id) && {type:'prepaid', item:DB.prepaid.find(x=>x.id===id)}
     || DB.accounts.find(x=>x.id===id) && {type:'account', item:DB.accounts.find(x=>x.id===id)}
     || DB.credits.find(x=>x.id===id) && {type:'credit', item:DB.credits.find(x=>x.id===id)}
     || DB.investments.find(x=>x.id===id) && {type:'investment', item:DB.investments.find(x=>x.id===id)}

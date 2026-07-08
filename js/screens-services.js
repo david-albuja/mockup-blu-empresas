@@ -51,7 +51,7 @@ Screens['bloqueo'] = {
       $('#blkPanel').innerHTML = `
       <div class="card card--pad section">
         <div class="row" style="gap:14px;align-items:center">
-          <div class="pcard__art" style="width:74px;height:48px;background:${grad(c.variant)}"><span class="mini-chip"></span><span class="mini-brand">BLU</span></div>
+          <div class="pcard__art" style="width:74px;height:48px;background:${grad(c.variant)}"><span class="mini-chip"></span><span class="mini-brand">blu</span></div>
           <div><div class="h4">${c.name}</div><div class="text-muted" style="font-size:13px">${c.kind} · ···${c.last4}</div></div>
           <span style="margin-left:auto">${stBadge(c.id)}</span>
         </div>
