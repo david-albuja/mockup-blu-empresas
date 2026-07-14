@@ -112,6 +112,19 @@ function kv(k, v, strong) { return `<div class="sum-row"><span class="k">${k}</s
 function panel(title, body, action='') { return `<div class="card card--pad section">${title?`<div class="row between mb-4"><h2 class="h4">${title}</h2>${action}</div>`:''}${body}</div>`; }
 /* Info banner */
 function infoBanner(text, ic='shield') { return `<div class="card card--pad section" style="background:var(--blu-50);border-color:var(--blu-100)"><div class="row" style="gap:10px;align-items:flex-start">${icon(ic)}<div class="text-slate" style="font-size:13px">${text}</div></div></div>`; }
+
+/* Umbrales: listas grandes no se renderizan en pantalla; se ofrece descarga en Excel */
+const DATA_LIMIT = { adicionales: 20, movimientos: 100 };
+const xlsxToast = (name) => `toast({title:'Generando Excel…',msg:'${name} se descargará en unos segundos.',type:'info'})`;
+function exportChip(name) { return `<button class="chip" onclick="${xlsxToast(name)}">${icon('download')} Exportar Excel</button>`; }
+function bulkExport(count, noun, filename) {
+  return `<div class="card card--pad section" style="text-align:center">
+    <div class="state__art" style="margin:0 auto 12px;background:var(--blu-50);color:var(--primary)">${icon('file')}</div>
+    <h3 class="h4">${count.toLocaleString('es-EC')} ${noun}</h3>
+    <p class="text-muted mt-2" style="max-width:46ch;margin-left:auto;margin-right:auto">Son demasiados para mostrarlos en pantalla. Descárgalos en Excel para acceder y procesar la información rápidamente.</p>
+    <button class="btn btn--primary mt-4" onclick="${xlsxToast(filename)}">${icon('download')} Descargar Excel</button>
+  </div>`;
+}
 /* Slider/rango para simuladores */
 function slider(id, min, max, val, step=1) { return `<input type="range" id="${id}" min="${min}" max="${max}" value="${val}" step="${step}" style="width:100%;accent-color:var(--blu-600);height:6px;cursor:pointer">`; }
 
@@ -214,7 +227,7 @@ Screens.login = {
           </div>
 
           <button class="btn btn--primary btn--lg btn--block" type="submit" id="loginBtn">Ingresar</button>
-          <p class="text-muted mt-6" style="text-align:center;font-size:13px">¿Tu empresa aún no es cliente? <a href="#/inicio" style="color:var(--primary);font-weight:600">Solicita acceso</a></p>
+          <p class="text-muted mt-6" style="text-align:center;font-size:13px">¿No cuentas con tu usuario para ingresar? <a href="#/crear-usuario" style="color:var(--primary);font-weight:600">Crea tu usuario aquí</a></p>
         </form>
       </section>
     </div>`;
@@ -233,6 +246,86 @@ Screens.login = {
   }
 };
 
+/* Cara de la tarjeta en el Home: últimos 4 dígitos, total a pagar y cupo disponible
+   (global, el mismo valor en todas las tarjetas — el cupo nunca es por tarjeta).
+   "Pagar hasta X" NO va sobre la imagen; se muestra debajo, en el cuerpo. */
+function homeCardFace(c) {
+  const totalTxt = c.pagoTotal > 0 ? (State.masked ? '••••••' : money(c.pagoTotal)) : 'Al día';
+  const cupoTxt = State.masked ? '••••' : money(DB.net.cupoGlobalDisp);
+  return `<div class="bank-card ${c.variant?'bank-card--'+c.variant:''}" tabindex="0" role="group" aria-label="Tarjeta ${c.name} terminación ${c.last4}">
+    <div class="row between">
+      <div><div class="bank-card__brand">blu</div><div class="bank-card__type">${c.name} · ${c.type}</div></div>
+      <div class="bank-card__chip"></div>
+    </div>
+    <div class="bank-card__number num">•••• ${c.last4}</div>
+    <div class="bank-card__foot">
+      <div><small>Total a pagar</small><strong class="num">${totalTxt}</strong></div>
+      <div style="text-align:right"><small>Cupo disponible</small><strong class="num">${cupoTxt}</strong></div>
+    </div>
+  </div>`;
+}
+function homeTarjetaCard(c) {
+  const badge = c.pagoTotal > 0
+    ? `<span class="badge badge--warning"><span class="dot"></span>Por pagar</span>`
+    : `<span class="badge badge--success">Al día</span>`;
+  return `<button class="prod-xl" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
+    <div class="prod-xl__media">${homeCardFace(c)}</div>
+    <div class="prod-xl__body">
+      <div class="row between" style="gap:8px;align-items:center">
+        <span class="prod-xl__sub" style="margin:0">${c.pagoTotal>0?`Pagar hasta ${c.pago}`:''}</span>
+        ${badge}
+      </div>
+    </div>
+  </button>`;
+}
+/* Cuentas, créditos e inversiones en el Home: cards homologadas (mismo shell prod-xl
+   que las tarjetas), en carrusel con scroll horizontal. */
+/* Cuenta en el Home: card limpia (sin cover/fondo de color), contenido centrado,
+   con el saldo y un pill de interés del mes destacado. */
+function homeAcctRow(a) {
+  const cancelada = a.estado === 'cancelada';
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.name}">
+    <div class="prod-xl__body">
+      <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
+      <div class="prod-xl__name">${a.name}</div>
+      <div class="prod-xl__id num">${a.type} · ${a.num}${cancelada?' · Cancelada':''}</div>
+      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${State.masked?'$ ••••••':money(a.saldo)}</div>
+      <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}</div>
+      ${cancelada
+        ? `<div class="acct-interes acct-interes--warn">${icon('alert')} Retira tu saldo</div>`
+        : (a.interesMes ? `<div class="acct-interes">${icon('arrowUp')} <strong class="num">${money(a.interesMes, true)}</strong> este mes</div>` : '')}
+    </div>
+  </button>`;
+}
+function homeCreditRow(c) {
+  const e = creditEstado(c.estado);
+  const sub = e.consultarDiners ? `${e.pagoLabel} · consulta el total con Diners` : (c.estado==='mora' ? `${e.pagoLabel} · cuota ${money(c.cuota)}` : `Cuota ${money(c.cuota)} · vence ${c.prox}`);
+  const pillCls = e.cls === 'badge--success' ? '' : e.cls === 'badge--warning' ? 'acct-interes--warn' : 'acct-interes--danger';
+  const pillIcon = e.cls === 'badge--success' ? 'check' : 'alert';
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
+    <div class="prod-xl__body">
+      <span class="prod__ic prod__ic--credit" style="margin:0 auto 8px">${icon('coins')}</span>
+      <div class="prod-xl__name">${c.name}</div>
+      <div class="prod-xl__id num">${c.num}</div>
+      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
+      <div class="prod-xl__sub">Deuda a la fecha · ${sub}</div>
+      <div class="acct-interes ${pillCls}">${icon(pillIcon)} ${e.label}</div>
+    </div>
+  </button>`;
+}
+function homeInvestRow(iv) {
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${iv.id}" aria-label="Abrir ${iv.name}">
+    <div class="prod-xl__body">
+      <span class="prod__ic prod__ic--invest" style="margin:0 auto 8px">${icon('chart')}</span>
+      <div class="prod-xl__name">${iv.tipo || iv.name}</div>
+      <div class="prod-xl__id num">···${iv.last4} · ${iv.tasa}</div>
+      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${State.masked?'$ ••••••':money(iv.monto)}</div>
+      <div class="prod-xl__sub">${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `Renueva el ${iv.vence}`}</div>
+      <div class="acct-interes">${icon('arrowUp')} <strong class="num">${State.masked?'••••':money(iv.interesGanado||0,true)}</strong> ganado</div>
+    </div>
+  </button>`;
+}
+
 /* ---------- INICIO / DASHBOARD ---------- */
 Screens.inicio = {
   title: 'Inicio',
@@ -244,180 +337,105 @@ Screens.inicio = {
       const N = DB.net;
       const p = moneyParts(N.activo);
 
+      // Cada sección de producto solo aparece si el usuario realmente tiene ese producto.
+      const prodData = { tarjeta: DB.cards, prepago: DB.prepaid, cuenta: DB.accounts, credito: DB.credits, inversion: DB.investments };
+      const prodTabsAll = [['tarjeta','Tarjetas'],['cuenta','Cuentas'],['credito','Créditos'],['inversion','Inversiones']];
+      const prodTabs = prodTabsAll.filter(t => (prodData[t[0]]||[]).length > 0);
+      const VR = DB.ventasResumen;
+      const bigMoney = (n) => { const m = moneyParts(n); return `${m.int}<span class="cents">,${m.dec}</span>`; };
+
       v.innerHTML = `
       <div class="page-head section">
         <div class="row between wrap" style="gap:12px">
-          <div><p class="eyebrow">Resumen consolidado</p><h1>Hola, ${DB.user.first}</h1></div>
-          <div class="row wrap" style="gap:8px">
-            <button class="btn btn--secondary btn--sm" onclick="window.open('presentacion.html','_blank','noopener')">${icon('sparkles')} Ver presentación</button>
-            <button class="btn btn--secondary btn--sm" data-nav="recompensas">${icon('gift')} 48.250 puntos Club</button>
+          <div>
+            <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+              <h1 style="line-height:1.1">${DB.empresa.name}</h1>
+              <button class="chip" onclick="toast({title:'Cambiar empresa',msg:'${DB.empresa.name} · ${DB.empresa.otras.join(' · ')}',type:'info'})" aria-label="Cambiar de empresa">${icon('building')} Cambiar ${icon('chevronDown')}</button>
+            </div>
+            <p class="text-muted" style="margin-top:4px">Hola, ${DB.user.first}</p>
+          </div>
+          <div class="row wrap" style="gap:8px;align-items:center">
+            <button class="icon-btn tip" data-nav="transferencias" data-tip="Transferir" aria-label="Transferir">${icon('send')}</button>
+            <button class="icon-btn tip" data-nav="carga-archivo" data-tip="Pago masivo" aria-label="Pago masivo">${icon('upload')}</button>
+            <button class="icon-btn tip" data-nav="aprobaciones" data-tip="Aprobaciones" aria-label="Aprobaciones" style="position:relative">${icon('approve')}<span class="badge badge--error" style="position:absolute;top:-3px;right:-3px;padding:1px 6px;font-size:10px">3</span></button>
+            <button class="btn btn--secondary btn--sm" data-nav="recompensas">${icon('gift')} 48.250 ClubMiles</button>
           </div>
         </div>
       </div>
 
-      <!-- Posición consolidada: total en productos (activo), deuda (pasivo), cupo global -->
-      <div class="card card--pad section mb-6">
-        <div class="row wrap" style="gap:10px;align-items:center">
-          <span class="eyebrow" style="margin:0">Posición consolidada</span>
-          <button class="chip" onclick="toast({title:'Cambiar empresa',msg:'Robles Comercial S.A. · Robles Retail S.A.S.',type:'info'})">${icon('building')} Robles Comercial S.A. ${icon('chevronDown')}</button>
-        </div>
-        <div class="row" style="gap:8px;align-items:center;margin-top:8px">
-          <div class="kpi__value num" id="mainBalance" style="font-size:34px">${State.masked?'••••••':`${p.int}<span class="cents">,${p.dec}</span>`}</div>
-          <button class="eye-toggle" id="maskBtn" aria-label="Ocultar saldos">${icon(State.masked?'eyeOff':'eye')}</button>
-        </div>
-        <div class="text-muted" style="font-size:12px">Total en productos · lo que tu empresa tiene</div>
-        <div class="grid grid-3 mt-4" style="gap:12px">
-          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Total deuda</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.pasivo)}</div><div class="text-muted" style="font-size:11px">productos de pasivo</div></div>
-          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Deuda en tarjetas</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.deudaTarjetas)}</div><div class="text-muted" style="font-size:11px">crédito rotativo</div></div>
-          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Cupo disponible</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:11px">de ${money(N.cupoGlobal)} · global Diners</div></div>
-        </div>
-        <div class="qa-grid mt-6">
-          <button class="qa" data-nav="transferencias"><span class="qa__ic">${icon('send')}</span><span class="qa__label">Transferir</span></button>
-          <button class="qa" data-nav="carga-archivo"><span class="qa__ic">${icon('upload')}</span><span class="qa__label">Pago masivo</span></button>
-          <button class="qa" data-nav="aprobaciones" style="position:relative"><span class="qa__ic">${icon('approve')}</span><span class="qa__label">Aprobaciones</span><span class="badge badge--error" style="position:absolute;top:8px;right:12px;padding:2px 7px">3</span></button>
-          <button class="qa" data-nav="pagos"><span class="qa__ic">${icon('receipt')}</span><span class="qa__label">Pagar servicios</span></button>
-        </div>
-      </div>
-
-      <!-- Tus productos: tarjetas, prepago, cuentas, créditos, inversiones y caja al mismo nivel -->
-      <div class="card card--pad section mb-6">
+      <!-- Tus ventas (adquirencia): encabeza el Home en lugar de la posición consolidada -->
+      <div class="section mb-6">
         <div class="row between wrap mb-4" style="gap:10px">
-          <div class="scroll-x" style="max-width:100%;padding-bottom:0"><div class="prod-tabs prod-tabs--inline" id="prodTabs" role="tablist">
-            ${[['tarjeta','Tarjetas'],['prepago','Prepago'],['cuenta','Cuentas'],['credito','Créditos'],['inversion','Inversiones'],['caja','Caja']].map((t,i)=>`<button class="${i===0?'is-active':''}" data-c="${t[0]}" role="tab" aria-selected="${i===0?'true':'false'}">${t[1]}</button>`).join('')}
-          </div></div>
-          <a class="row" id="prodSeeAll" style="gap:4px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer">Ver todo ${icon('chevron')}</a>
+          <h2 class="h3">Tus ventas</h2>
+          <a class="row" data-nav="caja" style="gap:6px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer">Mira el detalle ${icon('chevron')}</a>
         </div>
-        <div id="prodXlHost"></div>
-        <div id="prodXlExtra" class="mt-4"></div>
+        <div class="sales-summary">
+          <button class="sales-card sales-card--hl" data-nav="caja">
+            <div class="row between" style="align-items:flex-start">
+              <div class="sales-card__label">Ventas del mes</div>
+              <span class="sales-card__grow">${icon('arrowUp')} +${String(VR.crecimiento).replace('.',',')}%</span>
+            </div>
+            <div class="sales-card__amt num">${bigMoney(VR.ventasMes)}</div>
+            <div class="sales-card__cap">Periodo ${VR.periodo} · vs. mes anterior</div>
+          </button>
+          <button class="sales-card" data-nav="caja">
+            <div class="sales-card__label">Pagos recibidos</div>
+            <div class="sales-card__amt num">${bigMoney(VR.pagosRecibidos)}</div>
+            <div class="sales-card__cap">Periodo ${VR.periodo}</div>
+          </button>
+          <button class="sales-card" data-nav="caja">
+            <div class="sales-card__label">Total por cobrar</div>
+            <div class="sales-card__amt num">${bigMoney(VR.porCobrar)}</div>
+            <div class="sales-card__cap">${VR.fechaCobro}</div>
+          </button>
+        </div>
       </div>
 
-      <!-- Últimos movimientos (ancho completo, 2 columnas) -->
-      <div class="list-card section">
-        <div class="list-card__head"><h2 class="h4">Últimos movimientos</h2><a class="btn--ghost" data-nav="tarjetas" style="font-size:13px;font-weight:600;color:var(--primary)">Ver todos</a></div>
-        <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.map(UI.txRow).join('')}</div>
+      <!-- Tus productos con nosotros: solo se listan las categorías que el usuario tiene -->
+      <div class="section mb-6">
+        <div class="row between wrap mb-4" style="gap:10px">
+          <h2 class="h3">Tus Productos</h2>
+        </div>
+        <div class="card card--pad">
+          <div class="mb-4"><div class="scroll-x" style="max-width:100%;padding-bottom:0"><div class="prod-tabs prod-tabs--inline" id="prodTabs" role="tablist">
+            ${prodTabs.map((t,i)=>`<button class="${i===0?'is-active':''}" data-c="${t[0]}" role="tab" aria-selected="${i===0?'true':'false'}">${t[1]}</button>`).join('')}
+          </div></div></div>
+          <div id="prodXlHost"></div>
+          <div id="prodXlExtra" class="mt-4"></div>
+        </div>
       </div>`;
 
-      $('#maskBtn').onclick = toggleMask;
-
-      const coverIcon = { cuenta: 'wallet', credito: 'coins', inversion: 'chart' };
-      const prodData  = { tarjeta: DB.cards, prepago: DB.prepaid, cuenta: DB.accounts, credito: DB.credits, inversion: DB.investments };
-      const detailNav = (it) => `detalle-producto?id=${it.id}`;
       // "Ver todo" consistente: cada categoría lleva a ver todos los productos de ESA categoría
       const seeAllNav = { tarjeta:'tarjetas', prepago:'tarjetas', cuenta:'cuentas?cat=cuenta', credito:'cuentas?cat=credito', inversion:'cuentas?cat=inversion', caja:'caja' };
-
-      function prodXl(kind, item) {
-        // Tarjetas de crédito y prepago comparten el arte de tarjeta (sin cupo por tarjeta)
-        if (kind === 'tarjeta') {
-          const c = item;
-          const badge = c.pagoTotal > 0
-            ? `<span class="badge badge--warning"><span class="dot"></span>Pagar hasta ${c.pago}</span>`
-            : `<span class="badge badge--success">Al día</span>`;
-          return `<button class="prod-xl" data-nav="${detailNav(c)}" aria-label="Abrir ${c.name}">
-            <div class="prod-xl__media">${UI.bankCard(c)}</div>
-            <div class="prod-xl__body">
-              <div class="row between" style="gap:8px;align-items:flex-start"><div><div class="prod-xl__name">${c.name}</div><div class="prod-xl__id num">•••• ${c.last4}${c.principal===false?` · ${c.titular||'Adicional'}`:''}</div></div>${badge}</div>
-              <div class="prod-xl__amt num">${c.pagoTotal>0?(State.masked?'$ ••••••':money(c.pagoTotal)):'Al día'}</div>
-              <div class="prod-xl__sub">${c.pagoTotal>0?`Total a pagar · mínimo ${State.masked?'••••':money(c.pagoMin)}`:'Sin pagos pendientes'}</div>
-            </div>
-          </button>`;
-        }
-        if (kind === 'prepago') {
-          const c = item;
-          return `<button class="prod-xl" data-nav="${detailNav(c)}" aria-label="Abrir ${c.name}">
-            <div class="prod-xl__media">${UI.bankCard(c)}</div>
-            <div class="prod-xl__body">
-              <div><div class="prod-xl__name">${c.name}</div><div class="prod-xl__id num">•••• ${c.last4}</div></div>
-              <div class="prod-xl__amt num">${State.masked?'$ ••••••':money(c.saldo)}</div>
-              <div class="prod-xl__sub">Saldo disponible · recargable</div>
-            </div>
-          </button>`;
-        }
-        if (kind === 'cuenta') {
-          const a = item;
-          const cancelada = a.estado === 'cancelada';
-          const amt = State.masked ? '$ ••••••' : money(a.saldo);
-          return `<button class="prod-xl" data-nav="${detailNav(a)}" aria-label="Abrir ${a.name}">
-            <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--cuenta" ${cancelada?'style="filter:grayscale(.5);opacity:.85"':''}>
-              <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span>${cancelada?`<span class="prod-xl__cover-rate" style="color:var(--muted)">Cancelada</span>`:(a.tasa ? `<span class="prod-xl__cover-rate">${a.tasa}</span>` : icon('wallet'))}</div>
-              <div><div class="prod-xl__cover-name">${a.name}</div><div class="prod-xl__cover-id num">${a.num}</div></div>
-              <span class="prod-xl__cover-wm" aria-hidden="true">${icon('wallet')}</span>
-            </div></div>
-            <div class="prod-xl__body">
-              <div class="prod-xl__amt num">${amt}</div>
-              <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}</div>
-              ${cancelada ? `<div class="prod-acct__pill" style="background:var(--warn-bg,#FEF3E2);color:var(--warn,#B7791F)"><span class="dot" style="background:currentColor"></span>Retira tu saldo</div>` : (a.interesMes ? `<div class="prod-acct__pill"><span class="dot"></span><strong class="num">${money(a.interesMes, true)}</strong>&nbsp;interés del mes</div>` : '')}
-            </div>
-          </button>`;
-        }
-        if (kind === 'credito') {
-          const c = item, e = creditEstado(c.estado);
-          const sub = e.consultarDiners ? `${e.pagoLabel} · consulta el total con Diners` : (c.estado==='mora' ? `${e.pagoLabel} · cuota ${money(c.cuota)}` : `Cuota ${money(c.cuota)} · vence ${c.prox}`);
-          return `<button class="prod-xl" data-nav="${detailNav(c)}" aria-label="Abrir ${c.name}">
-            <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--credito">
-              <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
-              <div><div class="prod-xl__cover-name">${c.name}</div><div class="prod-xl__cover-id num">${c.num}</div></div>
-              <span class="prod-xl__cover-wm" aria-hidden="true">${icon('coins')}</span>
-            </div></div>
-            <div class="prod-xl__body">
-              <div class="prod-xl__amt num">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
-              <div class="prod-xl__sub">${sub}</div>
-            </div>
-          </button>`;
-        }
-        // inversion
-        const ic = coverIcon[kind];
-        return `<button class="prod-xl" data-nav="${detailNav(item)}" aria-label="Abrir ${item.name}">
-          <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--${kind}">
-            <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span>${icon(ic)}</div>
-            <div><div class="prod-xl__cover-name">${item.name}</div><div class="prod-xl__cover-id num">${item.vence||''}</div></div>
-            <span class="prod-xl__cover-wm" aria-hidden="true">${icon(ic)}</span>
-          </div></div>
-          <div class="prod-xl__body">
-            <div class="prod-xl__amt num">${State.masked ? '$ ••••••' : money(item.monto)}</div>
-            <div class="prod-xl__sub">Tasa ${item.tasa} · vence ${item.vence}</div>
-          </div>
-        </button>`;
+      const solicitarRoute = { tarjeta:'onboarding-signature', prepago:'ofertas', cuenta:'onboarding-blu-plus', credito:'sim-credito', inversion:'ofertas' };
+      const solicitarLabel = { tarjeta:'Solicitar tarjeta', prepago:'Solicitar prepago', cuenta:'Abrir cuenta', credito:'Solicitar crédito', inversion:'Invertir ahora' };
+      // Un botón "Solicitar" por producto (no genérico) + "Ver todo" junto al total monetario
+      function ctaRow(kind) {
+        return `<div class="row wrap mt-4" style="gap:8px">
+          <button class="btn btn--secondary btn--sm" data-nav="${solicitarRoute[kind]}">${icon('plus')} ${solicitarLabel[kind]}</button>
+          <button class="btn btn--ghost btn--sm" data-nav="${seeAllNav[kind]}">Ver todo ${icon('chevron')}</button>
+        </div>`;
       }
 
       const prodExtra = (kind) => {
-        // Tarjetas: cupo GLOBAL (no total consolidado; el pago es por tarjeta)
-        if (kind === 'tarjeta') return `<div class="card card--pad row between wrap" style="gap:12px;align-items:center"><div style="flex:1;min-width:0"><div class="text-muted" style="font-size:13px">Cupo de crédito disponible <span style="font-size:11px">· global Diners</span></div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(DB.net.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:12px">de ${money(DB.net.cupoGlobal)} · compartido entre todas tus tarjetas. El pago es por tarjeta.</div></div></div>`;
-        if (kind === 'prepago') { const t=DB.prepaid.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Saldo total prepago</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--primary" data-nav="transferencias">Recargar</button></div>`; }
-        if (kind === 'cuenta') { const t=DB.accounts.filter(a=>a.estado!=='cancelada').reduce((s,a)=>s+a.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Saldo total en cuentas</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--secondary" data-nav="cuentas?cat=cuenta">Ver cuentas</button></div>`; }
-        if (kind === 'credito') { const t=DB.credits.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Deuda total en créditos</div><div class="kpi__value num" style="font-size:22px">${money(t)}</div><div class="text-muted" style="font-size:12px">El pago es por crédito, según su estado.</div></div><button class="btn btn--secondary" data-nav="cuentas?cat=credito">Ver créditos</button></div>`; }
-        if (kind === 'inversion') { const t=DB.investments.reduce((s,i)=>s+i.monto,0); return `<div class="card card--pad row between"><div><div class="text-muted" style="font-size:13px">Total invertido</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(t)}</div></div><button class="btn btn--secondary" data-nav="sim-credito">Simular</button></div>`; }
+        if (kind === 'tarjeta') return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Tus tarjetas con nosotros</div><div class="text-muted" style="font-size:12px;margin-top:8px">Cupo disponible</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(N.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:12px">de ${money(N.cupoGlobal)} de cupo total · compartido entre todas tus tarjetas</div>${ctaRow('tarjeta')}</div>`;
+        if (kind === 'cuenta') { const t=DB.accounts.filter(a=>a.estado!=='cancelada').reduce((s,a)=>s+a.saldo,0); return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Tu saldo total en cuentas con nosotros</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(t)}</div>${ctaRow('cuenta')}</div>`; }
+        if (kind === 'credito') { const t=DB.credits.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Total de tus créditos con nosotros</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${money(t)}</div>${ctaRow('credito')}</div>`; }
+        if (kind === 'inversion') { const t=DB.investments.reduce((s,i)=>s+i.monto,0); return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Total de tus inversiones</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(t)}</div>${ctaRow('inversion')}</div>`; }
         return '';
       };
 
-      // Sección Caja (adquirencia) al mismo nivel que los productos
-      const cajaCard = () => `<div class="card card--pad section">
-        <div class="row between wrap" style="gap:12px">
-          <div><div class="text-muted" style="font-size:13px">${icon('store')} Ventas de hoy</div><div class="kpi__value num" style="font-size:26px;margin-top:4px">${money(12480.50)}</div><div class="text-success" style="font-size:12px;font-weight:600">+12,4% vs. ayer · 148 transacciones</div></div>
-          <div><div class="text-muted" style="font-size:13px">Por liquidar</div><div class="kpi__value num" style="font-size:26px;margin-top:4px">${money(8920.30)}</div><div class="text-muted" style="font-size:12px">próximo depósito · mañana</div></div>
-        </div>
-        <button class="btn btn--primary btn--block mt-4" data-nav="caja">Abrir consulta de caja</button>
-      </div>`;
-
-      let curKind = 'tarjeta';
+      // Todos los productos homologados como cards prod-xl, en carrusel con scroll horizontal.
+      const cardBuilder = { tarjeta: homeTarjetaCard, cuenta: homeAcctRow, credito: homeCreditRow, inversion: homeInvestRow };
       function renderProducts(kind) {
-        curKind = kind;
-        if (kind === 'caja') {
-          $('#prodXlHost').innerHTML = cajaCard();
-          $('#prodXlExtra').innerHTML = '';
-          $('#prodSeeAll').style.display = 'none';
-          return;
-        }
-        $('#prodSeeAll').style.display = '';
-        const items = (prodData[kind] || []).map(it => prodXl(kind, it));
-        $('#prodXlHost').innerHTML = `<div class="prod-strip">${items.join('')}</div>`;
+        $('#prodXlHost').innerHTML = `<div class="prod-strip">${(prodData[kind]||[]).map(cardBuilder[kind]).join('')}</div>`;
         $('#prodXlExtra').innerHTML = prodExtra(kind);
       }
       view.querySelectorAll('#prodTabs [data-c]').forEach(b => b.onclick = () => {
         view.querySelectorAll('#prodTabs [data-c]').forEach(x => { x.classList.remove('is-active'); x.setAttribute('aria-selected','false'); });
         b.classList.add('is-active'); b.setAttribute('aria-selected','true'); renderProducts(b.dataset.c);
       });
-      $('#prodSeeAll').onclick = () => { location.hash = '#/' + (seeAllNav[curKind] || 'tarjetas'); };
-      renderProducts('tarjeta');
+      renderProducts(prodTabs[0][0]);
     }
   }
 };
@@ -459,29 +477,6 @@ const CARD_GRAD = {
 function miniCardArt(c) {
   return `<div class="pcard__art" style="background:${CARD_GRAD[c.variant] || CARD_GRAD.diners}"><span class="mini-chip"></span><span class="mini-brand">blu</span></div>`;
 }
-function cardRow(c) {
-  const alDia = c.pagoTotal <= 0;
-  return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
-    ${miniCardArt(c)}
-    <div class="pcard__body">
-      <div class="pcard__name">${c.name}</div>
-      <div class="pcard__num">${c.principal===false ? 'Adicional' : 'Principal'} · ···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
-      <div class="pcard__num" style="margin-top:2px">${alDia ? 'Sin pago pendiente' : `Mínimo ${money(c.pagoMin)} · pagar hasta ${c.pago}`}</div>
-    </div>
-    <div class="pcard__value"><div class="pcard__amt num">${alDia ? 'Al día' : (State.masked ? '••••' : money(c.pagoTotal))}</div><div class="pcard__lbl">${alDia ? '' : 'total a pagar'}</div></div>
-  </button>`;
-}
-function prepaidRow(c) {
-  return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
-    ${miniCardArt(c)}
-    <div class="pcard__body">
-      <div class="pcard__name">${c.name}</div>
-      <div class="pcard__num">${c.type} · ···${c.last4}</div>
-      <div class="pcard__num" style="margin-top:2px">Recargable · sin cupo de crédito</div>
-    </div>
-    <div class="pcard__value"><div class="pcard__amt num">${State.masked ? '••••' : money(c.saldo)}</div><div class="pcard__lbl">saldo</div></div>
-  </button>`;
-}
 const ACCT_GRAD = {
   account:    'linear-gradient(135deg, #14213F 0%, #26365E 55%, #3A4F80 120%)',
   credit:     'linear-gradient(135deg, #24272F 0%, #3A3F4C 55%, #545B6C 120%)',
@@ -491,23 +486,59 @@ function acctRow(item, kind) {
   let cfg;
   if (kind === 'account') {
     const cancelada = item.estado === 'cancelada';
-    cfg = { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'saldo por retirar':'saldo', mask:true };
+    cfg = { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'Saldo por retirar':'Saldo disponible', mask:true };
   } else if (kind === 'credit') {
     const e = creditEstado(item.estado);
-    cfg = { ic:'coins', name:item.name, sub:`Crédito · ${item.num} · ${e.label}`, amt:e.consultarDiners?'Consultar':money(item.saldo), lbl:e.consultarDiners?'con Diners':'pendiente', mask:false,
-            bar:(item.estado==='al-dia') ? {pct:37, l:`Cuota ${item.plazo}`} : null };
+    cfg = { ic:'coins', name:item.name, sub:`Crédito · ${item.num}`, amt:e.consultarDiners?'Consultar':money(item.saldo), lbl:e.consultarDiners?'Consulta con Diners':'Saldo pendiente', mask:false, pill:e };
   } else {
-    cfg = { ic:'chart', name:item.name, sub:`Inversión · tasa ${item.tasa}`, amt:money(item.monto), lbl:'invertido', mask:true };
+    cfg = { ic:'chart', name:item.name, sub:`Inversión · tasa ${item.tasa}`, amt:money(item.monto), lbl:'Invertido', mask:true };
   }
-  return `<button class="pcard" data-nav="detalle-producto?id=${item.id}" aria-label="Abrir ${cfg.name}">
-    <div class="pcard__art pcard__art--ic" style="background:${ACCT_GRAD[kind]};color:#fff"><span class="mini-chip"></span>${icon(cfg.ic)}</div>
-    <div class="pcard__body">
-      <div class="pcard__name">${cfg.name}</div>
-      <div class="pcard__num">${cfg.sub}</div>
-      ${cfg.bar ? `<div class="pcard__bar"><div class="lbls"><span>${cfg.bar.l}</span><span>${cfg.bar.pct}%</span></div><div class="progress" style="height:6px"><span style="width:${cfg.bar.pct}%"></span></div></div>` : ''}
+  return `<div class="pcard-row">
+    <div class="pcard-row__art" style="background:${ACCT_GRAD[kind]}">${icon(cfg.ic)}</div>
+    <div class="pcard-row__body">
+      <div class="pcard-row__name" data-nav="detalle-producto?id=${item.id}">${cfg.name}</div>
+      <div class="pcard-row__num">${cfg.sub}</div>
+      ${cfg.pill ? `<div class="pcard-row__pill"><span class="badge ${cfg.pill.cls}">${cfg.pill.label}</span></div>` : ''}
     </div>
-    <div class="pcard__value"><div class="pcard__amt num">${(cfg.mask && State.masked) ? '••••' : cfg.amt}</div><div class="pcard__lbl">${cfg.lbl}</div></div>
-  </button>`;
+    <div class="pcard-row__value">
+      <div class="pcard-row__lbl">${cfg.lbl}</div>
+      <div class="pcard-row__amt num">${(cfg.mask && State.masked) ? '••••' : cfg.amt}</div>
+    </div>
+    <button class="btn btn--primary btn--sm" data-nav="detalle-producto?id=${item.id}">Ver detalles</button>
+  </div>`;
+}
+/* Fila de lista (sección Tarjetas de crédito): logo + nombre + estado, saldo a la derecha + CTA */
+function tarjetaListRow(c) {
+  const alDia = c.pagoTotal <= 0;
+  return `<div class="pcard-row">
+    ${miniCardArt(c)}
+    <div class="pcard-row__body">
+      <div class="pcard-row__name" data-nav="detalle-producto?id=${c.id}">${c.name}</div>
+      <div class="pcard-row__num">···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
+      ${alDia
+        ? `<div class="pcard-row__pill"><span class="badge badge--success">Tarjeta al día</span><span class="tip" data-tip="Sin saldo pendiente de pago" tabindex="0" aria-label="Sin saldo pendiente de pago">${icon('info')}</span></div>`
+        : `<div class="pcard-row__num" style="margin-top:2px">Pagar hasta ${c.pago}</div>`}
+    </div>
+    <div class="pcard-row__value">
+      <div class="pcard-row__lbl">${alDia ? 'Estado' : 'Saldo a pagar'}</div>
+      <div class="pcard-row__amt num ${alDia ? 'is-success' : ''}">${alDia ? 'Al día' : (State.masked ? '••••' : money(c.pagoTotal))}</div>
+    </div>
+    <button class="btn btn--primary btn--sm" data-nav="detalle-producto?id=${c.id}">Ver detalles</button>
+  </div>`;
+}
+function prepagoListRow(c) {
+  return `<div class="pcard-row">
+    ${miniCardArt(c)}
+    <div class="pcard-row__body">
+      <div class="pcard-row__name" data-nav="detalle-producto?id=${c.id}">${c.name}</div>
+      <div class="pcard-row__num">${c.type} · ···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
+    </div>
+    <div class="pcard-row__value">
+      <div class="pcard-row__lbl">Saldo disponible</div>
+      <div class="pcard-row__amt num">${State.masked ? '••••' : money(c.saldo)}</div>
+    </div>
+    <button class="btn btn--primary btn--sm" data-nav="detalle-producto?id=${c.id}">Ver detalles</button>
+  </div>`;
 }
 function addProductCard(route, label) {
   return `<button class="pcard" data-nav="${route}" style="border-style:dashed;background:transparent;color:var(--primary);font-weight:600;justify-content:center;min-height:80px">${icon('plus')} ${label}</button>`;
@@ -521,23 +552,75 @@ Screens.tarjetas = {
     const adicionales = DB.cards.filter(c => c.principal === false);
     const deuda = DB.cards.reduce((s,c)=>s+c.pagoTotal,0);
     view.innerHTML = `
-    ${premiumHead('Tarjetas de crédito de la empresa', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio',
+    ${premiumHead('Mira tus tarjetas', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio',
       `<button class="btn btn--primary btn--sm" data-nav="onboarding-signature">${icon('plus')} Solicitar tarjeta</button>`, 'Productos')}
     <div class="stat-tiles section mb-6">
       ${statTile('card', 'card', 'Cupo global', State.masked?'••••':money(N.cupoGlobal))}
       ${statTile('wallet', 'navy', 'Cupo disponible', State.masked?'••••':money(N.cupoGlobalDisp))}
       ${statTile('coins', 'graphite', 'Deuda en tarjetas', State.masked?'••••':money(deuda))}
     </div>
-    <h2 class="h4 mb-4">Tarjetas principales <span class="text-muted" style="font-weight:400">· ${principales.length}</span></h2>
-    <div class="pcard-grid section mb-6">${principales.map(cardRow).join('')}</div>
-    <h2 class="h4 mb-4">Tarjetas adicionales <span class="text-muted" style="font-weight:400">· ${adicionales.length}</span></h2>
-    <div class="pcard-grid section mb-6">${adicionales.map(cardRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>
-    ${(DB.prepaid && DB.prepaid.length) ? `<h2 class="h4 mb-4">Tarjetas prepago <span class="text-muted" style="font-weight:400">· ${DB.prepaid.length}</span></h2>
-    <div class="pcard-grid section mb-6">${DB.prepaid.map(prepaidRow).join('')}</div>` : ''}
-    <div class="list-card section">
-      <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2><button class="chip" onclick="toast({title:'Filtros avanzados',msg:'Rango de fechas, montos y categorías.',type:'info'})">${icon('filter')} Filtrar</button></div>
-      <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Diners Club'||m.card==='Visa blu').map(UI.txRow).join('')}</div>
+    <div class="segmented section mb-4" id="tcTabs" role="tablist">
+      <button class="is-active" data-t="principales" role="tab" aria-selected="true">Tus tarjetas</button>
+      <button data-t="adicionales" role="tab" aria-selected="false">Tus adicionales</button>
+      <button data-t="prepago" role="tab" aria-selected="false">Prepago</button>
+    </div>
+    <div id="tcBody"></div>`;
+
+    // Navegación por badges: el contenido cambia según la categoría seleccionada
+    function renderTcTab(t) {
+      const body = $('#tcBody');
+      if (t === 'principales') {
+        body.innerHTML = `<div class="pcard-list section mb-6">${principales.map(tarjetaListRow).join('')}</div>`;
+      } else if (t === 'adicionales') {
+        body.innerHTML = `
+        <div class="row between wrap mb-4" style="gap:10px">${adicionales.length > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
+        ${adicionales.length > DATA_LIMIT.adicionales
+          ? bulkExport(adicionales.length, 'tarjetas adicionales', 'tarjetas-adicionales.xlsx')
+          : `<div class="pcard-list section mb-6">${adicionales.map(tarjetaListRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>`}`;
+      } else {
+        body.innerHTML = `<div class="pcard-list section mb-6">${DB.prepaid.map(prepagoListRow).join('')}</div>`;
+      }
+    }
+    view.querySelectorAll('#tcTabs [data-t]').forEach(b => b.onclick = () => {
+      view.querySelectorAll('#tcTabs [data-t]').forEach(x => { x.classList.remove('is-active'); x.setAttribute('aria-selected','false'); });
+      b.classList.add('is-active'); b.setAttribute('aria-selected','true'); renderTcTab(b.dataset.t);
+    });
+    renderTcTab('principales');
+  }
+};
+
+/* ---------- PREPAGO (pantalla propia, accesible desde el menú Productos) ---------- */
+Screens.prepago = {
+  title: 'Prepago',
+  render(view) {
+    const PREP_RECENT = 6;
+    const total = DB.prepaid.reduce((s,c)=>s+c.saldo,0);
+    view.innerHTML = `
+    ${premiumHead('Tarjetas prepago', `${DB.prepaid.length} tarjetas · saldo total ${State.masked?'••••':money(total)}`, 'inicio',
+      `<button class="btn btn--primary btn--sm" data-nav="ofertas">${icon('plus')} Solicitar prepago</button>`, 'Productos')}
+    <div class="card card--pad section">
+      <p class="text-muted mb-4" style="font-size:13px">Busca la tarjeta prepago de tu colaborador por nombre y apellido, o por los últimos 4 dígitos.</p>
+      <div class="grid grid-2" style="gap:10px">
+        <div class="control">${icon('user')}<input id="prepName" placeholder="Nombre y apellido" autocomplete="off"></div>
+        <div class="control">${icon('card')}<input id="prepLast4" placeholder="Últimos 4 dígitos" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      </div>
+      <div class="mt-6 mb-2"><span class="text-muted" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em" id="prepLbl">Tarjetas recientes</span></div>
+      <div id="prepResults"></div>
     </div>`;
+
+    function search() {
+      const nameQ = ($('#prepName')?.value || '').trim().toLowerCase();
+      const l4Q = ($('#prepLast4')?.value || '').trim();
+      const resEl = $('#prepResults'), lbl = $('#prepLbl'); if (!resEl) return;
+      const searching = !!(nameQ || l4Q);
+      if (lbl) lbl.textContent = searching ? 'Resultados' : 'Tarjetas recientes';
+      if (!searching) { resEl.innerHTML = `<div class="pcard-list">${DB.prepaid.slice(0, PREP_RECENT).map(prepagoListRow).join('')}</div>`; return; }
+      const matches = DB.prepaid.filter(c => (!nameQ || (c.titular||'').toLowerCase().includes(nameQ)) && (!l4Q || c.last4.includes(l4Q)));
+      resEl.innerHTML = matches.length ? `<div class="pcard-list">${matches.map(prepagoListRow).join('')}</div>` : emptyState('Sin resultados', 'No encontramos una tarjeta con esos datos.', 'search');
+    }
+    search();
+    $('#prepName').oninput = search;
+    $('#prepLast4').oninput = () => { const i=$('#prepLast4'); i.value=i.value.replace(/\D/g,'').slice(0,4); search(); };
   }
 };
 
@@ -573,25 +656,26 @@ Screens.cuentas = {
     const cat = getParam('cat'); // 'cuenta' | 'credito' | 'inversion' | null (todas)
     const saldo = DB.accounts.reduce((s,a)=>s+a.saldo,0), credito = DB.credits.reduce((s,c)=>s+c.saldo,0), invertido = DB.investments.reduce((s,i)=>s+i.monto,0);
     const total = DB.accounts.length + DB.credits.length + DB.investments.length;
-    const titulo = cat==='cuenta' ? 'Cuentas' : cat==='credito' ? 'Créditos' : cat==='inversion' ? 'Inversiones' : 'Cuentas y créditos';
-    const secCuentas = `<div class="section mb-6"><h2 class="h4 mb-4">Cuentas <span class="text-muted" style="font-weight:400">· ${DB.accounts.length}</span></h2>
-      <div class="pcard-grid">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta blu+')}</div></div>`;
-    const secCreditos = `<div class="section mb-6"><h2 class="h4 mb-4">Créditos <span class="text-muted" style="font-weight:400">· ${DB.credits.length}</span></h2>
-      <div class="pcard-grid">${DB.credits.map(cr=>acctRow(cr,'credit')).join('')}</div></div>`;
-    const secInv = `<div class="section mb-6"><h2 class="h4 mb-4">Inversiones <span class="text-muted" style="font-weight:400">· ${DB.investments.length}</span></h2>
-      <div class="pcard-grid">${DB.investments.map(iv=>acctRow(iv,'investment')).join('')}</div></div>`;
+    const titulo = cat==='cuenta' ? 'Mira tus cuentas' : cat==='credito' ? 'Mira tus créditos' : cat==='inversion' ? 'Mira tus inversiones' : 'Mira tus cuentas y créditos';
+    const secCuentas = `<div class="section mb-6"><h2 class="h4 mb-4">Cuentas</h2>
+      <div class="pcard-list">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta blu+')}</div></div>`;
+    const secCreditos = `<div class="section mb-6"><h2 class="h4 mb-4">Créditos</h2>
+      <div class="pcard-list">${DB.credits.map(cr=>acctRow(cr,'credit')).join('')}</div></div>`;
+    const secInv = `<div class="section mb-6"><h2 class="h4 mb-4">Inversiones</h2>
+      <div class="pcard-list">${DB.investments.map(iv=>acctRow(iv,'investment')).join('')}</div></div>`;
     const secciones = cat==='cuenta' ? secCuentas : cat==='credito' ? secCreditos : cat==='inversion' ? secInv : (secCuentas+secCreditos+secInv);
-    const tiles = cat==='cuenta' ? statTile('wallet','navy','Saldo en cuentas',State.masked?'••••':money(saldo))
-      : cat==='credito' ? statTile('coins','graphite','Deuda en créditos',money(credito))
-      : cat==='inversion' ? statTile('chart','indigo','Total invertido',State.masked?'••••':money(invertido))
-      : statTile('wallet','navy','Saldo en cuentas',State.masked?'••••':money(saldo))+statTile('coins','graphite','Deuda en créditos',money(credito))+statTile('chart','indigo','Invertido',State.masked?'••••':money(invertido));
+    // Naming homologado en toda la plataforma (mismos términos que el Home)
+    const tiles = cat==='cuenta' ? statTile('wallet','navy','Total cuentas con nosotros',State.masked?'••••':money(saldo))
+      : cat==='credito' ? statTile('coins','graphite','Total de tus créditos',money(credito))
+      : cat==='inversion' ? statTile('chart','indigo','Total de tus inversiones',State.masked?'••••':money(invertido))
+      : statTile('wallet','navy','Total cuentas con nosotros',State.masked?'••••':money(saldo))+statTile('coins','graphite','Total de tus créditos',money(credito))+statTile('chart','indigo','Total de tus inversiones',State.masked?'••••':money(invertido));
     view.innerHTML = `
     ${premiumHead(titulo, cat ? '' : `${total} productos`, 'inicio',
       `<button class="btn btn--primary btn--sm" data-nav="ofertas">${icon('plus')} Abrir producto</button>`, 'Productos')}
     <div class="stat-tiles section mb-6">${tiles}</div>
     ${secciones}
     <div class="list-card section">
-      <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2></div>
+      <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2>${exportChip('movimientos-cuentas.xlsx')}</div>
       <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Ahorros').map(UI.txRow).join('')}</div>
     </div>`;
   }
@@ -890,19 +974,19 @@ Screens.recompensas = {
   render(view) {
     const r = DB.rewards; const pct = Math.round(r.points/(r.points+r.toNext)*100);
     view.innerHTML = `
-    <div class="page-head section"><h1>Recompensas Club</h1><p>Acumula puntos y canjéalos por lo que quieras.</p></div>
+    <div class="page-head section"><h1>Tus ClubMiles</h1><p>Acumula ClubMiles y canjéalos por lo que quieras.</p></div>
     <div class="grid dash-grid">
       <div class="grid" style="gap:20px">
         <div class="bank-card section" style="aspect-ratio:auto;background:var(--grad-sky)">
           <div class="row between"><div><div class="bank-card__type">Programa</div><div class="bank-card__brand">Club ${r.tier}</div></div>${icon('star','')}</div>
-          <div style="margin-top:20px"><div style="font-size:13px;opacity:.85">Puntos disponibles</div><div class="num" style="font-size:38px;font-weight:800">${r.points.toLocaleString('es-EC')}</div></div>
-          <div style="margin-top:16px"><div class="row between" style="font-size:12px;opacity:.9"><span>Nivel ${r.tier}</span><span>${r.toNext.toLocaleString('es-EC')} pts para ${r.next}</span></div><div class="progress mt-2" style="background:rgba(255,255,255,.3)"><span style="width:${pct}%;background:#fff"></span></div></div>
+          <div style="margin-top:20px"><div style="font-size:13px;opacity:.85">ClubMiles disponibles</div><div class="num" style="font-size:38px;font-weight:800">${r.points.toLocaleString('es-EC')}</div></div>
+          <div style="margin-top:16px"><div class="row between" style="font-size:12px;opacity:.9"><span>Nivel ${r.tier}</span><span>${r.toNext.toLocaleString('es-EC')} ClubMiles para ${r.next}</span></div><div class="progress mt-2" style="background:rgba(255,255,255,.3)"><span style="width:${pct}%;background:#fff"></span></div></div>
         </div>
-        <div class="card card--pad section"><h2 class="h4 mb-4">Catálogo de canjes</h2><div class="grid grid-2">${r.catalog.map(c=>`<button class="card card--pad card--hover" data-redeem="${c.id}" style="text-align:left"><span class="prod__ic prod__ic--card">${icon(c.icon)}</span><div class="mt-4" style="font-weight:600">${c.name}</div><div class="text-muted" style="font-size:12px">${c.sub}</div><div class="row between mt-4"><span class="badge badge--info">${c.cost.toLocaleString('es-EC')} pts</span><span class="prod__chev">${icon('chevron')}</span></div></button>`).join('')}</div></div>
+        <div class="card card--pad section"><h2 class="h4 mb-4">Catálogo de canjes</h2><div class="grid grid-2">${r.catalog.map(c=>`<button class="card card--pad card--hover" data-redeem="${c.id}" style="text-align:left"><span class="prod__ic prod__ic--card">${icon(c.icon)}</span><div class="mt-4" style="font-weight:600">${c.name}</div><div class="text-muted" style="font-size:12px">${c.sub}</div><div class="row between mt-4"><span class="badge badge--info">${c.cost.toLocaleString('es-EC')} ClubMiles</span><span class="prod__chev">${icon('chevron')}</span></div></button>`).join('')}</div></div>
       </div>
       <div class="grid" style="gap:20px">
         <div class="card card--pad section"><div class="kpi"><div class="kpi__label">${icon('cash')} Cashback acumulado</div><div class="kpi__value num" style="font-size:26px">${money(r.cashback)}</div></div><button class="btn btn--secondary btn--block mt-4">Transferir a mi cuenta</button></div>
-        <div class="card card--pad section" style="background:var(--blu-50);border-color:var(--blu-100)"><div class="row" style="gap:10px;align-items:flex-start">${icon('sparkles','')}<div><div style="font-weight:600;font-size:14px">Multiplica tus puntos</div><div class="text-muted" style="font-size:13px">Paga con tu Diners Club en supermercados y gana 3x este mes.</div></div></div></div>
+        <div class="card card--pad section" style="background:var(--blu-50);border-color:var(--blu-100)"><div class="row" style="gap:10px;align-items:flex-start">${icon('sparkles','')}<div><div style="font-weight:600;font-size:14px">Multiplica tus ClubMiles</div><div class="text-muted" style="font-size:13px">Paga con tu Diners Club en supermercados y gana 3x este mes.</div></div></div></div>
       </div>
     </div>`;
     view.querySelectorAll('[data-redeem]').forEach(b=> b.onclick=()=>{ const c=r.catalog.find(x=>x.id===b.dataset.redeem); redeemModal(c); });
@@ -911,7 +995,7 @@ Screens.recompensas = {
 function redeemModal(c) {
   const ov=openModal(`
     <div class="modal__head"><h3 class="h3">Canjear recompensa</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
-    <div class="modal__body" style="text-align:center"><div class="state__art" style="margin:0 auto 12px">${icon(c.icon)}</div><h3 class="h3">${c.name}</h3><p class="text-muted">${c.sub}</p><div class="sum-total mt-6"><span class="k">Costo</span><span class="v num">${c.cost.toLocaleString('es-EC')} pts</span></div><p class="text-muted mt-2" style="font-size:12px">Saldo tras el canje: ${(DB.rewards.points-c.cost).toLocaleString('es-EC')} pts</p></div>
+    <div class="modal__body" style="text-align:center"><div class="state__art" style="margin:0 auto 12px">${icon(c.icon)}</div><h3 class="h3">${c.name}</h3><p class="text-muted">${c.sub}</p><div class="sum-total mt-6"><span class="k">Costo</span><span class="v num">${c.cost.toLocaleString('es-EC')} ClubMiles</span></div><p class="text-muted mt-2" style="font-size:12px">Saldo tras el canje: ${(DB.rewards.points-c.cost).toLocaleString('es-EC')} ClubMiles</p></div>
     <div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="doRedeem">Confirmar canje</button></div>`);
   ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(ov));
   ov.querySelector('#doRedeem').onclick=(e)=>{ e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ closeModal(ov); successModal('¡Canje exitoso!', `Canjeaste ${c.name}. Recibirás los detalles por correo.`, 'recompensas'); },1000); };
@@ -943,19 +1027,20 @@ Screens.perfil = {
   }
 };
 
-/* ---------- RECUPERAR (estado simple) ---------- */
+/* ---------- RECUPERAR ----------
+   Este proceso ya no se completa en la web: se hace desde la app blu Empresas
+   (donde, al ingresar la cédula, primero se solicita el RUC de la empresa para
+   validar que es cliente, y luego se valida que la cédula tenga un usuario
+   asociado a ese RUC — lógica que vive del lado de la app, no de este canal). */
 Screens.recuperar = {
   title: 'Recuperar acceso', full: true,
   render(view) {
     view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><div class="auth__form" style="text-align:center">
-      <a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;margin-bottom:16px">${icon('back')} Volver</a>
-      <div style="width:64px;height:64px;border-radius:20px;background:var(--blu-50);color:var(--primary);display:grid;place-items:center;margin:8px auto 18px">${icon('phone')}</div>
+      <a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;margin-bottom:16px;justify-content:center">${icon('back')} Volver al ingreso</a>
+      <div class="state__art" style="margin:0 auto 16px;background:var(--blu-50);color:var(--primary)">${icon('phone')}</div>
       <h2 class="h2">Recupera tu acceso desde la app</h2>
-      <p class="text-muted mb-6" style="max-width:42ch;margin-left:auto;margin-right:auto">Por tu seguridad, la recuperación de usuario y contraseña se realiza únicamente en la <strong>app blu Empresas</strong>. Ábrela y elige <em>“Olvidé mi usuario o contraseña”</em>; ahí validaremos tu identidad con tu cédula y el RUC de tu empresa.</p>
-      <div class="card card--pad" style="text-align:left;background:var(--blu-50);border-color:var(--blu-100);max-width:420px;margin:0 auto">
-        <div class="row" style="gap:10px;align-items:flex-start">${icon('shield')}<div class="text-slate" style="font-size:13px">No pedimos tu cédula ni usuario en la web: así evitamos suplantación y phishing. El proceso seguro vive en la app.</div></div>
-      </div>
-      <a class="btn btn--primary btn--lg btn--block mt-6" href="#/login" style="max-width:420px;margin-left:auto;margin-right:auto">Entendido, volver al inicio</a>
+      <p class="text-muted mt-2 mb-6" style="max-width:42ch;margin-left:auto;margin-right:auto">Para tu seguridad, la recuperación de usuario y contraseña se hace desde la app blu Empresas. Ábrela en tu celular y sigue los pasos desde ahí.</p>
+      <a class="btn btn--primary btn--lg btn--block" href="#/login">Entendido, volver al ingreso</a>
     </div></section></div>`;
   }
 };
@@ -964,11 +1049,11 @@ Screens.recuperar = {
    SHELL + ROUTER
    ============================================================ */
 const NAV_GROUPS = [
-  { label:'Principal', items:[ ['inicio','home','Inicio'], ['pantallas','grid','Todas las pantallas'] ] },
-  { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
-  { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pagos','receipt','Pago de servicios'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['programados','calendar','Programados'], ['contactos','contacts','Contactos'], ['mapa','map','Mapa de agencias'] ] },
-  { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['aviso-viaje','plane','Aviso de viaje'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'], ['residencia-fiscal','shield','Residencia fiscal'], ['contactenos','headset','Contáctenos'] ] },
-  { label:'Empresa', items:[ ['caja','store','Consulta de caja'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
+  { label:'Principal', items:[ ['inicio','home','Inicio'] ] },
+  { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
+  { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['contactos','contacts','Contactos'] ] },
+  { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'], ['contactenos','headset','Contáctenos'] ] },
+  { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
   { label:'Más', items:[ ['recompensas','gift','Recompensas Club'], ['perfil','user','Mi perfil'] ] },
 ];
 const BOTTOM = [ ['inicio','home','Inicio'], ['tarjetas','card','Tarjetas'], ['transferencias','send','Enviar'], ['recompensas','gift','Club'], ['perfil','user','Perfil'] ];
@@ -992,7 +1077,7 @@ function shell(activeRoute, title) {
     <aside class="sidebar">
       <div class="brand"><div class="brand__mark">b</div><div><div class="brand__name">blu</div><div class="brand__sub">Diners Club · Empresas</div></div></div>
       <nav class="nav" aria-label="Menú principal">${nav}</nav>
-      <div class="sidebar__foot"><div class="user-chip" data-nav="perfil"><span class="avatar">${DB.user.initials}</span><div><div class="user-chip__name">${DB.user.first}</div><div class="user-chip__role">${DB.user.role}</div></div></div></div>
+      <div class="sidebar__foot"><button class="nav__item" style="color:var(--error)" data-nav="logout">${icon('logout')}<span>Cerrar sesión</span></button></div>
     </aside>
     <div class="main">
       <header class="topbar">
@@ -1000,7 +1085,6 @@ function shell(activeRoute, title) {
         <div class="topbar__title">${title}</div>
         <div class="topbar__spacer"></div>
         <div class="search">${icon('search')}<input placeholder="Buscar movimientos, servicios…" aria-label="Buscar"></div>
-        <button class="btn btn--secondary btn--sm tb-legacy" data-nav="${legacyEquivalent(activeRoute)}" title="Ver cómo es hoy esta pantalla en la app actual (repo Azure)" style="min-height:38px">${icon('clock')} <span class="tb-btn-label">Ver app actual</span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Cambiar tema" title="Modo ${State.theme==='dark'?'claro':'oscuro'}">${icon(State.theme==='dark'?'sun':'moon')}</button>
         <button class="icon-btn notif-dot" aria-label="Notificaciones" id="notifBtn">${icon('bell')}</button>
         <span class="avatar" style="cursor:pointer" data-nav="perfil">${DB.user.initials}</span>
@@ -1107,7 +1191,7 @@ setupNavDelegation();
 function notifPanel() {
   openModal(`<div class="modal__head"><h3 class="h3">Notificaciones</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
   <div class="modal__body">
-    ${[['Consumo aprobado','Supermaxi · $84,32 con Diners Club ···4417','store','Hace 2 h'],['Recordatorio de pago','Tu tarjeta vence el 02 ago','alert','Ayer'],['Puntos acreditados','+320 pts Club por tu consumo','gift','Ayer']].map(n=>`<div class="tx"><span class="tx__ic">${icon(n[2])}</span><div class="tx__main"><div class="tx__title">${n[0]}</div><div class="tx__meta">${n[1]}</div></div><span class="tx__meta">${n[3]}</span></div>`).join('')}
+    ${[['Consumo aprobado','Supermaxi · $84,32 con Diners Club ···4417','store','Hace 2 h'],['Recordatorio de pago','Tu tarjeta vence el 02 ago','alert','Ayer'],['ClubMiles acreditados','+320 ClubMiles por tu consumo','gift','Ayer']].map(n=>`<div class="tx"><span class="tx__ic">${icon(n[2])}</span><div class="tx__main"><div class="tx__title">${n[0]}</div><div class="tx__meta">${n[1]}</div></div><span class="tx__meta">${n[3]}</span></div>`).join('')}
   </div><div class="modal__foot"><button class="btn btn--secondary btn--block" data-close>Cerrar</button></div>`).querySelectorAll('[data-close]').forEach(b=>b.onclick=e=>closeModal(e.currentTarget));
 }
 

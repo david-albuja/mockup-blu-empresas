@@ -80,6 +80,23 @@
   /* Radios */
   --r-xs: 8px; --r-sm: 12px; --r-md: 16px; --r-lg: 20px; --r-xl: 28px; --r-full: 999px;
 
+  /* ─── Tokens de BOTÓN — Tribu Design System (blu-design-tokens-config, Azure)
+     Fuente: /tokens/components/button.json + /tokens/design/color.json.
+     Primario = primary.500 sólido (navy), sin gradiente; pill (radius.xxl). ─── */
+  --btn-primary-bg:      #04195d;  /* color.primary.500 */
+  --btn-primary-hover:   #36477d;  /* color.primary.400 */
+  --btn-primary-press:   #031242;  /* color.primary.700 */
+  --btn-primary-fg:      #FFFFFF;  /* color.base.white */
+  --btn-secondary-border:#031242;  /* color.primary.700 */
+  --btn-secondary-fg:    #04195d;  /* color.primary.500 */
+  --btn-secondary-hover: #E9EAF1;  /* color.secondary.100 */
+  --btn-secondary-press: #CFD2E1;  /* color.secondary.300 */
+  --btn-disabled-bg:     #E2E2E2;  /* color.neutrals.200 */
+  --btn-disabled-fg:     #545454;  /* color.neutrals.600 */
+  --btn-disabled-border: #CBCBCB;  /* color.neutrals.300 */
+  --btn-shadow:          0 6px 16px rgba(4,25,93,.24);
+  --btn-shadow-hover:    0 10px 24px rgba(4,25,93,.30);
+
   /* Elevaciones (sutiles) */
   --e-0: none;
   --e-1: 0 1px 2px rgba(16,22,51,.06), 0 1px 3px rgba(16,22,51,.04);
@@ -106,6 +123,22 @@
   --primary-strong: #6E8BFF;
   --primary-soft:   #1A2650;
   --on-primary:     #0B1020;
+
+  /* Botón DS en oscuro: el navy #04195d se pierde sobre fondos oscuros,
+     así que se usan variantes tonales más claras (regla color-dark-mode). */
+  --btn-primary-bg:      #5B7BFF;
+  --btn-primary-hover:   #6E8BFF;
+  --btn-primary-press:   #4C71FC;
+  --btn-primary-fg:      #0B1020;
+  --btn-secondary-border:#5B7BFF;
+  --btn-secondary-fg:    #9FB0FF;
+  --btn-secondary-hover: rgba(91,123,255,.14);
+  --btn-secondary-press: rgba(91,123,255,.22);
+  --btn-disabled-bg:     #232B45;
+  --btn-disabled-fg:     #6B7391;
+  --btn-disabled-border: #313A5A;
+  --btn-shadow:          0 6px 16px rgba(0,0,0,.35);
+  --btn-shadow-hover:    0 10px 24px rgba(0,0,0,.42);
 
   --success:   #34C77E; --success-bg:#0F2A1E;
   --warning:   #E7B84B; --warning-bg:#2A2410;
@@ -239,20 +272,25 @@ ul { list-style: none; padding: 0; }
   user-select: none; white-space: nowrap;
 }
 .btn svg { width: 18px; height: 18px; }
-.btn:hover { filter: brightness(1.05); box-shadow: var(--e-2); }
 .btn:active { transform: translateY(1px) scale(.99); }
-.btn--primary { background: var(--grad-brand); box-shadow: 0 6px 16px rgba(44,85,245,.28); }
-.btn--primary:hover { box-shadow: 0 10px 24px rgba(44,85,245,.34); }
-.btn--secondary { background: var(--surface); color: var(--primary); border-color: var(--blu-200); box-shadow: var(--e-1); }
-.btn--secondary:hover { background: var(--blu-50); filter: none; }
-.btn--ghost { background: transparent; color: var(--primary); }
-.btn--ghost:hover { background: var(--blu-50); filter: none; box-shadow: none; }
-.btn--danger { background: var(--error); }
+/* Primario: navy sólido del DS (color.primary.500) — estados por token, sin gradiente */
+.btn--primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); box-shadow: var(--btn-shadow); }
+.btn--primary:hover { background: var(--btn-primary-hover); box-shadow: var(--btn-shadow-hover); }
+.btn--primary:active { background: var(--btn-primary-press); }
+/* Secundario: fondo blanco, borde y texto navy del DS */
+.btn--secondary { background: var(--surface); color: var(--btn-secondary-fg); border-color: var(--btn-secondary-border); box-shadow: var(--e-1); }
+.btn--secondary:hover { background: var(--btn-secondary-hover); box-shadow: var(--e-1); }
+.btn--secondary:active { background: var(--btn-secondary-press); }
+/* Link/ghost: texto navy del DS, subrayado en hover (variante link del DS) */
+.btn--ghost { background: transparent; color: var(--btn-secondary-fg); }
+.btn--ghost:hover { background: transparent; text-decoration: underline; box-shadow: none; }
+.btn--danger { background: var(--error); color: #fff; }
+.btn--danger:hover { filter: brightness(1.05); }
 .btn--block { width: 100%; }
 .btn--sm { min-height: 38px; padding: 0 var(--s-4); font-size: var(--fs-13); }
 .btn--lg { min-height: 54px; font-size: var(--fs-16); }
 .btn:disabled, .btn[aria-disabled="true"] {
-  background: var(--bg-2); color: var(--disabled); border-color: transparent;
+  background: var(--btn-disabled-bg); color: var(--btn-disabled-fg); border-color: var(--btn-disabled-border);
   cursor: not-allowed; box-shadow: none; filter: none; transform: none;
 }
 .btn.is-loading { color: transparent; pointer-events: none; position: relative; }
@@ -261,7 +299,7 @@ ul { list-style: none; padding: 0; }
   border: 2.5px solid rgba(255,255,255,.45); border-top-color: #fff;
   animation: spin .7s linear infinite;
 }
-.btn--secondary.is-loading::after { border-color: rgba(44,85,245,.35); border-top-color: var(--primary); }
+.btn--secondary.is-loading::after { border-color: rgba(4,25,93,.35); border-top-color: var(--btn-secondary-fg); }
 
 /* Icon button */
 .icon-btn {

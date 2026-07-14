@@ -16,7 +16,9 @@ Screens['onboarding-signature'] = {
         debito: true, terminos: false,
       },
     };
-    const STEPS = ['Tu oferta','Datos','Finanzas','Personaliza','Entrega','Revisión'];
+    // Oferta PREAPROBADA a un cliente existente → flujo corto de 3 pasos
+    // (patrón de los mejores bancos: sin re-ingreso de datos ni re-evaluación).
+    const STEPS = ['Tu oferta','Personaliza','Confirma'];
 
     /* ---- Tarjeta de vista previa (se actualiza con el cupo) ---- */
     function previewCard() {
@@ -78,33 +80,8 @@ Screens['onboarding-signature'] = {
 
       1: () => `
         <div class="card card--pad">
-          <h2 class="h3 mb-2">Confirma tus datos</h2>
-          <p class="text-muted mb-6">Detectamos que ya eres cliente. Revisa que todo esté correcto.</p>
-          <div class="grid grid-2" style="gap:0 16px">
-            <div class="field"><label>Nombres y apellidos</label><div class="control">${icon('user')}<input value="${DB.user.name}" readonly></div><span class="hint">Dato verificado con tu identidad</span></div>
-            <div class="field"><label>Documento</label><div class="control">${icon('file')}<input value="Cédula 171234567-8" readonly></div></div>
-            <div class="field"><label>Correo electrónico <span class="req">*</span></label><div class="control">${icon('receipt')}<input id="obEmail" type="email" value="${S.data.email}"></div></div>
-            <div class="field"><label>Celular <span class="req">*</span></label><div class="control">${icon('phone')}<input id="obPhone" value="${S.data.phone}"></div></div>
-          </div>
-          ${infoBanner('Si algún dato de identidad es incorrecto, actualízalo en <strong>Mi perfil</strong> antes de continuar.','info')}
-        </div>`,
-
-      2: () => `
-        <div class="card card--pad">
-          <h2 class="h3 mb-2">Información financiera</h2>
-          <p class="text-muted mb-6">Nos ayuda a confirmar tu cupo preaprobado.</p>
-          <div class="field" id="fOcup"><label>Situación laboral <span class="req">*</span></label><div class="control">${icon('store')}<select id="obOcup"><option value="">Selecciona…</option><option>Empleado en relación de dependencia</option><option>Independiente / profesional</option><option>Empresario</option><option>Jubilado</option></select>${icon('chevronDown')}</div><span class="error-text">${icon('alert')} Selecciona tu situación laboral.</span></div>
-          <div class="field"><label>Empresa / actividad</label><div class="control">${icon('building')}<input id="obEmpresa" value="${S.data.empresa}" placeholder="Nombre de la empresa o actividad"></div></div>
-          <div class="grid grid-2" style="gap:0 16px">
-            <div class="field" id="fIng"><label>Ingresos mensuales <span class="req">*</span></label><div class="control">${icon('cash')}<select id="obIng"><option value="">Selecciona…</option><option>$1.000 – $2.000</option><option>$2.000 – $3.500</option><option>$3.500 – $5.000</option><option>Más de $5.000</option></select>${icon('chevronDown')}</div><span class="error-text">${icon('alert')} Indica tu rango de ingresos.</span></div>
-            <div class="field"><label>Antigüedad laboral</label><div class="control">${icon('clock')}<select id="obAnt"><option>Menos de 1 año</option><option>1 – 3 años</option><option>Más de 3 años</option></select>${icon('chevronDown')}</div></div>
-          </div>
-        </div>`,
-
-      3: () => `
-        <div class="card card--pad">
           <h2 class="h3 mb-2">Personaliza tu tarjeta</h2>
-          <p class="text-muted mb-6">Ajusta el cupo y la configuración a tu medida.</p>
+          <p class="text-muted mb-6">Ajusta el cupo, la fecha de corte y cómo quieres recibirla.</p>
           <label style="font-size:13px;font-weight:600;color:var(--slate)">Cupo solicitado</label>
           <div class="row between mb-2 mt-2"><span class="text-muted" style="font-size:13px">Mín ${money(MINL)}</span><span class="h2 num" id="obCupoVal">${money(S.data.cupo)}</span><span class="text-muted" style="font-size:13px">Máx ${money(PREAP)}</span></div>
           ${slider('obCupo',MINL,PREAP,S.data.cupo,500)}
@@ -117,34 +94,32 @@ Screens['onboarding-signature'] = {
           <div class="grid grid-3 mt-2" id="obFormato" style="gap:10px">
             ${[['digital','Digital','bolt','Úsala hoy mismo'],['fisica','Física','card','Llega a tu casa'],['ambas','Ambas','sparkles','Recomendado']].map(f=>`<label class="card card--pad" data-fmt="${f[0]}" style="cursor:pointer;text-align:center;border-color:${f[0]===S.data.formato?'var(--blu-500)':'var(--line)'};box-shadow:${f[0]===S.data.formato?'var(--ring)':'none'}"><span class="qa__ic" style="margin:0 auto">${icon(f[2])}</span><div style="font-weight:600;font-size:13px;margin-top:8px">${f[1]}</div><div class="text-muted" style="font-size:11px">${f[3]}</div></label>`).join('')}
           </div>
-        </div>`,
-
-      4: () => `
-        <div class="card card--pad">
-          <h2 class="h3 mb-2">Entrega de tu tarjeta física</h2>
-          <p class="text-muted mb-6">¿Dónde quieres recibirla?</p>
-          <div class="grid grid-2 mb-4" id="obEntrega" style="gap:10px">
+          <div class="divider"></div>
+          <label style="font-size:13px;font-weight:600;color:var(--slate)">¿Dónde quieres recibirla?</label>
+          <div class="grid grid-2 mt-2 mb-4" id="obEntrega" style="gap:10px">
             ${[['domicilio','En mi domicilio','home'],['agencia','Retirar en agencia','store']].map(e=>`<label class="card card--pad" data-ent="${e[0]}" style="cursor:pointer;border-color:${e[0]===S.data.entrega?'var(--blu-500)':'var(--line)'};box-shadow:${e[0]===S.data.entrega?'var(--ring)':'none'}"><div class="row" style="gap:10px">${icon(e[2])}<span style="font-weight:600;font-size:14px">${e[1]}</span></div></label>`).join('')}
           </div>
-          <div id="obDir">
+          <div id="obDir" style="${S.data.entrega==='agencia'?'display:none':''}">
             <div class="field" id="fCalle"><label>Dirección <span class="req">*</span></label><div class="control">${icon('map')}<input id="obCalle" value="${S.data.calle}" placeholder="Calle principal, número, secundaria"></div><span class="error-text">${icon('alert')} Ingresa tu dirección de entrega.</span></div>
             <div class="grid grid-2" style="gap:0 16px">
               <div class="field"><label>Ciudad</label><div class="control">${icon('building')}<select id="obCiudad"><option>Quito</option><option>Guayaquil</option><option>Cuenca</option><option>Ambato</option></select>${icon('chevronDown')}</div></div>
               <div class="field"><label>Referencia</label><div class="control">${icon('info')}<input id="obRef" value="${S.data.referencia}" placeholder="Ej. frente al parque"></div></div>
             </div>
           </div>
-          <div class="row" style="gap:10px;padding:12px 0;border-top:1px solid var(--line-2);margin-top:4px"><span class="prod__ic prod__ic--acct" style="width:38px;height:38px">${icon('clock')}</span><div><div style="font-weight:600;font-size:13px">Tiempo estimado de entrega</div><div class="text-muted" style="font-size:12px">3 a 5 días hábiles · tu tarjeta digital estará lista en minutos</div></div></div>
+          <div class="row" style="gap:10px;padding:12px 0;border-top:1px solid var(--line-2);margin-top:4px"><span class="prod__ic prod__ic--acct" style="width:38px;height:38px">${icon('clock')}</span><div><div style="font-weight:600;font-size:13px">Entrega en 3 a 5 días hábiles</div><div class="text-muted" style="font-size:12px">Tu tarjeta digital estará lista en minutos.</div></div></div>
         </div>`,
 
-      5: () => `
+      2: () => `
         <div class="card card--pad">
           <h2 class="h3 mb-2">Revisa y confirma</h2>
-          <p class="text-muted mb-6">Verifica los datos de tu solicitud.</p>
+          <p class="text-muted mb-6">Detectamos que ya eres cliente. Verifica tus datos de contacto y confirma.</p>
           ${kv('Titular', DB.user.name)}
-          ${kv('Correo', S.data.email)}
-          ${kv('Celular', S.data.phone)}
-          ${kv('Situación laboral', S.data.ocupacion || '—')}
-          ${kv('Ingresos', S.data.ingresos || '—')}
+          ${kv('Documento', 'Cédula 171234567-8')}
+          <div class="grid grid-2 mt-2" style="gap:0 16px">
+            <div class="field"><label>Correo electrónico <span class="req">*</span></label><div class="control">${icon('receipt')}<input id="obEmail" type="email" value="${S.data.email}"></div></div>
+            <div class="field"><label>Celular <span class="req">*</span></label><div class="control">${icon('phone')}<input id="obPhone" value="${S.data.phone}"></div></div>
+          </div>
+          <div class="divider"></div>
           ${kv('Cupo solicitado', money(S.data.cupo), 1)}
           ${kv('Fecha de corte', S.data.corte+' de cada mes')}
           ${kv('Formato', {fisica:'Física', digital:'Digital', ambas:'Física + Digital'}[S.data.formato])}
@@ -195,13 +170,14 @@ Screens['onboarding-signature'] = {
     /* ---- Navegación de pasos ---- */
     function persist() {
       const g=(id)=>{const e=$('#'+id);return e?e.value:undefined;};
-      if(S.step===1){ if(g('obEmail')!==undefined)S.data.email=g('obEmail'); if(g('obPhone')!==undefined)S.data.phone=g('obPhone'); }
-      if(S.step===2){ if(g('obOcup')!==undefined)S.data.ocupacion=g('obOcup'); if(g('obEmpresa')!==undefined)S.data.empresa=g('obEmpresa'); if(g('obIng')!==undefined)S.data.ingresos=g('obIng'); if(g('obAnt')!==undefined)S.data.antiguedad=g('obAnt'); }
-      if(S.step===4){ if(g('obCalle')!==undefined)S.data.calle=g('obCalle'); if(g('obCiudad')!==undefined)S.data.ciudad=g('obCiudad'); if(g('obRef')!==undefined)S.data.referencia=g('obRef'); }
+      // Paso 1 (Personaliza + entrega): dirección
+      if(S.step===1){ if(g('obCalle')!==undefined)S.data.calle=g('obCalle'); if(g('obCiudad')!==undefined)S.data.ciudad=g('obCiudad'); if(g('obRef')!==undefined)S.data.referencia=g('obRef'); }
+      // Paso 2 (Confirma): datos de contacto
+      if(S.step===2){ if(g('obEmail')!==undefined)S.data.email=g('obEmail'); if(g('obPhone')!==undefined)S.data.phone=g('obPhone'); }
     }
     function validate() {
-      if(S.step===2){ let ok=true; const o=$('#obOcup'), i=$('#obIng'); if(!o.value){$('#fOcup').classList.add('has-error');ok=false;} if(!i.value){$('#fIng').classList.add('has-error');ok=false;} return ok; }
-      if(S.step===4 && S.data.entrega==='domicilio'){ const c=$('#obCalle'); if(!c.value.trim()){$('#fCalle').classList.add('has-error');return false;} }
+      // Solo se valida la dirección si eligió entrega a domicilio
+      if(S.step===1 && S.data.entrega==='domicilio'){ const c=$('#obCalle'); if(c && !c.value.trim()){$('#fCalle').classList.add('has-error');return false;} }
       return true;
     }
 
@@ -218,23 +194,21 @@ Screens['onboarding-signature'] = {
     function wireStep() {
       const back=$('#obBack'); if(back) back.onclick=()=>{ persist(); S.step--; paintForm(); };
       const cancel=$('#obCancel'); if(cancel) cancel.onclick=()=> location.hash='#/ofertas';
-      // step-specific bindings
-      if(S.step===2){ ['obOcup','obIng'].forEach(id=>{const e=$('#'+id); if(e) e.onchange=()=>e.closest('.field').classList.remove('has-error');}); }
-      if(S.step===3){
+      // Paso 1: personaliza (cupo, corte, formato) + entrega
+      if(S.step===1){
         const sl=$('#obCupo'); if(sl) sl.oninput=()=>{ S.data.cupo=+sl.value; $('#obCupoVal').textContent=money(S.data.cupo); paintSide(); };
         view.querySelectorAll('#obCorte [data-corte]').forEach(b=>b.onclick=()=>{ view.querySelectorAll('#obCorte .chip').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); S.data.corte=b.dataset.corte; paintSide(); });
         view.querySelectorAll('#obFormato [data-fmt]').forEach(l=>l.onclick=()=>{ S.data.formato=l.dataset.fmt; view.querySelectorAll('#obFormato [data-fmt]').forEach(x=>{x.style.borderColor='var(--line)';x.style.boxShadow='none';}); l.style.borderColor='var(--blu-500)'; l.style.boxShadow='var(--ring)'; paintSide(); });
-      }
-      if(S.step===4){
         view.querySelectorAll('#obEntrega [data-ent]').forEach(l=>l.onclick=()=>{ S.data.entrega=l.dataset.ent; view.querySelectorAll('#obEntrega [data-ent]').forEach(x=>{x.style.borderColor='var(--line)';x.style.boxShadow='none';}); l.style.borderColor='var(--blu-500)'; l.style.boxShadow='var(--ring)'; $('#obDir').style.display = l.dataset.ent==='agencia'?'none':'block'; });
         const c=$('#obCalle'); if(c) c.oninput=()=>$('#fCalle').classList.remove('has-error');
       }
-      if(S.step===5){ const t=$('#obTerm'); if(t) t.onchange=()=>{S.data.terminos=t.checked;$('#termErr').style.display=t.checked?'none':'none';}; const d=$('#obDebito'); if(d) d.onchange=()=>S.data.debito=d.checked; }
+      // Paso 2: confirma (débito, términos)
+      if(S.step===2){ const t=$('#obTerm'); if(t) t.onchange=()=>{S.data.terminos=t.checked;$('#termErr').style.display='none';}; const d=$('#obDebito'); if(d) d.onchange=()=>S.data.debito=d.checked; }
 
       $('#obNext').onclick=(e)=>{
         persist();
         if(!validate()) return;
-        if(S.step===5){
+        if(S.step===STEPS.length-1){
           if(!$('#obTerm').checked){ $('#termErr').style.display='flex'; return; }
           // confirmación por token
           confirmSignature(S, ()=>{ S.done=true; paintDone(); });

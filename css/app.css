@@ -362,6 +362,33 @@
 .pcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--s-4); }
 @media (max-width: 560px) { .pcard-grid { grid-template-columns: 1fr; } .pcard__num { display: none; } }
 
+/* Lista de tarjetas (sección Tarjetas de crédito): filas apiladas, logo + nombre + saldo + CTA */
+.pcard-list { display: flex; flex-direction: column; gap: var(--s-4); }
+.pcard-row {
+  display: flex; align-items: center; gap: var(--s-4); width: 100%;
+  padding: var(--s-4) var(--s-5); background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: var(--r-md); box-shadow: var(--e-1);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.pcard-row:hover { border-color: var(--blu-200); box-shadow: var(--e-2); }
+.pcard-row__art { width: 48px; height: 48px; border-radius: 12px; flex: none; display: grid; place-items: center; color: #fff; }
+.pcard-row__art svg { width: 22px; height: 22px; }
+.pcard-row__body { flex: 1; min-width: 0; }
+.pcard-row__name { font-weight: 700; font-size: var(--fs-14); color: var(--primary); cursor: pointer; }
+.pcard-row__name:hover { text-decoration: underline; }
+.pcard-row__num { font-size: var(--fs-12); color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.pcard-row__pill { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.pcard-row__pill .tip svg { width: 15px; height: 15px; color: var(--muted); cursor: help; }
+.pcard-row__value { text-align: right; flex: none; }
+.pcard-row__lbl { font-size: 11px; color: var(--muted); }
+.pcard-row__amt { font-weight: 700; font-size: var(--fs-16); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.pcard-row__amt.is-success { color: var(--success); }
+@media (max-width: 640px) {
+  .pcard-row { flex-wrap: wrap; }
+  .pcard-row__value { order: 3; text-align: left; margin-top: 8px; }
+  .pcard-row > .btn { order: 4; width: 100%; margin-top: 8px; }
+}
+
 /* Resumen strip de productos */
 .prod-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line-2); border: 1px solid var(--line-2); border-radius: var(--r-md); overflow: hidden; }
 .prod-summary > div { background: var(--surface); padding: var(--s-4) var(--s-5); }
@@ -546,6 +573,19 @@
 .prod-acct__pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
 .prod-acct__pill strong { font-weight: 800; }
 
+/* Cuenta en Home: card con contenido centrado + pill de interés destacado */
+.acct-card-plain .prod-xl__body { align-items: center; text-align: center; padding-top: 18px; }
+.acct-interes {
+  display: inline-flex; align-items: center; gap: 5px; align-self: center; margin-top: 12px;
+  background: var(--success-bg); color: var(--success);
+  font-size: 13px; font-weight: 800; padding: 6px 13px; border-radius: var(--r-full);
+  box-shadow: 0 2px 8px rgba(11,127,69,.18); border: 1px solid color-mix(in srgb, var(--success) 25%, transparent);
+}
+.acct-interes svg { width: 15px; height: 15px; }
+.acct-interes strong { font-weight: 900; }
+.acct-interes--warn { background: var(--warn-bg,#FEF3E2); color: var(--warn,#B7791F); box-shadow: 0 2px 8px rgba(183,121,31,.18); border-color: color-mix(in srgb, var(--warn,#B7791F) 25%, transparent); }
+.acct-interes--danger { background: var(--error-bg); color: var(--error); box-shadow: 0 2px 8px rgba(220,38,38,.18); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
+
 /* ----- Barra de acciones compacta del detalle (patrón Revolut/N26) ----- */
 .act-bar { display: flex; gap: 4px; }
 .act-bar button {
@@ -601,3 +641,47 @@
 .otp-box { width: 46px; height: 54px; text-align: center; font: inherit; font-size: 22px; font-weight: 700; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease); }
 .otp-box:focus { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
 @media (max-width: 400px){ .otp-box { width: 40px; height: 48px; font-size: 19px; } }
+
+/* Detalle de producto: los datos viven en el cuerpo/CTA, sin duplicar sobre el arte.
+   En el Home la tarjeta SÍ muestra total a pagar + cupo disponible sobre la imagen
+   (observación de negocio); "Pagar hasta" queda fuera, en el cuerpo. */
+.dtl-card .bank-card__foot { display: none; }
+
+/* Tooltip al pasar el mouse (botones de solo ícono junto a ClubMiles) */
+.tip { position: relative; }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(-3px);
+  background: var(--ink); color: var(--surface); font-size: 11px; font-weight: 600; white-space: nowrap;
+  padding: 4px 9px; border-radius: 7px; box-shadow: var(--e-2);
+  opacity: 0; pointer-events: none; transition: opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease); z-index: 200;
+}
+.tip:hover::after, .tip:focus-visible::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce){ .tip::after { transition: opacity var(--dur-1) linear; } }
+
+/* Resumen de ventas del Home (reemplaza la posición consolidada) — estilo tarjetas
+   centradas: etiqueta arriba, monto grande, caption abajo. */
+.sales-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.sales-card {
+  display: flex; flex-direction: column; gap: 6px; text-align: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 22px 20px; cursor: pointer; width: 100%;
+  transition: box-shadow var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease), transform var(--dur-1) var(--ease);
+}
+.sales-card:hover { box-shadow: var(--e-2); border-color: var(--blu-200); }
+.sales-card:active { transform: translateY(1px); }
+.sales-card:focus-visible { box-shadow: var(--ring); outline: none; }
+.sales-card__label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.sales-card__amt { font-size: 30px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.sales-card__amt .cents { font-size: .58em; font-weight: 700; color: var(--muted); }
+.sales-card__cap { font-size: 12px; color: var(--muted); }
+/* Card destacada (Ventas del mes) + % de crecimiento enfatizado */
+.sales-card--hl { border-color: var(--blu-200); background: linear-gradient(180deg, var(--blu-50) 0%, var(--surface) 60%); text-align: left; }
+.sales-card--hl .sales-card__amt { color: var(--primary-strong); }
+.sales-card__grow {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--success-bg); color: var(--success);
+  font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: var(--r-full);
+}
+.sales-card__grow svg { width: 15px; height: 15px; }
+@media (max-width: 760px){ .sales-summary { grid-template-columns: 1fr; } .sales-card { text-align: left; } }
