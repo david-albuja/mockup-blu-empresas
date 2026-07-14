@@ -546,6 +546,19 @@
 .prod-acct__pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
 .prod-acct__pill strong { font-weight: 800; }
 
+/* Cuenta en Home: card con contenido centrado + pill de interés destacado */
+.acct-card-plain .prod-xl__body { align-items: center; text-align: center; padding-top: 18px; }
+.acct-interes {
+  display: inline-flex; align-items: center; gap: 5px; align-self: center; margin-top: 12px;
+  background: var(--success-bg); color: var(--success);
+  font-size: 13px; font-weight: 800; padding: 6px 13px; border-radius: var(--r-full);
+  box-shadow: 0 2px 8px rgba(11,127,69,.18); border: 1px solid color-mix(in srgb, var(--success) 25%, transparent);
+}
+.acct-interes svg { width: 15px; height: 15px; }
+.acct-interes strong { font-weight: 900; }
+.acct-interes--warn { background: var(--warn-bg,#FEF3E2); color: var(--warn,#B7791F); box-shadow: 0 2px 8px rgba(183,121,31,.18); border-color: color-mix(in srgb, var(--warn,#B7791F) 25%, transparent); }
+.acct-interes--danger { background: var(--error-bg); color: var(--error); box-shadow: 0 2px 8px rgba(220,38,38,.18); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
+
 /* ----- Barra de acciones compacta del detalle (patrón Revolut/N26) ----- */
 .act-bar { display: flex; gap: 4px; }
 .act-bar button {
@@ -606,6 +619,18 @@
    En el Home la tarjeta SÍ muestra total a pagar + cupo disponible sobre la imagen
    (observación de negocio); "Pagar hasta" queda fuera, en el cuerpo. */
 .dtl-card .bank-card__foot { display: none; }
+
+/* Tooltip al pasar el mouse (botones de solo ícono junto a ClubMiles) */
+.tip { position: relative; }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(-3px);
+  background: var(--ink); color: var(--surface); font-size: 11px; font-weight: 600; white-space: nowrap;
+  padding: 4px 9px; border-radius: 7px; box-shadow: var(--e-2);
+  opacity: 0; pointer-events: none; transition: opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease); z-index: 200;
+}
+.tip:hover::after, .tip:focus-visible::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce){ .tip::after { transition: opacity var(--dur-1) linear; } }
 
 /* Resumen de ventas del Home (reemplaza la posición consolidada) — estilo tarjetas
    centradas: etiqueta arriba, monto grande, caption abajo. */

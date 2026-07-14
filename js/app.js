@@ -264,61 +264,64 @@ function homeCardFace(c) {
     </div>
   </div>`;
 }
-/* Tarjeta del carrusel Home: lleva a "Mis tarjetas de crédito" (listado con badges),
-   no al detalle de esa tarjeta puntual — el detalle se abre desde ahí. */
 function homeTarjetaCard(c) {
   const badge = c.pagoTotal > 0
     ? `<span class="badge badge--warning"><span class="dot"></span>Por pagar</span>`
     : `<span class="badge badge--success">Al día</span>`;
-  return `<button class="prod-xl" data-nav="tarjetas" aria-label="Ver tus tarjetas de crédito">
+  return `<button class="prod-xl" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
     <div class="prod-xl__media">${homeCardFace(c)}</div>
     <div class="prod-xl__body">
-      <div class="row between" style="gap:8px;align-items:flex-start"><div><div class="prod-xl__name">${c.name}</div><div class="prod-xl__id num">${c.principal===false?(c.titular||'Adicional'):'Principal'}</div></div>${badge}</div>
-      <div class="prod-xl__sub">${c.pagoTotal>0?`Pagar hasta ${c.pago}`:'Sin pagos pendientes este mes'}</div>
+      <div class="row between" style="gap:8px;align-items:center">
+        <span class="prod-xl__sub" style="margin:0">${c.pagoTotal>0?`Pagar hasta ${c.pago}`:''}</span>
+        ${badge}
+      </div>
     </div>
   </button>`;
 }
 /* Cuentas, créditos e inversiones en el Home: cards homologadas (mismo shell prod-xl
    que las tarjetas), en carrusel con scroll horizontal. */
+/* Cuenta en el Home: card limpia (sin cover/fondo de color), contenido centrado,
+   con el saldo y un pill de interés del mes destacado. */
 function homeAcctRow(a) {
   const cancelada = a.estado === 'cancelada';
-  return `<button class="prod-xl" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.name}">
-    <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--cuenta" ${cancelada?'style="filter:grayscale(.5);opacity:.85"':''}>
-      <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span>${cancelada?`<span class="prod-xl__cover-rate" style="color:#fff">Cancelada</span>`:(a.tasa ? `<span class="prod-xl__cover-rate">${a.tasa}</span>` : icon('wallet'))}</div>
-      <div><div class="prod-xl__cover-name">${a.name}</div><div class="prod-xl__cover-id num">${a.num}</div></div>
-      <span class="prod-xl__cover-wm" aria-hidden="true">${icon('wallet')}</span>
-    </div></div>
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.name}">
     <div class="prod-xl__body">
-      <div class="prod-xl__amt num">${State.masked?'$ ••••••':money(a.saldo)}</div>
-      <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}${(!cancelada&&a.interesMes)?` · ${money(a.interesMes,true)} de interés este mes`:''}</div>
+      <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
+      <div class="prod-xl__name">${a.name}</div>
+      <div class="prod-xl__id num">${a.type} · ${a.num}${cancelada?' · Cancelada':''}</div>
+      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${State.masked?'$ ••••••':money(a.saldo)}</div>
+      <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}</div>
+      ${cancelada
+        ? `<div class="acct-interes acct-interes--warn">${icon('alert')} Retira tu saldo</div>`
+        : (a.interesMes ? `<div class="acct-interes">${icon('arrowUp')} <strong class="num">${money(a.interesMes, true)}</strong> este mes</div>` : '')}
     </div>
   </button>`;
 }
 function homeCreditRow(c) {
   const e = creditEstado(c.estado);
   const sub = e.consultarDiners ? `${e.pagoLabel} · consulta el total con Diners` : (c.estado==='mora' ? `${e.pagoLabel} · cuota ${money(c.cuota)}` : `Cuota ${money(c.cuota)} · vence ${c.prox}`);
-  return `<button class="prod-xl" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
-    <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--credito">
-      <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
-      <div><div class="prod-xl__cover-name">${c.name}</div><div class="prod-xl__cover-id num">${c.num}</div></div>
-      <span class="prod-xl__cover-wm" aria-hidden="true">${icon('coins')}</span>
-    </div></div>
+  const pillCls = e.cls === 'badge--success' ? '' : e.cls === 'badge--warning' ? 'acct-interes--warn' : 'acct-interes--danger';
+  const pillIcon = e.cls === 'badge--success' ? 'check' : 'alert';
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
     <div class="prod-xl__body">
-      <div class="prod-xl__amt num">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
+      <span class="prod__ic prod__ic--credit" style="margin:0 auto 8px">${icon('coins')}</span>
+      <div class="prod-xl__name">${c.name}</div>
+      <div class="prod-xl__id num">${c.num}</div>
+      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
       <div class="prod-xl__sub">Deuda a la fecha · ${sub}</div>
+      <div class="acct-interes ${pillCls}">${icon(pillIcon)} ${e.label}</div>
     </div>
   </button>`;
 }
 function homeInvestRow(iv) {
-  return `<button class="prod-xl" data-nav="detalle-producto?id=${iv.id}" aria-label="Abrir ${iv.name}">
-    <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--inversion">
-      <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span><span class="prod-xl__cover-rate">${iv.tasa}</span></div>
-      <div><div class="prod-xl__cover-name">${iv.tipo || iv.name}</div><div class="prod-xl__cover-id num">···${iv.last4}</div></div>
-      <span class="prod-xl__cover-wm" aria-hidden="true">${icon('chart')}</span>
-    </div></div>
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${iv.id}" aria-label="Abrir ${iv.name}">
     <div class="prod-xl__body">
-      <div class="prod-xl__amt num">${State.masked?'$ ••••••':money(iv.monto)}</div>
-      <div class="prod-xl__sub">${State.masked?'••••':money(iv.interesGanado||0,true)} ganado · ${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `renueva el ${iv.vence}`}</div>
+      <span class="prod__ic prod__ic--invest" style="margin:0 auto 8px">${icon('chart')}</span>
+      <div class="prod-xl__name">${iv.tipo || iv.name}</div>
+      <div class="prod-xl__id num">···${iv.last4} · ${iv.tasa}</div>
+      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${State.masked?'$ ••••••':money(iv.monto)}</div>
+      <div class="prod-xl__sub">${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `Renueva el ${iv.vence}`}</div>
+      <div class="acct-interes">${icon('arrowUp')} <strong class="num">${State.masked?'••••':money(iv.interesGanado||0,true)}</strong> ganado</div>
     </div>
   </button>`;
 }
@@ -349,45 +352,42 @@ Screens.inicio = {
               <h1 style="line-height:1.1">${DB.empresa.name}</h1>
               <button class="chip" onclick="toast({title:'Cambiar empresa',msg:'${DB.empresa.name} · ${DB.empresa.otras.join(' · ')}',type:'info'})" aria-label="Cambiar de empresa">${icon('building')} Cambiar ${icon('chevronDown')}</button>
             </div>
-            <p class="text-muted" style="margin-top:4px">Hola, ${DB.user.first} · ${DB.user.role}</p>
+            <p class="text-muted" style="margin-top:4px">Hola, ${DB.user.first}</p>
           </div>
-          <div class="row wrap" style="gap:8px">
-            <button class="btn btn--secondary btn--sm" onclick="window.open('presentacion.html','_blank','noopener')">${icon('sparkles')} Ver presentación</button>
+          <div class="row wrap" style="gap:8px;align-items:center">
+            <button class="icon-btn tip" data-nav="transferencias" data-tip="Transferir" aria-label="Transferir">${icon('send')}</button>
+            <button class="icon-btn tip" data-nav="carga-archivo" data-tip="Pago masivo" aria-label="Pago masivo">${icon('upload')}</button>
+            <button class="icon-btn tip" data-nav="aprobaciones" data-tip="Aprobaciones" aria-label="Aprobaciones" style="position:relative">${icon('approve')}<span class="badge badge--error" style="position:absolute;top:-3px;right:-3px;padding:1px 6px;font-size:10px">3</span></button>
             <button class="btn btn--secondary btn--sm" data-nav="recompensas">${icon('gift')} 48.250 ClubMiles</button>
           </div>
         </div>
       </div>
 
-      <!-- Resumen de ventas (adquirencia): encabeza el Home en lugar de la posición consolidada -->
-      <div class="sales-summary section mb-4">
-        <button class="sales-card" data-nav="caja">
-          <div class="sales-card__label">Total por cobrar</div>
-          <div class="sales-card__amt num">${bigMoney(VR.porCobrar)}</div>
-          <div class="sales-card__cap">${VR.fechaCobro}</div>
-        </button>
-        <button class="sales-card" data-nav="caja">
-          <div class="sales-card__label">Pagos recibidos</div>
-          <div class="sales-card__amt num">${bigMoney(VR.pagosRecibidos)}</div>
-          <div class="sales-card__cap">Periodo ${VR.periodo}</div>
-        </button>
-        <button class="sales-card sales-card--hl" data-nav="caja">
-          <div class="row between" style="align-items:flex-start">
-            <div class="sales-card__label">Ventas del mes</div>
-            <span class="sales-card__grow">${icon('arrowUp')} +${String(VR.crecimiento).replace('.',',')}%</span>
-          </div>
-          <div class="sales-card__amt num">${bigMoney(VR.ventasMes)}</div>
-          <div class="sales-card__cap">Periodo ${VR.periodo} · vs. mes anterior</div>
-        </button>
-      </div>
-      <div class="row section mb-6"><a class="row" data-nav="caja" style="gap:6px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer">Mira el detalle de tus ventas ${icon('chevron')}</a></div>
-
-      <!-- Accesos rápidos -->
-      <div class="card card--pad section mb-6">
-        <div class="qa-grid">
-          <button class="qa" data-nav="transferencias"><span class="qa__ic">${icon('send')}</span><span class="qa__label">Transferir</span></button>
-          <button class="qa" data-nav="carga-archivo"><span class="qa__ic">${icon('upload')}</span><span class="qa__label">Pago masivo</span></button>
-          <button class="qa" data-nav="aprobaciones" style="position:relative"><span class="qa__ic">${icon('approve')}</span><span class="qa__label">Aprobaciones</span><span class="badge badge--error" style="position:absolute;top:8px;right:12px;padding:2px 7px">3</span></button>
-          <button class="qa" data-nav="pagos"><span class="qa__ic">${icon('receipt')}</span><span class="qa__label">Pagar servicios</span></button>
+      <!-- Tus ventas (adquirencia): encabeza el Home en lugar de la posición consolidada -->
+      <div class="section mb-6">
+        <div class="row between wrap mb-4" style="gap:10px">
+          <h2 class="h3">Tus ventas</h2>
+          <a class="row" data-nav="caja" style="gap:6px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer">Mira el detalle ${icon('chevron')}</a>
+        </div>
+        <div class="sales-summary">
+          <button class="sales-card sales-card--hl" data-nav="caja">
+            <div class="row between" style="align-items:flex-start">
+              <div class="sales-card__label">Ventas del mes</div>
+              <span class="sales-card__grow">${icon('arrowUp')} +${String(VR.crecimiento).replace('.',',')}%</span>
+            </div>
+            <div class="sales-card__amt num">${bigMoney(VR.ventasMes)}</div>
+            <div class="sales-card__cap">Periodo ${VR.periodo} · vs. mes anterior</div>
+          </button>
+          <button class="sales-card" data-nav="caja">
+            <div class="sales-card__label">Pagos recibidos</div>
+            <div class="sales-card__amt num">${bigMoney(VR.pagosRecibidos)}</div>
+            <div class="sales-card__cap">Periodo ${VR.periodo}</div>
+          </button>
+          <button class="sales-card" data-nav="caja">
+            <div class="sales-card__label">Total por cobrar</div>
+            <div class="sales-card__amt num">${bigMoney(VR.porCobrar)}</div>
+            <div class="sales-card__cap">${VR.fechaCobro}</div>
+          </button>
         </div>
       </div>
 
@@ -543,15 +543,9 @@ Screens.tarjetas = {
     </div>
     <div class="segmented section mb-4" id="tcTabs" role="tablist">
       <button class="is-active" data-t="principales" role="tab" aria-selected="true">Tus tarjetas <span class="text-muted" style="font-weight:400">· ${principales.length}</span></button>
-      <button data-t="adicionales" role="tab" aria-selected="false">Tus adicionales <span class="text-muted" style="font-weight:400">· ${adicionales.length}</span></button>
+      <button data-t="adicionales" role="tab" aria-selected="false">Tus adicionales <span class="text-muted" style="font-weight:400">· ${adicionales.length + DB.prepaid.length}</span></button>
     </div>
-    <div id="tcBody"></div>
-    ${(DB.prepaid && DB.prepaid.length) ? `<h2 class="h4 mb-4">Tarjetas prepago <span class="text-muted" style="font-weight:400">· ${DB.prepaid.length}</span></h2>
-    <div class="pcard-grid section mb-6">${DB.prepaid.map(prepaidRow).join('')}</div>` : ''}
-    <div class="list-card section">
-      <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2><div class="row" style="gap:8px"><button class="chip" onclick="toast({title:'Filtros avanzados',msg:'Rango de fechas, montos y categorías.',type:'info'})">${icon('filter')} Filtrar</button>${exportChip('movimientos-tarjetas.xlsx')}</div></div>
-      <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Diners Club'||m.card==='Visa blu').map(UI.txRow).join('')}</div>
-    </div>`;
+    <div id="tcBody"></div>`;
 
     // Navegación por badges: el contenido cambia según la categoría seleccionada
     function renderTcTab(t) {
@@ -559,11 +553,12 @@ Screens.tarjetas = {
       if (t === 'principales') {
         body.innerHTML = `<div class="pcard-grid section mb-6">${principales.map(cardRow).join('')}</div>`;
       } else {
+        const total = adicionales.length + DB.prepaid.length;
         body.innerHTML = `
-        <div class="row between wrap mb-4" style="gap:10px">${adicionales.length > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
-        ${adicionales.length > DATA_LIMIT.adicionales
-          ? bulkExport(adicionales.length, 'tarjetas adicionales', 'tarjetas-adicionales.xlsx')
-          : `<div class="pcard-grid section mb-6">${adicionales.map(cardRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>`}`;
+        <div class="row between wrap mb-4" style="gap:10px">${total > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
+        ${total > DATA_LIMIT.adicionales
+          ? bulkExport(total, 'tarjetas adicionales', 'tarjetas-adicionales.xlsx')
+          : `<div class="pcard-grid section mb-6">${adicionales.map(cardRow).join('')}${DB.prepaid.map(prepaidRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>`}`;
       }
     }
     view.querySelectorAll('#tcTabs [data-t]').forEach(b => b.onclick = () => {
@@ -1036,8 +1031,8 @@ Screens.recuperar = {
 const NAV_GROUPS = [
   { label:'Principal', items:[ ['inicio','home','Inicio'] ] },
   { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
-  { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pagos','receipt','Pago de servicios'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['programados','calendar','Programados'], ['contactos','contacts','Contactos'], ['mapa','map','Mapa de agencias'] ] },
-  { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['aviso-viaje','plane','Aviso de viaje'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'], ['residencia-fiscal','shield','Residencia fiscal'], ['contactenos','headset','Contáctenos'] ] },
+  { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['contactos','contacts','Contactos'] ] },
+  { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'], ['contactenos','headset','Contáctenos'] ] },
   { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
   { label:'Más', items:[ ['recompensas','gift','Recompensas Club'], ['perfil','user','Mi perfil'] ] },
 ];
@@ -1062,7 +1057,7 @@ function shell(activeRoute, title) {
     <aside class="sidebar">
       <div class="brand"><div class="brand__mark">b</div><div><div class="brand__name">blu</div><div class="brand__sub">Diners Club · Empresas</div></div></div>
       <nav class="nav" aria-label="Menú principal">${nav}</nav>
-      <div class="sidebar__foot"><div class="user-chip" data-nav="perfil"><span class="avatar">${DB.user.initials}</span><div><div class="user-chip__name">${DB.user.first}</div><div class="user-chip__role">${DB.user.role}</div></div></div></div>
+      <div class="sidebar__foot"><button class="nav__item" style="color:var(--error)" data-nav="logout">${icon('logout')}<span>Cerrar sesión</span></button></div>
     </aside>
     <div class="main">
       <header class="topbar">
