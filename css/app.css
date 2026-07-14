@@ -362,6 +362,33 @@
 .pcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--s-4); }
 @media (max-width: 560px) { .pcard-grid { grid-template-columns: 1fr; } .pcard__num { display: none; } }
 
+/* Lista de tarjetas (sección Tarjetas de crédito): filas apiladas, logo + nombre + saldo + CTA */
+.pcard-list { display: flex; flex-direction: column; gap: var(--s-4); }
+.pcard-row {
+  display: flex; align-items: center; gap: var(--s-4); width: 100%;
+  padding: var(--s-4) var(--s-5); background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: var(--r-md); box-shadow: var(--e-1);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.pcard-row:hover { border-color: var(--blu-200); box-shadow: var(--e-2); }
+.pcard-row__art { width: 48px; height: 48px; border-radius: 12px; flex: none; display: grid; place-items: center; color: #fff; }
+.pcard-row__art svg { width: 22px; height: 22px; }
+.pcard-row__body { flex: 1; min-width: 0; }
+.pcard-row__name { font-weight: 700; font-size: var(--fs-14); color: var(--primary); cursor: pointer; }
+.pcard-row__name:hover { text-decoration: underline; }
+.pcard-row__num { font-size: var(--fs-12); color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.pcard-row__pill { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.pcard-row__pill .tip svg { width: 15px; height: 15px; color: var(--muted); cursor: help; }
+.pcard-row__value { text-align: right; flex: none; }
+.pcard-row__lbl { font-size: 11px; color: var(--muted); }
+.pcard-row__amt { font-weight: 700; font-size: var(--fs-16); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.pcard-row__amt.is-success { color: var(--success); }
+@media (max-width: 640px) {
+  .pcard-row { flex-wrap: wrap; }
+  .pcard-row__value { order: 3; text-align: left; margin-top: 8px; }
+  .pcard-row > .btn { order: 4; width: 100%; margin-top: 8px; }
+}
+
 /* Resumen strip de productos */
 .prod-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line-2); border: 1px solid var(--line-2); border-radius: var(--r-md); overflow: hidden; }
 .prod-summary > div { background: var(--surface); padding: var(--s-4) var(--s-5); }

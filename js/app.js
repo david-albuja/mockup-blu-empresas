@@ -392,12 +392,17 @@ Screens.inicio = {
       </div>
 
       <!-- Tus productos con nosotros: solo se listan las categorías que el usuario tiene -->
-      <div class="card card--pad section mb-6">
-        <div class="mb-4"><div class="scroll-x" style="max-width:100%;padding-bottom:0"><div class="prod-tabs prod-tabs--inline" id="prodTabs" role="tablist">
-          ${prodTabs.map((t,i)=>`<button class="${i===0?'is-active':''}" data-c="${t[0]}" role="tab" aria-selected="${i===0?'true':'false'}">${t[1]}</button>`).join('')}
-        </div></div></div>
-        <div id="prodXlHost"></div>
-        <div id="prodXlExtra" class="mt-4"></div>
+      <div class="section mb-6">
+        <div class="row between wrap mb-4" style="gap:10px">
+          <h2 class="h3">Tus Productos</h2>
+        </div>
+        <div class="card card--pad">
+          <div class="mb-4"><div class="scroll-x" style="max-width:100%;padding-bottom:0"><div class="prod-tabs prod-tabs--inline" id="prodTabs" role="tablist">
+            ${prodTabs.map((t,i)=>`<button class="${i===0?'is-active':''}" data-c="${t[0]}" role="tab" aria-selected="${i===0?'true':'false'}">${t[1]}</button>`).join('')}
+          </div></div></div>
+          <div id="prodXlHost"></div>
+          <div id="prodXlExtra" class="mt-4"></div>
+        </div>
       </div>`;
 
       // "Ver todo" consistente: cada categoría lleva a ver todos los productos de ESA categoría
@@ -472,29 +477,6 @@ const CARD_GRAD = {
 function miniCardArt(c) {
   return `<div class="pcard__art" style="background:${CARD_GRAD[c.variant] || CARD_GRAD.diners}"><span class="mini-chip"></span><span class="mini-brand">blu</span></div>`;
 }
-function cardRow(c) {
-  const alDia = c.pagoTotal <= 0;
-  return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
-    ${miniCardArt(c)}
-    <div class="pcard__body">
-      <div class="pcard__name">${c.name}</div>
-      <div class="pcard__num">${c.principal===false ? 'Adicional' : 'Principal'} · ···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
-      <div class="pcard__num" style="margin-top:2px">${alDia ? 'Sin pago pendiente' : `Mínimo ${money(c.pagoMin)} · pagar hasta ${c.pago}`}</div>
-    </div>
-    <div class="pcard__value"><div class="pcard__amt num">${alDia ? 'Al día' : (State.masked ? '••••' : money(c.pagoTotal))}</div><div class="pcard__lbl">${alDia ? '' : 'total a pagar'}</div></div>
-  </button>`;
-}
-function prepaidRow(c) {
-  return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
-    ${miniCardArt(c)}
-    <div class="pcard__body">
-      <div class="pcard__name">${c.name}${c.titular?` · ${c.titular}`:''}</div>
-      <div class="pcard__num">${c.type} · ···${c.last4}</div>
-      <div class="pcard__num" style="margin-top:2px">Recargable · sin cupo de crédito</div>
-    </div>
-    <div class="pcard__value"><div class="pcard__amt num">${State.masked ? '••••' : money(c.saldo)}</div><div class="pcard__lbl">saldo</div></div>
-  </button>`;
-}
 const ACCT_GRAD = {
   account:    'linear-gradient(135deg, #14213F 0%, #26365E 55%, #3A4F80 120%)',
   credit:     'linear-gradient(135deg, #24272F 0%, #3A3F4C 55%, #545B6C 120%)',
@@ -504,23 +486,59 @@ function acctRow(item, kind) {
   let cfg;
   if (kind === 'account') {
     const cancelada = item.estado === 'cancelada';
-    cfg = { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'saldo por retirar':'saldo', mask:true };
+    cfg = { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'Saldo por retirar':'Saldo disponible', mask:true };
   } else if (kind === 'credit') {
     const e = creditEstado(item.estado);
-    cfg = { ic:'coins', name:item.name, sub:`Crédito · ${item.num} · ${e.label}`, amt:e.consultarDiners?'Consultar':money(item.saldo), lbl:e.consultarDiners?'con Diners':'pendiente', mask:false,
-            bar:(item.estado==='al-dia') ? {pct:37, l:`Cuota ${item.plazo}`} : null };
+    cfg = { ic:'coins', name:item.name, sub:`Crédito · ${item.num}`, amt:e.consultarDiners?'Consultar':money(item.saldo), lbl:e.consultarDiners?'Consulta con Diners':'Saldo pendiente', mask:false, pill:e };
   } else {
-    cfg = { ic:'chart', name:item.name, sub:`Inversión · tasa ${item.tasa}`, amt:money(item.monto), lbl:'invertido', mask:true };
+    cfg = { ic:'chart', name:item.name, sub:`Inversión · tasa ${item.tasa}`, amt:money(item.monto), lbl:'Invertido', mask:true };
   }
-  return `<button class="pcard" data-nav="detalle-producto?id=${item.id}" aria-label="Abrir ${cfg.name}">
-    <div class="pcard__art pcard__art--ic" style="background:${ACCT_GRAD[kind]};color:#fff"><span class="mini-chip"></span>${icon(cfg.ic)}</div>
-    <div class="pcard__body">
-      <div class="pcard__name">${cfg.name}</div>
-      <div class="pcard__num">${cfg.sub}</div>
-      ${cfg.bar ? `<div class="pcard__bar"><div class="lbls"><span>${cfg.bar.l}</span><span>${cfg.bar.pct}%</span></div><div class="progress" style="height:6px"><span style="width:${cfg.bar.pct}%"></span></div></div>` : ''}
+  return `<div class="pcard-row">
+    <div class="pcard-row__art" style="background:${ACCT_GRAD[kind]}">${icon(cfg.ic)}</div>
+    <div class="pcard-row__body">
+      <div class="pcard-row__name" data-nav="detalle-producto?id=${item.id}">${cfg.name}</div>
+      <div class="pcard-row__num">${cfg.sub}</div>
+      ${cfg.pill ? `<div class="pcard-row__pill"><span class="badge ${cfg.pill.cls}">${cfg.pill.label}</span></div>` : ''}
     </div>
-    <div class="pcard__value"><div class="pcard__amt num">${(cfg.mask && State.masked) ? '••••' : cfg.amt}</div><div class="pcard__lbl">${cfg.lbl}</div></div>
-  </button>`;
+    <div class="pcard-row__value">
+      <div class="pcard-row__lbl">${cfg.lbl}</div>
+      <div class="pcard-row__amt num">${(cfg.mask && State.masked) ? '••••' : cfg.amt}</div>
+    </div>
+    <button class="btn btn--primary btn--sm" data-nav="detalle-producto?id=${item.id}">Ver detalles</button>
+  </div>`;
+}
+/* Fila de lista (sección Tarjetas de crédito): logo + nombre + estado, saldo a la derecha + CTA */
+function tarjetaListRow(c) {
+  const alDia = c.pagoTotal <= 0;
+  return `<div class="pcard-row">
+    ${miniCardArt(c)}
+    <div class="pcard-row__body">
+      <div class="pcard-row__name" data-nav="detalle-producto?id=${c.id}">${c.name}</div>
+      <div class="pcard-row__num">···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
+      ${alDia
+        ? `<div class="pcard-row__pill"><span class="badge badge--success">Tarjeta al día</span><span class="tip" data-tip="Sin saldo pendiente de pago" tabindex="0" aria-label="Sin saldo pendiente de pago">${icon('info')}</span></div>`
+        : `<div class="pcard-row__num" style="margin-top:2px">Pagar hasta ${c.pago}</div>`}
+    </div>
+    <div class="pcard-row__value">
+      <div class="pcard-row__lbl">${alDia ? 'Estado' : 'Saldo a pagar'}</div>
+      <div class="pcard-row__amt num ${alDia ? 'is-success' : ''}">${alDia ? 'Al día' : (State.masked ? '••••' : money(c.pagoTotal))}</div>
+    </div>
+    <button class="btn btn--primary btn--sm" data-nav="detalle-producto?id=${c.id}">Ver detalles</button>
+  </div>`;
+}
+function prepagoListRow(c) {
+  return `<div class="pcard-row">
+    ${miniCardArt(c)}
+    <div class="pcard-row__body">
+      <div class="pcard-row__name" data-nav="detalle-producto?id=${c.id}">${c.name}</div>
+      <div class="pcard-row__num">${c.type} · ···${c.last4}${c.titular?` · ${c.titular}`:''}</div>
+    </div>
+    <div class="pcard-row__value">
+      <div class="pcard-row__lbl">Saldo disponible</div>
+      <div class="pcard-row__amt num">${State.masked ? '••••' : money(c.saldo)}</div>
+    </div>
+    <button class="btn btn--primary btn--sm" data-nav="detalle-producto?id=${c.id}">Ver detalles</button>
+  </div>`;
 }
 function addProductCard(route, label) {
   return `<button class="pcard" data-nav="${route}" style="border-style:dashed;background:transparent;color:var(--primary);font-weight:600;justify-content:center;min-height:80px">${icon('plus')} ${label}</button>`;
@@ -542,8 +560,9 @@ Screens.tarjetas = {
       ${statTile('coins', 'graphite', 'Deuda en tarjetas', State.masked?'••••':money(deuda))}
     </div>
     <div class="segmented section mb-4" id="tcTabs" role="tablist">
-      <button class="is-active" data-t="principales" role="tab" aria-selected="true">Tus tarjetas <span class="text-muted" style="font-weight:400">· ${principales.length}</span></button>
-      <button data-t="adicionales" role="tab" aria-selected="false">Tus adicionales <span class="text-muted" style="font-weight:400">· ${adicionales.length + DB.prepaid.length}</span></button>
+      <button class="is-active" data-t="principales" role="tab" aria-selected="true">Tus tarjetas</button>
+      <button data-t="adicionales" role="tab" aria-selected="false">Tus adicionales</button>
+      <button data-t="prepago" role="tab" aria-selected="false">Prepago</button>
     </div>
     <div id="tcBody"></div>`;
 
@@ -551,14 +570,15 @@ Screens.tarjetas = {
     function renderTcTab(t) {
       const body = $('#tcBody');
       if (t === 'principales') {
-        body.innerHTML = `<div class="pcard-grid section mb-6">${principales.map(cardRow).join('')}</div>`;
-      } else {
-        const total = adicionales.length + DB.prepaid.length;
+        body.innerHTML = `<div class="pcard-list section mb-6">${principales.map(tarjetaListRow).join('')}</div>`;
+      } else if (t === 'adicionales') {
         body.innerHTML = `
-        <div class="row between wrap mb-4" style="gap:10px">${total > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
-        ${total > DATA_LIMIT.adicionales
-          ? bulkExport(total, 'tarjetas adicionales', 'tarjetas-adicionales.xlsx')
-          : `<div class="pcard-grid section mb-6">${adicionales.map(cardRow).join('')}${DB.prepaid.map(prepaidRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>`}`;
+        <div class="row between wrap mb-4" style="gap:10px">${adicionales.length > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
+        ${adicionales.length > DATA_LIMIT.adicionales
+          ? bulkExport(adicionales.length, 'tarjetas adicionales', 'tarjetas-adicionales.xlsx')
+          : `<div class="pcard-list section mb-6">${adicionales.map(tarjetaListRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>`}`;
+      } else {
+        body.innerHTML = `<div class="pcard-list section mb-6">${DB.prepaid.map(prepagoListRow).join('')}</div>`;
       }
     }
     view.querySelectorAll('#tcTabs [data-t]').forEach(b => b.onclick = () => {
@@ -584,7 +604,7 @@ Screens.prepago = {
         <div class="control">${icon('user')}<input id="prepName" placeholder="Nombre y apellido" autocomplete="off"></div>
         <div class="control">${icon('card')}<input id="prepLast4" placeholder="Últimos 4 dígitos" inputmode="numeric" maxlength="4" autocomplete="off"></div>
       </div>
-      <div class="row between mt-6 mb-2"><span class="text-muted" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em" id="prepLbl">Tarjetas recientes</span><span class="text-muted" style="font-size:12px">${DB.prepaid.length} en total</span></div>
+      <div class="mt-6 mb-2"><span class="text-muted" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em" id="prepLbl">Tarjetas recientes</span></div>
       <div id="prepResults"></div>
     </div>`;
 
@@ -594,9 +614,9 @@ Screens.prepago = {
       const resEl = $('#prepResults'), lbl = $('#prepLbl'); if (!resEl) return;
       const searching = !!(nameQ || l4Q);
       if (lbl) lbl.textContent = searching ? 'Resultados' : 'Tarjetas recientes';
-      if (!searching) { resEl.innerHTML = `<div class="pcard-grid">${DB.prepaid.slice(0, PREP_RECENT).map(prepaidRow).join('')}</div>`; return; }
+      if (!searching) { resEl.innerHTML = `<div class="pcard-list">${DB.prepaid.slice(0, PREP_RECENT).map(prepagoListRow).join('')}</div>`; return; }
       const matches = DB.prepaid.filter(c => (!nameQ || (c.titular||'').toLowerCase().includes(nameQ)) && (!l4Q || c.last4.includes(l4Q)));
-      resEl.innerHTML = matches.length ? `<div class="pcard-grid">${matches.map(prepaidRow).join('')}</div>` : emptyState('Sin resultados', 'No encontramos una tarjeta con esos datos.', 'search');
+      resEl.innerHTML = matches.length ? `<div class="pcard-list">${matches.map(prepagoListRow).join('')}</div>` : emptyState('Sin resultados', 'No encontramos una tarjeta con esos datos.', 'search');
     }
     search();
     $('#prepName').oninput = search;
@@ -637,12 +657,12 @@ Screens.cuentas = {
     const saldo = DB.accounts.reduce((s,a)=>s+a.saldo,0), credito = DB.credits.reduce((s,c)=>s+c.saldo,0), invertido = DB.investments.reduce((s,i)=>s+i.monto,0);
     const total = DB.accounts.length + DB.credits.length + DB.investments.length;
     const titulo = cat==='cuenta' ? 'Mira tus cuentas' : cat==='credito' ? 'Mira tus créditos' : cat==='inversion' ? 'Mira tus inversiones' : 'Mira tus cuentas y créditos';
-    const secCuentas = `<div class="section mb-6"><h2 class="h4 mb-4">Cuentas <span class="text-muted" style="font-weight:400">· ${DB.accounts.length}</span></h2>
-      <div class="pcard-grid">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta blu+')}</div></div>`;
-    const secCreditos = `<div class="section mb-6"><h2 class="h4 mb-4">Créditos <span class="text-muted" style="font-weight:400">· ${DB.credits.length}</span></h2>
-      <div class="pcard-grid">${DB.credits.map(cr=>acctRow(cr,'credit')).join('')}</div></div>`;
-    const secInv = `<div class="section mb-6"><h2 class="h4 mb-4">Inversiones <span class="text-muted" style="font-weight:400">· ${DB.investments.length}</span></h2>
-      <div class="pcard-grid">${DB.investments.map(iv=>acctRow(iv,'investment')).join('')}</div></div>`;
+    const secCuentas = `<div class="section mb-6"><h2 class="h4 mb-4">Cuentas</h2>
+      <div class="pcard-list">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta blu+')}</div></div>`;
+    const secCreditos = `<div class="section mb-6"><h2 class="h4 mb-4">Créditos</h2>
+      <div class="pcard-list">${DB.credits.map(cr=>acctRow(cr,'credit')).join('')}</div></div>`;
+    const secInv = `<div class="section mb-6"><h2 class="h4 mb-4">Inversiones</h2>
+      <div class="pcard-list">${DB.investments.map(iv=>acctRow(iv,'investment')).join('')}</div></div>`;
     const secciones = cat==='cuenta' ? secCuentas : cat==='credito' ? secCreditos : cat==='inversion' ? secInv : (secCuentas+secCreditos+secInv);
     // Naming homologado en toda la plataforma (mismos términos que el Home)
     const tiles = cat==='cuenta' ? statTile('wallet','navy','Total cuentas con nosotros',State.masked?'••••':money(saldo))
