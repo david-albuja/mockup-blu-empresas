@@ -41,9 +41,9 @@ function drawArea(host, data) {
   </svg>`;
 }
 
-/* Consulta de caja — dashboard de comercios / adquirencia */
+/* Ventas — dashboard de comercios / adquirencia (antes "Consulta de caja") */
 Screens['caja'] = {
-  title: 'Consulta de caja',
+  title: 'Ventas',
   render(view) {
     const M = MERCHANT, k = M.kpis;
     let range = 'hoy', tab = 'resumen', sortDir = 1, sortKey = 0, filterState = 'all', query = '';
@@ -52,7 +52,7 @@ Screens['caja'] = {
     <div class="page-head section">
       <a class="row" style="gap:6px;color:var(--primary);font-weight:600;font-size:13px;margin-bottom:10px;cursor:pointer" data-nav="inicio">${icon('back')} Volver</a>
       <div class="row between wrap" style="gap:12px">
-        <div><p class="eyebrow">Comercios · Adquirencia</p><h1>Consulta de caja</h1></div>
+        <div><p class="eyebrow">Comercios · Adquirencia</p><h1>Tus ventas</h1><p class="text-muted" style="font-size:13px;margin-top:4px">Para ver la información al día, primero haz el cierre de tu POS · Actualizado hasta hoy, 14:20</p></div>
         <div class="row wrap" style="gap:8px">
           <div class="control" style="height:42px;width:210px;padding:0 12px">${icon('store')}<select id="cjBranch" aria-label="Local" style="font-weight:600;font-size:13px">${M.branches.map(b=>`<option>${b}</option>`).join('')}</select>${icon('chevronDown')}</div>
           <button class="btn btn--secondary btn--sm" onclick="toast({title:'Exportando',msg:'Se descargará un CSV con las transacciones.',type:'info'})">${icon('download')} Exportar</button>
@@ -72,11 +72,11 @@ Screens['caja'] = {
     /* ---- Tab Resumen ---- */
     function resumen() {
       const kpis = [
-        ['Ventas del día', fmt(k.ventas), 'arrowUp', `+${k.deltaVentas}% vs. ayer`, 'success'],
-        ['Transacciones', k.tx, 'receipt', `+${k.deltaTx} vs. ayer`, 'info'],
+        ['Ventas de hoy', fmt(k.ventas), 'arrowUp', `+${k.deltaVentas}% vs. ayer`, 'success'],
+        ['Ventas realizadas', k.tx, 'receipt', `+${k.deltaTx} vs. ayer`, 'info'],
         ['Ticket promedio', fmt(k.ticket), 'chart', 'por venta', 'muted'],
         ['Comisión', fmt(k.comision), 'coins', '1,5% + IVA', 'muted'],
-        ['Neto a liquidar', fmt(k.neto), 'wallet', 'depósito 03 jul', 'success'],
+        ['Pendiente de pago', fmt(k.neto), 'wallet', 'se deposita el 03 jul', 'success'],
       ];
       return `
       <div class="grid section mb-6" style="grid-template-columns:repeat(5,1fr);gap:16px">
@@ -97,9 +97,9 @@ Screens['caja'] = {
         </div>
         <div class="grid" style="gap:20px">
           <div class="card card--pad section" style="background:var(--grad-card);color:#fff">
-            <div class="row between"><span style="font-size:13px;opacity:.9">Próxima liquidación</span>${icon('wallet')}</div>
+            <div class="row between"><span style="font-size:13px;opacity:.9">Pendiente de pago</span>${icon('wallet')}</div>
             <div class="num" style="font-size:30px;font-weight:800;margin-top:8px">${fmt(M.settlement.amount)}</div>
-            <div style="font-size:13px;opacity:.9">Depósito el ${M.settlement.next}</div>
+            <div style="font-size:13px;opacity:.9">Te lo depositamos el ${M.settlement.next}</div>
             <div class="divider" style="background:rgba(255,255,255,.25)"></div>
             <div class="row between" style="font-size:13px;opacity:.95"><span>Cuenta destino</span><span>${M.settlement.account}</span></div>
             <div class="row between mt-2" style="font-size:13px;opacity:.95"><span>Lote actual</span><span class="num">${M.settlement.batch}</span></div>

@@ -18,18 +18,18 @@ const DB = {
   // las tarjetas principales de la empresa de las adicionales.
   cards: [
     { id: 'diners', name: 'Diners Club', type: 'Internacional', variant: 'diners', principal: true, last4: '4417', number: '5412 •••• •••• 4417', pago: '02 ago', pagoMin: 210.40, pagoTotal: 2340.18, status: 'active' },
-    { id: 'black', name: 'Mastercard Black', type: 'World Elite', variant: 'black', principal: true, last4: '2051', number: '5301 •••• •••• 2051', pago: '05 ago', pagoMin: 480.00, pagoTotal: 5800.00, status: 'active' },
+    { id: 'black', name: 'Mastercard Black', type: 'World Elite', variant: 'black', principal: true, last4: '2051', number: '5301 •••• •••• 2051', pago: '05 ago', pagoMin: 480.00, pagoTotal: 5800.00, status: 'active', movTotal: 247 },
     { id: 'visa', name: 'Visa blu', type: 'Adicional · Signature', variant: 'indigo', principal: false, titular: 'Carla Robles', last4: '8890', number: '4023 •••• •••• 8890', pago: '07 ago', pagoMin: 0, pagoTotal: 0, status: 'active' },
     { id: 'platinum', name: 'Diners Club Platinum', type: 'Adicional · Rewards', variant: 'teal', principal: false, titular: 'Luis Robles', last4: '3376', number: '5488 •••• •••• 3376', pago: '12 ago', pagoMin: 88.00, pagoTotal: 879.50, status: 'active' },
     { id: 'diners-add', name: 'Diners Club', type: 'Adicional', variant: 'diners', principal: false, titular: 'Andrés Robles', last4: '5521', number: '5412 •••• •••• 5521', pago: '02 ago', pagoMin: 20.00, pagoTotal: 160.00, status: 'active' },
   ],
   // Tarjetas prepago (producto aparte, sin cupo de crédito — funciona con saldo)
   prepaid: [
-    { id: 'prep1', name: 'blu Prepago', type: 'Prepago empresarial', variant: 'indigo', last4: '7742', number: '4211 •••• •••• 7742', saldo: 1250.00, status: 'active' },
-    { id: 'prep2', name: 'blu Prepago Viáticos', type: 'Prepago · Ventas', variant: 'teal', last4: '3388', number: '4211 •••• •••• 3388', saldo: 480.30, status: 'active' },
+    { id: 'prep1', name: 'blu Prepago', type: 'Prepago empresarial', variant: 'indigo', titular: 'Mario Salazar', last4: '7742', number: '4211 •••• •••• 7742', saldo: 1250.00, status: 'active' },
+    { id: 'prep2', name: 'blu Prepago Viáticos', type: 'Prepago · Ventas', variant: 'teal', titular: 'Diana Cevallos', last4: '3388', number: '4211 •••• •••• 3388', saldo: 480.30, status: 'active' },
   ],
   accounts: [
-    { id: 'ahorro', name: 'Cuenta de Ahorros blu', type: 'Ahorros', num: '••• 2205', saldo: 12580.40, disponible: 12580.40, tasa: '4,5% anual', interesMes: 46.32, interesAnio: 512.80 },
+    { id: 'ahorro', name: 'Cuenta de Ahorros blu', type: 'Ahorros', num: '••• 2205', saldo: 12580.40, disponible: 12580.40, tasa: '4,5% anual', interesMes: 46.32, interesAnio: 512.80, movTotal: 312 },
     { id: 'corriente', name: 'Cuenta Corriente', type: 'Corriente', num: '••• 7781', saldo: 3099.60, disponible: 3099.60 },
     { id: 'programado', name: 'Ahorro Programado', type: 'Meta de ahorro', num: '••• 6640', saldo: 2400.00, disponible: 2400.00, tasa: '5,25% anual', interesMes: 10.44, interesAnio: 118.20 },
     { id: 'usd', name: 'Cuenta en Dólares', type: 'Ahorros USD', num: '••• 9014', saldo: 5820.75, disponible: 5820.75, tasa: '3,1% anual', interesMes: 14.87, interesAnio: 162.40 },
@@ -45,9 +45,9 @@ const DB = {
     { id: 'comercial', name: 'Crédito Comercial', num: '••• 5566', saldo: 15600.00, cuota: 0, plazo: '—', prox: 'Inmediato', estado: 'judicial' },
   ],
   investments: [
-    { id: 'dpf', name: 'Depósito a Plazo Fijo', monto: 5000, tasa: '7.25%', vence: '12 dic 2026' },
-    { id: 'dpf2', name: 'Depósito a Plazo 90 días', monto: 8000, tasa: '6.80%', vence: '20 sep 2026' },
-    { id: 'fondo', name: 'Fondo de Inversión blu', monto: 3200, tasa: '6.10%', vence: 'Sin plazo fijo' },
+    { id: 'dpf', name: 'Depósito a Plazo Fijo', tipo: 'Depósito a plazo fijo', last4: '3391', monto: 5000, tasa: '7.25%', interesGanado: 181.25, vence: '12 dic 2026' },
+    { id: 'dpf2', name: 'Depósito a Plazo 90 días', tipo: 'Depósito a plazo fijo', last4: '7204', monto: 8000, tasa: '6.80%', interesGanado: 136.00, vence: '20 sep 2026' },
+    { id: 'fondo', name: 'Fondo de Inversión blu', tipo: 'Fondo de inversión', last4: '5518', monto: 3200, tasa: '6.10%', interesGanado: 48.80, vence: 'Sin plazo fijo' },
   ],
 
   movements: [

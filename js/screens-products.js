@@ -9,12 +9,17 @@ Screens['detalle-producto'] = {
     const { type, item: p } = found;
     const usedPct = p.cupo ? Math.round((p.usado||0)/p.cupo*100) : 0;
     const movsBy = (name) => { const f = DB.movements.filter(m=>m.card===name); return (f.length?f:DB.movements.slice(0,5)); };
-    /* Movimientos a lo ancho, al final de la pantalla */
-    const movsSection = (name, tabs='') => `
-      <div class="list-card section mt-6">
-        <div class="list-card__head"><h2 class="h4">Movimientos</h2>${tabs}</div>
+    /* Movimientos a lo ancho, al final. Si el total supera el umbral, se ofrece Excel. */
+    const movsSection = (name, tabs='', total=null) => {
+      const n = (total == null) ? movsBy(name).length : total;
+      if (n > DATA_LIMIT.movimientos) {
+        return `<div class="section mt-6"><h2 class="h4 mb-4">Movimientos</h2>${bulkExport(n,'movimientos','movimientos.xlsx')}</div>`;
+      }
+      return `<div class="list-card section mt-6">
+        <div class="list-card__head"><h2 class="h4">Movimientos</h2><div class="row" style="gap:8px">${tabs}${exportChip('movimientos.xlsx')}</div></div>
         <div class="list-card__body" style="columns:340px 2;column-gap:40px">${movsBy(name).map(UI.txRow).join('')}</div>
       </div>`;
+    };
     /* Barra de acciones compacta (patrón Revolut/N26): íconos circulares en fila */
     const actBar = (acts) => `<div class="card card--pad" style="padding:14px 10px"><div class="act-bar">${acts.map(a=>`<button class="act-bar__btn" data-nav="${a[2]}" aria-label="${a[1]}"><span class="act-bar__ic">${icon(a[0])}</span><span class="act-bar__lbl">${a[1]}</span></button>`).join('')}</div></div>`;
 
@@ -23,7 +28,7 @@ Screens['detalle-producto'] = {
       view.innerHTML = `
       ${pageHead(p.name, `${esAdic ? 'Tarjeta adicional' : 'Tarjeta principal'} · ···${p.last4}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="toast({title:'Estado de cuenta',msg:'${p.name}: enviado a tu correo.',type:'info'})">${icon('download')} Estado de cuenta</button>`)}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
-        <div class="grid" style="gap:16px">
+        <div class="grid dtl-card" style="gap:16px">
           ${UI.bankCard(p)}
           ${actBar([['receipt','Diferir','diferir'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo'],['gift','Beneficios','beneficios']])}
         </div>
@@ -32,15 +37,13 @@ Screens['detalle-producto'] = {
             kv('Titular', esAdic ? (p.titular||'Adicional') : DB.user.name)
             + kv('Tipo', esAdic ? 'Adicional' : 'Principal')
             + kv('Pago mínimo', money(p.pagoMin), 1)
-            + kv('Pago total', money(p.pagoTotal), 1)
-            + kv('Fecha máxima de pago', p.pago)
             + (p.pagoTotal>0
                 ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Total a pagar · hasta ${p.pago}</div><div class="detail-cta__amt num">${money(p.pagoTotal)}</div></div><button class="btn btn--primary" data-nav="pago-tarjeta">Pagar tarjeta</button></div>`
                 : `<div class="detail-cta detail-cta--ok">${icon('shield')}<span>Tu tarjeta está al día. No tienes pagos pendientes este mes.</span></div>`))}
           ${infoBanner('El cupo de crédito es global y compartido entre todas las tarjetas Diners de la empresa; por eso no se muestra un cupo por tarjeta.','card')}
         </div>
       </div>
-      ${movsSection(p.name, `<div class="segmented"><button class="is-active">Todos</button><button>Consumos</button><button>Diferidos</button></div>`)}`;
+      ${movsSection(p.name, `<div class="segmented"><button class="is-active">Todos</button><button>Consumos</button><button>Diferidos</button></div>`, p.movTotal)}`;
       return;
     }
 
@@ -48,7 +51,7 @@ Screens['detalle-producto'] = {
       view.innerHTML = `
       ${pageHead(p.name, `Tarjeta prepago · ···${p.last4}`, 'inicio')}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
-        <div class="grid" style="gap:16px">
+        <div class="grid dtl-card" style="gap:16px">
           ${UI.bankCard(p)}
           ${actBar([['send','Recargar','transferencias'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo']])}
         </div>
@@ -65,7 +68,6 @@ Screens['detalle-producto'] = {
 
     if (type === 'account') {
       const rate = p.tasa ? kv('Tasa de interés', `<span class="text-success" style="font-weight:700">${p.tasa}</span>`) : '';
-      const interest = p.interesMes ? kv('Interés ganado (mes)', `<span class="text-success num" style="font-weight:700">${money(p.interesMes, true)}</span>`) : '';
       view.innerHTML = `
       ${pageHead(p.name, `${p.type} · ${p.num}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="toast({title:'Certificado de cuenta',msg:'Generado y enviado a tu correo.',type:'info'})">${icon('download')} Certificado</button>`)}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
@@ -79,13 +81,13 @@ Screens['detalle-producto'] = {
           ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['certificate','Certificado','certificados']])}
         </div>
         <div class="grid" style="gap:20px">
-          ${panel('Detalle de la cuenta', kv('Titular',DB.user.name)+kv('Tipo de cuenta',p.type)+kv('Número',p.num)+rate+interest+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
+          ${panel('Detalle de la cuenta', kv('Titular',DB.user.name)+kv('Tipo de cuenta',p.type)+kv('Número',p.num)+rate+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
             + (p.interesMes
                 ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Rendimiento este mes · ${p.tasa}</div><div class="detail-cta__amt num" style="color:var(--success)">${money(p.interesMes, true)}</div></div><button class="btn btn--primary" data-nav="transferencias">Transferir</button></div>`
-                : `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Saldo disponible</div><div class="detail-cta__amt num">${State.masked?'••••':money(p.saldo)}</div></div><button class="btn btn--primary" data-nav="transferencias">Transferir</button></div>`))}
+                : `<div class="detail-cta"><div class="text-muted" style="font-size:13px">Mueve tu dinero a otras cuentas o bancos</div><button class="btn btn--primary" data-nav="transferencias">Transferir</button></div>`))}
         </div>
       </div>
-      ${movsSection('Ahorros')}`;
+      ${movsSection('Ahorros', '', p.movTotal)}`;
       return;
     }
 
@@ -109,7 +111,7 @@ Screens['detalle-producto'] = {
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Estado del crédito',
-            (e.consultarDiners ? '' : `<div class="row between mb-2"><span class="text-muted">Saldo pendiente</span><span class="h3 num">${money(p.saldo)}</span></div><div class="progress mb-2"><span style="width:37%"></span></div><div class="text-muted" style="font-size:12px">${p.plazo!=='—'?p.plazo.replace('/',' de ')+' cuotas pagadas':''}</div><div class="divider"></div>`)
+            (e.consultarDiners ? '' : `<div class="progress mb-2"><span style="width:37%"></span></div><div class="text-muted" style="font-size:12px">${p.plazo!=='—'?p.plazo.replace('/',' de ')+' cuotas pagadas':''}</div><div class="divider"></div>`)
             + kv('Estado', `<span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span>`)
             + (p.cuota>0 ? kv('Cuota mensual',money(p.cuota),1) : '')
             + kv('Fecha máxima de pago', p.prox)
@@ -117,7 +119,7 @@ Screens['detalle-producto'] = {
           ${e.consultarDiners ? infoBanner(`Este crédito está ${e.label.toLowerCase()}. El saldo total y las condiciones se gestionan directamente con Diners Club.`,'alert') : infoBanner('Puedes abonar a capital para reducir tu plazo o cuota.','coins')}
         </div>
       </div>
-      ${movsSection(p.name)}`;
+      ${movsSection(p.name, '', p.movTotal)}`;
       return;
     }
 
@@ -135,11 +137,11 @@ Screens['detalle-producto'] = {
         ${actBar([['chart','Simular','sim-credito'],['plus','Nueva','ofertas']])}
       </div>
       <div class="grid" style="gap:20px">
-        ${panel('Detalle de la inversión', kv('Monto invertido',money(p.monto),1)+kv('Tasa anual',`<span class="text-success" style="font-weight:700">${p.tasa}</span>`)+kv('Vencimiento',p.vence)+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Vigente</span>')
+        ${panel('Detalle de la inversión', kv('Tasa anual',`<span class="text-success" style="font-weight:700">${p.tasa}</span>`)+kv('Vencimiento',p.vence)+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Vigente</span>')
           + `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Rendimiento estimado · ${p.vence}</div><div class="detail-cta__amt num" style="color:var(--success)">${money(p.monto*0.0725)}</div></div><button class="btn btn--primary" data-nav="sim-credito">Simular</button></div>`)}
       </div>
     </div>
-    ${movsSection(p.name)}`;
+    ${movsSection(p.name, '', p.movTotal)}`;
   }
 };
 
