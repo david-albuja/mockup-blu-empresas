@@ -289,7 +289,7 @@ function homeAcctRow(a) {
       <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
       <div class="prod-xl__name">${a.name}</div>
       <div class="prod-xl__id num">${a.type} · ${a.num}${cancelada?' · Cancelada':''}</div>
-      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${State.masked?'$ ••••••':money(a.saldo)}</div>
+      <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${State.masked?'$ ••••••':money(a.saldo)}</div>
       <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}</div>
       ${cancelada
         ? `<div class="acct-interes acct-interes--warn">${icon('alert')} Retira tu saldo</div>`
@@ -307,7 +307,7 @@ function homeCreditRow(c) {
       <span class="prod__ic prod__ic--credit" style="margin:0 auto 8px">${icon('coins')}</span>
       <div class="prod-xl__name">${c.name}</div>
       <div class="prod-xl__id num">${c.num}</div>
-      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
+      <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
       <div class="prod-xl__sub">Deuda a la fecha · ${sub}</div>
       <div class="acct-interes ${pillCls}">${icon(pillIcon)} ${e.label}</div>
     </div>
@@ -319,7 +319,7 @@ function homeInvestRow(iv) {
       <span class="prod__ic prod__ic--invest" style="margin:0 auto 8px">${icon('chart')}</span>
       <div class="prod-xl__name">${iv.tipo || iv.name}</div>
       <div class="prod-xl__id num">···${iv.last4} · ${iv.tasa}</div>
-      <div class="prod-xl__amt num" style="font-size:26px;margin-top:12px">${State.masked?'$ ••••••':money(iv.monto)}</div>
+      <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${State.masked?'$ ••••••':money(iv.monto)}</div>
       <div class="prod-xl__sub">${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `Renueva el ${iv.vence}`}</div>
       <div class="acct-interes">${icon('arrowUp')} <strong class="num">${State.masked?'••••':money(iv.interesGanado||0,true)}</strong> ganado</div>
     </div>
@@ -1020,6 +1020,9 @@ Screens.perfil = {
           ${[['Autenticación biométrica','fingerprint',true],['Notificaciones de consumos','bell',true],['Token dinámico en pagos','shield',true],['Modo de privacidad de saldos','eyeOff',false]].map((s,i)=>`<div class="row between" style="padding:12px 0;border-bottom:${i<3?'1px solid var(--line-2)':'none'}"><span class="row" style="gap:12px">${icon(s[1])}<span style="font-weight:500">${s[0]}</span></span><label class="switch"><input type="checkbox" ${s[2]?'checked':''}><span class="track"></span></label></div>`).join('')}
           <button class="btn btn--secondary btn--block mt-4" data-nav="cambiar-clave">${icon('lock')} Cambiar contraseña</button>
         </div>
+        <div class="card card--pad section"><h2 class="h4 mb-4">Recursos</h2>
+          <a class="btn btn--secondary btn--block" href="design-system.html" target="_blank" rel="noopener">${icon('sparkles')} Ver Design System</a>
+        </div>
         <button class="btn btn--ghost" style="color:var(--error);justify-content:flex-start" data-nav="logout">${icon('logout')} Cerrar sesión</button>
       </div>
     </div>`;
@@ -1052,7 +1055,7 @@ const NAV_GROUPS = [
   { label:'Principal', items:[ ['inicio','home','Inicio'] ] },
   { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
   { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['contactos','contacts','Contactos'] ] },
-  { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'], ['contactenos','headset','Contáctenos'] ] },
+  { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'] ] },
   { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
   { label:'Más', items:[ ['recompensas','gift','Recompensas Club'], ['perfil','user','Mi perfil'] ] },
 ];

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLU Empresas · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/design-system.css?v=45">
+<link rel="stylesheet" href="css/app.css?v=45">
+<style>
+  /* ---------- Motor de presentación (deck) — mismo patrón que presentacion.html ---------- */
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{overflow:hidden}
+  .deck{position:relative;height:100dvh;width:100%;overflow:hidden}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(24px,5vw,72px) clamp(24px,6vw,88px) 96px;opacity:0;transform:translateX(40px);pointer-events:none;
+    transition:opacity .5s var(--ease),transform .5s var(--ease);overflow-y:auto;
+  }
+  .slide.is-active{opacity:1;transform:none;pointer-events:auto}
+  .slide.is-prev{transform:translateX(-40px)}
+  .wrap{width:100%;max-width:1120px;margin:0 auto}
+
+  .ds-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:16px}
+  .ds-eyebrow::before{content:"";width:26px;height:3px;border-radius:3px;background:var(--primary)}
+  .ds-h1{font-size:clamp(30px,5vw,54px);font-weight:900;letter-spacing:-.03em;line-height:1.05}
+  .ds-h2{font-size:clamp(24px,3.4vw,38px);font-weight:900;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px}
+  .ds-lead{font-size:clamp(15px,1.5vw,18px);color:var(--slate);line-height:1.55;max-width:70ch}
+
+  /* Cover */
+  .cover{background:var(--grad-card);color:#fff}
+  .cover .ds-eyebrow{color:#fff}
+  .cover .ds-eyebrow::before{background:#fff}
+  .cover .ds-h1{max-width:18ch}
+  .cover .ds-lead{color:rgba(255,255,255,.88)}
+  .mark{display:inline-flex;align-items:center;gap:14px;margin-bottom:30px}
+  .mark__ic{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-weight:900;font-size:26px}
+  .mark__t{font-weight:900;font-size:22px;letter-spacing:-.02em}
+  .mark__t span{opacity:.75;font-weight:500;font-size:12px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-top:2px}
+  .cover .meta{margin-top:36px;display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,.82)}
+  .cover .meta b{color:#fff;font-weight:700}
+
+  /* Grids genéricos */
+  .ds-grid{display:grid;gap:14px;margin-top:22px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)} .g5{grid-template-columns:repeat(5,1fr)}
+  .g6{grid-template-columns:repeat(6,1fr)}
+
+  /* Swatches de color */
+  .swatch{border-radius:var(--r-md);overflow:hidden;border:1px solid var(--line-2);box-shadow:var(--e-1)}
+  .swatch__fill{height:64px}
+  .swatch__meta{padding:8px 10px;background:var(--surface)}
+  .swatch__name{font-size:12px;font-weight:700}
+  .swatch__hex{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* Escala tipográfica */
+  .type-row{display:flex;align-items:baseline;gap:16px;padding:10px 0;border-bottom:1px solid var(--line-2)}
+  .type-row .tag{width:110px;flex:none;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .type-row .sample{flex:1}
+
+  /* Barras de espaciado */
+  .space-row{display:flex;align-items:center;gap:14px;padding:7px 0}
+  .space-row .tag{width:64px;flex:none;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .space-row .bar{height:16px;background:var(--primary);border-radius:4px}
+  .space-row .px{font-size:12px;color:var(--muted);width:44px;flex:none}
+
+  .radius-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:20px}
+  .radius-chip{width:76px;height:76px;background:var(--primary-soft);border:2px solid var(--primary);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:11px;font-weight:700;color:var(--primary-strong)}
+
+  .elev-card{background:var(--surface);border-radius:var(--r-lg);padding:22px;text-align:center}
+  .elev-card b{display:block;font-size:15px;margin-bottom:4px}
+  .elev-card span{font-size:12px;color:var(--muted)}
+
+  .demo-card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:22px;box-shadow:var(--e-1)}
+  .demo-card h3{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .demo-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .demo-note{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+
+  .gov-list{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+  .gov-item{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-md);padding:14px 16px;box-shadow:var(--e-1)}
+  .gov-item .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+  .gov-item.ok .ic{background:var(--success-bg);color:var(--success)}
+  .gov-item.pending .ic{background:var(--warning-bg);color:var(--warning)}
+  .gov-item b{display:block;font-size:13.5px}
+  .gov-item p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  /* controles del deck */
+  .hud{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:16px;padding:16px clamp(20px,4vw,44px);pointer-events:none}
+  .hud > *{pointer-events:auto}
+  .ds-progress{flex:1;height:5px;background:var(--primary-soft);border-radius:5px;overflow:hidden}
+  .ds-progress__bar{height:100%;width:0;background:var(--primary);border-radius:5px;transition:width .4s var(--ease)}
+  .ds-nav{display:flex;gap:8px}
+  .ds-nav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);color:var(--primary);cursor:pointer;display:grid;place-items:center;box-shadow:var(--e-1);transition:transform .15s var(--ease),background .15s}
+  .ds-nav button:hover{background:var(--primary-soft);transform:translateY(-2px)}
+  .ds-nav button:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  .ds-count{font-size:13px;font-weight:700;color:var(--muted);min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+  .top-bar{position:fixed;top:18px;left:0;right:0;z-index:20;display:flex;justify-content:space-between;padding:0 20px}
+  .pill-link{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;color:var(--primary);text-decoration:none;box-shadow:var(--e-1);cursor:pointer}
+  svg{stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+
+  @media (max-width:900px){
+    .g2,.g3,.g4,.g5,.g6{grid-template-columns:repeat(2,1fr)}
+    .slide{padding:72px 20px 110px;justify-content:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){ .slide{transition:opacity .2s} }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="pill-link" href="index.html#/inicio">← Volver a la app</a>
+  <button class="pill-link" id="themeBtn" type="button">Modo oscuro</button>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 · Cover -->
+  <section class="slide cover">
+    <div class="wrap">
+      <div class="mark"><span class="mark__ic">b</span><span class="mark__t">BLU Empresas<span>Design System</span></span></div>
+      <div class="ds-eyebrow">Sistema de diseño · v1</div>
+      <h1 class="ds-h1">Los tokens y componentes detrás de cada pantalla.</h1>
+      <p class="ds-lead">Fundamentos (color, tipografía, espaciado), componentes reutilizables y su alineación con el Tribu Design System real de BLU.</p>
+      <div class="meta"><span><b>Fuente:</b> css/design-system.css</span><span><b>Alineado a:</b> blu-design-tokens-config (Azure DevOps)</span><span><b>Cobertura:</b> Botones, color, tipografía, cards, listas</span></div>
+    </div>
+  </section>
+
+  <!-- 2 · Paleta de marca -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Fundamentos · Color</div>
+      <h2 class="ds-h2">Paleta de marca BLU.</h2>
+      <p class="ds-lead">Azules derivados de la identidad Diners Club / BLU. <b style="color:var(--ink)">blu-600</b> es el primario semántico (<code>--primary</code>); <b style="color:var(--ink)">blu-700</b> es la acción fuerte.</p>
+      <div class="ds-grid g6" id="brandSwatches"></div>
+    </div>
+  </section>
+
+  <!-- 3 · Colores semánticos -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Fundamentos · Color</div>
+      <h2 class="ds-h2">Colores semánticos.</h2>
+      <p class="ds-lead">Cada estado tiene un par texto/fondo con contraste AA. Nunca se usa el color como único indicador — siempre acompañado de ícono o texto.</p>
+      <div class="ds-grid g4" id="semanticSwatches"></div>
+      <div class="demo-note">Modo oscuro: los mismos tokens (<code>--success</code>, <code>--warning</code>, <code>--error</code>, <code>--info</code>) cambian de valor bajo <code>[data-theme="dark"]</code> — no se invierten, se usan variantes tonales más claras. Prueba el botón "Modo oscuro" arriba.</div>
+    </div>
+  </section>
+
+  <!-- 4 · Tipografía -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Fundamentos · Tipografía</div>
+      <h2 class="ds-h2">Una sola familia, jerarquía clara.</h2>
+      <p class="ds-lead"><b style="color:var(--ink)">Roboto</b> en toda la plataforma. Escala de tamaños fija (<code>--fs-11</code> a <code>--fs-36</code>) y utilidades <code>.h1</code>–<code>.h4</code> para encabezados.</p>
+      <div class="ds-grid" style="margin-top:24px">
+        <div class="type-row"><span class="tag">.h1 · 30px</span><span class="sample h1">Encabezado principal</span></div>
+        <div class="type-row"><span class="tag">.h2 · 24px</span><span class="sample h2">Encabezado de sección</span></div>
+        <div class="type-row"><span class="tag">.h3 · 20px</span><span class="sample h3">Título de card</span></div>
+        <div class="type-row"><span class="tag">.h4 · 16px</span><span class="sample h4">Subtítulo</span></div>
+        <div class="type-row"><span class="tag">.eyebrow · 12px</span><span class="sample eyebrow">Etiqueta de categoría</span></div>
+        <div class="type-row"><span class="tag">body · 14px</span><span class="sample">Texto de cuerpo estándar, line-height 1.5 para lectura cómoda.</span></div>
+        <div class="type-row"><span class="tag">.text-muted</span><span class="sample text-muted">Texto secundario / hints (--muted)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Espaciado y radios -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Fundamentos · Layout</div>
+      <h2 class="ds-h2">Grid de 8px, radios consistentes.</h2>
+      <p class="ds-lead">Todo el espaciado se deriva de una escala de 4/8px; los radios van de "casi recto" (inputs) a "pill" (botones, badges).</p>
+      <div class="ds-grid g2" style="margin-top:22px">
+        <div>
+          <div class="demo-note" style="margin:0 0 8px;font-weight:700;color:var(--ink)">Espaciado (--s-1 … --s-10)</div>
+          <div id="spaceRows"></div>
+        </div>
+        <div>
+          <div class="demo-note" style="margin:0 0 8px;font-weight:700;color:var(--ink)">Radios (--r-xs … --r-full)</div>
+          <div class="radius-row" id="radiusRow"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Elevación -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Fundamentos · Profundidad</div>
+      <h2 class="ds-h2">Elevación y movimiento.</h2>
+      <p class="ds-lead">Sombras sutiles en 4 niveles; transiciones cortas (140–320ms) con easing consistente. Se respeta <code>prefers-reduced-motion</code>.</p>
+      <div class="ds-grid g4" id="elevGrid"></div>
+      <div class="demo-note">Duraciones: <code>--dur-1</code> 140ms (micro) · <code>--dur-2</code> 220ms (estándar) · <code>--dur-3</code> 320ms (modales/toasts).</div>
+    </div>
+  </section>
+
+  <!-- 7 · Botones -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Componentes · Acción</div>
+      <h2 class="ds-h2">Botones alineados al Tribu Design System.</h2>
+      <p class="ds-lead">Primario navy sólido <code>#04195d</code> (sin gradiente), pill, con estados hover/press/disabled tomados directo de <code>blu-design-tokens-config</code>.</p>
+      <div class="demo-card" style="margin-top:20px">
+        <h3>Variantes y tamaños</h3>
+        <div class="demo-row">
+          <button class="btn btn--primary">Primario</button>
+          <button class="btn btn--secondary">Secundario</button>
+          <button class="btn btn--ghost">Ghost / link</button>
+          <button class="btn btn--danger">Danger</button>
+          <button class="btn btn--primary" disabled>Deshabilitado</button>
+        </div>
+        <div class="demo-row" style="margin-top:14px">
+          <button class="btn btn--primary btn--sm">Small</button>
+          <button class="btn btn--primary">Default</button>
+          <button class="btn btn--primary btn--lg">Large</button>
+          <button class="icon-btn" aria-label="Ícono"></button>
+        </div>
+        <div class="demo-note">Un solo CTA primario por pantalla; acciones secundarias siempre subordinadas visualmente.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Badges / Pills -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Componentes · Estado</div>
+      <h2 class="ds-h2">Badges, chips y pills de estado.</h2>
+      <p class="ds-lead">Comunican estado de producto (al día, en mora, pendiente) de forma consistente en toda la app.</p>
+      <div class="demo-card" style="margin-top:20px">
+        <h3>Badges</h3>
+        <div class="demo-row">
+          <span class="badge badge--success"><span class="dot"></span>Al día</span>
+          <span class="badge badge--warning"><span class="dot"></span>En mora</span>
+          <span class="badge badge--error"><span class="dot"></span>En legal</span>
+          <span class="badge badge--info">Informativo</span>
+          <span class="badge badge--neutral">Neutral</span>
+        </div>
+      </div>
+      <div class="demo-card" style="margin-top:14px">
+        <h3>Chips</h3>
+        <div class="demo-row">
+          <span class="chip">Filtrar</span>
+          <span class="chip is-active">Activo</span>
+        </div>
+      </div>
+      <div class="demo-card" style="margin-top:14px">
+        <h3>Pills de interés / estado (Home)</h3>
+        <div class="demo-row">
+          <div class="acct-interes">↑ <strong>$46,32</strong> este mes</div>
+          <div class="acct-interes acct-interes--warn">En mora</div>
+          <div class="acct-interes acct-interes--danger">En legal</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · Cards y productos -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Componentes · Contenido</div>
+      <h2 class="ds-h2">Cards y filas de producto.</h2>
+      <p class="ds-lead">Dos patrones conviven: la card grande de carrusel en Home (<code>.prod-xl</code>) y la fila de lista para catálogos completos (<code>.pcard-row</code>).</p>
+      <div class="ds-grid g2" style="margin-top:16px">
+        <div class="demo-card">
+          <h3>Card de producto (Home)</h3>
+          <button class="prod-xl acct-card-plain" style="max-width:280px;margin:0 auto" aria-label="Ejemplo cuenta">
+            <div class="prod-xl__body">
+              <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px"></span>
+              <div class="prod-xl__name">Cuenta de Ahorros blu</div>
+              <div class="prod-xl__id num">Ahorros · ••• 2205</div>
+              <div class="prod-xl__amt num" style="font-size:24px;margin-top:10px">$12.580,40</div>
+              <div class="prod-xl__sub">Saldo disponible</div>
+              <div class="acct-interes">↑ <strong>$46,32</strong> este mes</div>
+            </div>
+          </button>
+        </div>
+        <div class="demo-card">
+          <h3>Fila de lista (Tarjetas / Cuentas / Prepago)</h3>
+          <div class="pcard-row">
+            <div class="pcard-row__art" style="background:linear-gradient(135deg,#14213F,#26365E,#3A4F80)"></div>
+            <div class="pcard-row__body">
+              <div class="pcard-row__name">Diners Club</div>
+              <div class="pcard-row__num">···4417</div>
+              <div class="pcard-row__num" style="margin-top:2px">Pagar hasta 02 ago</div>
+            </div>
+            <div class="pcard-row__value">
+              <div class="pcard-row__lbl">Saldo a pagar</div>
+              <div class="pcard-row__amt num">$2.340,18</div>
+            </div>
+            <button class="btn btn--primary btn--sm">Ver detalles</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · Formularios -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Componentes · Entrada</div>
+      <h2 class="ds-h2">Formularios y controles.</h2>
+      <p class="ds-lead">Etiquetas siempre visibles (no solo placeholder), estados de validación por borde + texto, nunca solo color.</p>
+      <div class="ds-grid g2" style="margin-top:16px">
+        <div class="demo-card">
+          <h3>Input y estados</h3>
+          <div class="field"><label>Correo electrónico</label><div class="control"><input placeholder="nombre@empresa.com"></div></div>
+          <div class="field"><label>Con error</label><div class="control is-invalid"><input value="usuario@"></div><span class="error-text" style="display:flex">Ingresa un correo válido</span></div>
+        </div>
+        <div class="demo-card">
+          <h3>Segmentado y switch</h3>
+          <div class="segmented" style="margin-bottom:16px"><button class="is-active">Hoy</button><button>7 días</button><button>Mes</button></div>
+          <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+          <span style="margin-left:10px;font-size:13px;color:var(--slate)">Notificaciones activas</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · Gobernanza -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="ds-eyebrow">Gobernanza</div>
+      <h2 class="ds-h2">Qué está alineado, qué falta.</h2>
+      <p class="ds-lead">El Tribu Design System real vive en <b style="color:var(--ink)">blu-design-tokens-config</b> (Azure DevOps). Este prototipo alinea progresivamente sus tokens a esa fuente.</p>
+      <div class="gov-list">
+        <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Botones</b><p>Primario navy #04195d sólido, pill, estados hover/press/disabled y theme-aware — tomado 1:1 de <code>/tokens/components/button.json</code>.</p></div></div>
+        <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Modo oscuro</b><p>Tokens paralelos completos (color, sombra, superficie) bajo <code>[data-theme="dark"]</code>, no solo inversión de brillo.</p></div></div>
+        <div class="gov-item pending"><span class="ic gov-ic-alert"></span><div><b>Resto de acentos</b><p>Links, tabs activos y gráficos siguen en el azul del rediseño (<code>--blu-600/700</code>); un rebrand total a navy es una decisión de negocio aparte.</p></div></div>
+        <div class="gov-item pending"><span class="ic gov-ic-alert"></span><div><b>Naming --warn vs. --warning</b><p>Componentes nuevos (pills de interés) usan <code>--warn</code> con fallback; el resto del sistema usa <code>--warning</code>. Unificar en la próxima pasada de tokens.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="hud">
+  <div class="ds-nav"><button id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button></div>
+  <div class="ds-progress"><div class="ds-progress__bar" id="bar"></div></div>
+  <div class="ds-count" id="count">1 / 11</div>
+  <div class="ds-nav"><button id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+</div>
+
+<script src="js/icons.js?v=45"></script>
+<script>
+  // Íconos reales del sistema (misma librería que la app)
+  document.querySelector('.prod__ic--acct').innerHTML = icon('wallet');
+  document.querySelector('.icon-btn').innerHTML = icon('bell');
+  document.getElementById('themeBtn').innerHTML = icon('moon') + ' Modo oscuro';
+  document.querySelectorAll('.gov-ic-check').forEach(el => el.innerHTML = icon('check'));
+  document.querySelectorAll('.gov-ic-alert').forEach(el => el.innerHTML = icon('alert'));
+
+  // Paleta de marca
+  const BRAND = ['blu-50','blu-100','blu-200','blu-300','blu-400','blu-500','blu-600','blu-700','blu-800','blu-900','sky','soap'];
+  const cs = getComputedStyle(document.documentElement);
+  document.getElementById('brandSwatches').innerHTML = BRAND.map(n => {
+    const hex = cs.getPropertyValue('--'+n).trim();
+    return `<div class="swatch"><div class="swatch__fill" style="background:${hex}"></div><div class="swatch__meta"><div class="swatch__name">--${n}</div><div class="swatch__hex">${hex}</div></div></div>`;
+  }).join('');
+
+  // Semánticos
+  const SEMANTIC = [['success','Success'],['warning','Warning'],['error','Error'],['info','Info']];
+  document.getElementById('semanticSwatches').innerHTML = SEMANTIC.map(([n,label]) => {
+    const fg = cs.getPropertyValue('--'+n).trim(), bg = cs.getPropertyValue('--'+n+'-bg').trim();
+    return `<div class="swatch"><div class="swatch__fill" style="background:${bg};display:flex;align-items:center;justify-content:center;color:${fg};font-weight:700;font-size:13px">${label}</div><div class="swatch__meta"><div class="swatch__name">--${n}</div><div class="swatch__hex">${fg}</div></div></div>`;
+  }).join('');
+
+  // Espaciado
+  const SPACE = [1,2,3,4,5,6,7,8,9,10];
+  document.getElementById('spaceRows').innerHTML = SPACE.map(n => {
+    const px = cs.getPropertyValue('--s-'+n).trim();
+    return `<div class="space-row"><span class="tag">--s-${n}</span><span class="bar" style="width:${px}"></span><span class="px">${px}</span></div>`;
+  }).join('');
+
+  // Radios
+  const RADIUS = ['r-xs','r-sm','r-md','r-lg','r-xl','r-full'];
+  document.getElementById('radiusRow').innerHTML = RADIUS.map(n => {
+    const val = cs.getPropertyValue('--'+n).trim();
+    return `<div class="radius-chip" style="border-radius:${val}">${n}</div>`;
+  }).join('');
+
+  // Elevación
+  const ELEV = [1,2,3,4];
+  document.getElementById('elevGrid').innerHTML = ELEV.map(n =>
+    `<div class="elev-card" style="box-shadow:var(--e-${n})"><b>e-${n}</b><span>--e-${n}</span></div>`
+  ).join('');
+
+  // Tema oscuro/claro en vivo
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.onclick = () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    themeBtn.innerHTML = icon(dark ? 'moon' : 'sun') + (dark ? ' Modo oscuro' : ' Modo claro');
+  };
+
+  // Motor de slides (idéntico a presentacion.html)
+  const slides = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar');
+  const count = document.getElementById('count');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  let i = 0;
+  function show(n){
+    i = Math.max(0, Math.min(slides.length-1, n));
+    slides.forEach((s,x)=>{ s.classList.toggle('is-active', x===i); s.classList.toggle('is-prev', x<i); });
+    bar.style.width = ((i+1)/slides.length*100)+'%';
+    count.textContent = (i+1)+' / '+slides.length;
+    prev.disabled = i===0; next.disabled = i===slides.length-1;
+  }
+  next.onclick = ()=>show(i+1);
+  prev.onclick = ()=>show(i-1);
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); show(i+1); }
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); show(i-1); }
+    if(e.key==='Home'){ show(0); } if(e.key==='End'){ show(slides.length-1); }
+  });
+  let sx=null;
+  document.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{ if(sx===null)return; const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>50) show(dx<0?i+1:i-1); sx=null; });
+  show(0);
+</script>
+</body>
+</html>

@@ -573,10 +573,15 @@
 .prod-acct__pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
 .prod-acct__pill strong { font-weight: 800; }
 
-/* Cuenta en Home: card con contenido centrado + pill de interés destacado */
-.acct-card-plain .prod-xl__body { align-items: center; text-align: center; padding-top: 18px; }
+/* Cuenta/crédito/inversión en Home: card con contenido centrado + pill destacado */
+.acct-card-plain .prod-xl__body { align-items: center; text-align: center; padding-top: 24px; padding-bottom: 20px; }
+.acct-card-plain .prod__ic { width: 64px; height: 64px; border-radius: 16px; }
+.acct-card-plain .prod__ic svg { width: 28px; height: 28px; }
+.acct-card-plain .prod-xl__name { font-size: 17px; margin-top: 2px; }
+.acct-card-plain .prod-xl__id { font-size: 13px; margin-top: 4px; }
+.acct-card-plain .prod-xl__sub { font-size: 13px; margin-top: 6px; line-height: 1.4; }
 .acct-interes {
-  display: inline-flex; align-items: center; gap: 5px; align-self: center; margin-top: 12px;
+  display: inline-flex; align-items: center; gap: 5px; align-self: center; margin-top: 16px;
   background: var(--success-bg); color: var(--success);
   font-size: 13px; font-weight: 800; padding: 6px 13px; border-radius: var(--r-full);
   box-shadow: 0 2px 8px rgba(11,127,69,.18); border: 1px solid color-mix(in srgb, var(--success) 25%, transparent);
