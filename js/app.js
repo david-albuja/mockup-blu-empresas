@@ -278,40 +278,48 @@ function homeTarjetaCard(c) {
     </div>
   </button>`;
 }
-/* Cuentas, créditos e inversiones en el Home: fila plana (mismo patrón que Screens.tarjetas/cuentas),
-   sin arte de tarjeta — prioriza los datos sobre lo decorativo. */
+/* Cuentas, créditos e inversiones en el Home: cards homologadas (mismo shell prod-xl
+   que las tarjetas), en carrusel con scroll horizontal. */
 function homeAcctRow(a) {
   const cancelada = a.estado === 'cancelada';
-  return `<button class="pcard" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.name}">
-    <div class="pcard__art pcard__art--ic" style="background:${ACCT_GRAD.account};color:#fff"><span class="mini-chip"></span>${icon('wallet')}</div>
-    <div class="pcard__body">
-      <div class="pcard__name">${a.name}</div>
-      <div class="pcard__num">${a.type} · ${a.num}${cancelada?' · Cancelada':''}</div>
-      ${cancelada ? `<div class="pcard__num" style="color:var(--warn,#B7791F);margin-top:2px">${icon('alert')} Retira tu saldo</div>` : (a.interesMes ? `<div class="pcard__num" style="margin-top:2px">${money(a.interesMes,true)} de interés este mes</div>` : '')}
+  return `<button class="prod-xl" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.name}">
+    <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--cuenta" ${cancelada?'style="filter:grayscale(.5);opacity:.85"':''}>
+      <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span>${cancelada?`<span class="prod-xl__cover-rate" style="color:#fff">Cancelada</span>`:(a.tasa ? `<span class="prod-xl__cover-rate">${a.tasa}</span>` : icon('wallet'))}</div>
+      <div><div class="prod-xl__cover-name">${a.name}</div><div class="prod-xl__cover-id num">${a.num}</div></div>
+      <span class="prod-xl__cover-wm" aria-hidden="true">${icon('wallet')}</span>
+    </div></div>
+    <div class="prod-xl__body">
+      <div class="prod-xl__amt num">${State.masked?'$ ••••••':money(a.saldo)}</div>
+      <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}${(!cancelada&&a.interesMes)?` · ${money(a.interesMes,true)} de interés este mes`:''}</div>
     </div>
-    <div class="pcard__value"><div class="pcard__amt num">${State.masked?'••••••':money(a.saldo)}</div><div class="pcard__lbl">${cancelada?'saldo por retirar':'saldo disponible'}</div></div>
   </button>`;
 }
 function homeCreditRow(c) {
   const e = creditEstado(c.estado);
-  return `<button class="pcard" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
-    <div class="pcard__art pcard__art--ic" style="background:${ACCT_GRAD.credit};color:#fff"><span class="mini-chip"></span>${icon('coins')}</div>
-    <div class="pcard__body">
-      <div class="pcard__name">Deuda a la fecha: ${e.consultarDiners ? 'consulta con Diners' : money(c.saldo)}</div>
-      <div class="pcard__num">${c.name} · ${c.num}</div>
+  const sub = e.consultarDiners ? `${e.pagoLabel} · consulta el total con Diners` : (c.estado==='mora' ? `${e.pagoLabel} · cuota ${money(c.cuota)}` : `Cuota ${money(c.cuota)} · vence ${c.prox}`);
+  return `<button class="prod-xl" data-nav="detalle-producto?id=${c.id}" aria-label="Abrir ${c.name}">
+    <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--credito">
+      <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
+      <div><div class="prod-xl__cover-name">${c.name}</div><div class="prod-xl__cover-id num">${c.num}</div></div>
+      <span class="prod-xl__cover-wm" aria-hidden="true">${icon('coins')}</span>
+    </div></div>
+    <div class="prod-xl__body">
+      <div class="prod-xl__amt num">${e.consultarDiners ? 'Consultar' : money(c.saldo)}</div>
+      <div class="prod-xl__sub">Deuda a la fecha · ${sub}</div>
     </div>
-    <div class="pcard__value"><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
   </button>`;
 }
 function homeInvestRow(iv) {
-  return `<button class="pcard" data-nav="detalle-producto?id=${iv.id}" aria-label="Abrir ${iv.name}">
-    <div class="pcard__art pcard__art--ic" style="background:${ACCT_GRAD.investment};color:#fff"><span class="mini-chip"></span>${icon('chart')}</div>
-    <div class="pcard__body">
-      <div class="pcard__name">${iv.tipo || iv.name}</div>
-      <div class="pcard__num">···${iv.last4} · Tasa ${iv.tasa} · ${State.masked?'••••':money(iv.interesGanado||0,true)} ganado a la fecha</div>
-      <div class="pcard__num" style="margin-top:2px">${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `Renueva el ${iv.vence}`}</div>
+  return `<button class="prod-xl" data-nav="detalle-producto?id=${iv.id}" aria-label="Abrir ${iv.name}">
+    <div class="prod-xl__media"><div class="prod-xl__cover prod-xl__cover--inversion">
+      <div class="row between" style="align-items:flex-start"><span class="prod-xl__cover-brand">blu</span><span class="prod-xl__cover-rate">${iv.tasa}</span></div>
+      <div><div class="prod-xl__cover-name">${iv.tipo || iv.name}</div><div class="prod-xl__cover-id num">···${iv.last4}</div></div>
+      <span class="prod-xl__cover-wm" aria-hidden="true">${icon('chart')}</span>
+    </div></div>
+    <div class="prod-xl__body">
+      <div class="prod-xl__amt num">${State.masked?'$ ••••••':money(iv.monto)}</div>
+      <div class="prod-xl__sub">${State.masked?'••••':money(iv.interesGanado||0,true)} ganado · ${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `renueva el ${iv.vence}`}</div>
     </div>
-    <div class="pcard__value"><div class="pcard__amt num">${State.masked?'••••••':money(iv.monto)}</div><div class="pcard__lbl">invertido</div></div>
   </button>`;
 }
 
@@ -328,37 +336,54 @@ Screens.inicio = {
 
       // Cada sección de producto solo aparece si el usuario realmente tiene ese producto.
       const prodData = { tarjeta: DB.cards, prepago: DB.prepaid, cuenta: DB.accounts, credito: DB.credits, inversion: DB.investments };
-      const prodTabsAll = [['tarjeta','Tarjetas'],['prepago','Prepago'],['cuenta','Cuentas'],['credito','Créditos'],['inversion','Inversiones'],['caja','Ventas']];
-      const prodTabs = prodTabsAll.filter(t => t[0] === 'caja' || (prodData[t[0]]||[]).length > 0);
+      const prodTabsAll = [['tarjeta','Tarjetas'],['cuenta','Cuentas'],['credito','Créditos'],['inversion','Inversiones']];
+      const prodTabs = prodTabsAll.filter(t => (prodData[t[0]]||[]).length > 0);
+      const VR = DB.ventasResumen;
+      const bigMoney = (n) => { const m = moneyParts(n); return `${m.int}<span class="cents">,${m.dec}</span>`; };
 
       v.innerHTML = `
       <div class="page-head section">
         <div class="row between wrap" style="gap:12px">
-          <div><p class="eyebrow">Resumen consolidado</p><h1>Hola, ${DB.user.first}</h1></div>
+          <div>
+            <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+              <h1 style="line-height:1.1">${DB.empresa.name}</h1>
+              <button class="chip" onclick="toast({title:'Cambiar empresa',msg:'${DB.empresa.name} · ${DB.empresa.otras.join(' · ')}',type:'info'})" aria-label="Cambiar de empresa">${icon('building')} Cambiar ${icon('chevronDown')}</button>
+            </div>
+            <p class="text-muted" style="margin-top:4px">Hola, ${DB.user.first} · ${DB.user.role}</p>
+          </div>
           <div class="row wrap" style="gap:8px">
             <button class="btn btn--secondary btn--sm" onclick="window.open('presentacion.html','_blank','noopener')">${icon('sparkles')} Ver presentación</button>
-            <button class="btn btn--secondary btn--sm" data-nav="recompensas">${icon('gift')} 48.250 puntos Club</button>
+            <button class="btn btn--secondary btn--sm" data-nav="recompensas">${icon('gift')} 48.250 ClubMiles</button>
           </div>
         </div>
       </div>
 
-      <!-- Posición consolidada: total en productos (activo), deuda (pasivo), cupo global -->
+      <!-- Resumen de ventas (adquirencia): encabeza el Home en lugar de la posición consolidada -->
+      <div class="sales-summary section mb-4">
+        <button class="sales-card" data-nav="caja">
+          <div class="sales-card__label">Total por cobrar</div>
+          <div class="sales-card__amt num">${bigMoney(VR.porCobrar)}</div>
+          <div class="sales-card__cap">${VR.fechaCobro}</div>
+        </button>
+        <button class="sales-card" data-nav="caja">
+          <div class="sales-card__label">Pagos recibidos</div>
+          <div class="sales-card__amt num">${bigMoney(VR.pagosRecibidos)}</div>
+          <div class="sales-card__cap">Periodo ${VR.periodo}</div>
+        </button>
+        <button class="sales-card sales-card--hl" data-nav="caja">
+          <div class="row between" style="align-items:flex-start">
+            <div class="sales-card__label">Ventas del mes</div>
+            <span class="sales-card__grow">${icon('arrowUp')} +${String(VR.crecimiento).replace('.',',')}%</span>
+          </div>
+          <div class="sales-card__amt num">${bigMoney(VR.ventasMes)}</div>
+          <div class="sales-card__cap">Periodo ${VR.periodo} · vs. mes anterior</div>
+        </button>
+      </div>
+      <div class="row section mb-6"><a class="row" data-nav="caja" style="gap:6px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer">Mira el detalle de tus ventas ${icon('chevron')}</a></div>
+
+      <!-- Accesos rápidos -->
       <div class="card card--pad section mb-6">
-        <div class="row wrap" style="gap:10px;align-items:center">
-          <span class="eyebrow" style="margin:0">Posición consolidada</span>
-          <button class="chip" onclick="toast({title:'Cambiar empresa',msg:'Robles Comercial S.A. · Robles Retail S.A.S.',type:'info'})">${icon('building')} Robles Comercial S.A. ${icon('chevronDown')}</button>
-        </div>
-        <div class="row" style="gap:8px;align-items:center;margin-top:8px">
-          <div class="kpi__value num" id="mainBalance" style="font-size:34px">${State.masked?'••••••':`${p.int}<span class="cents">,${p.dec}</span>`}</div>
-          <button class="eye-toggle" id="maskBtn" aria-label="Ocultar saldos">${icon(State.masked?'eyeOff':'eye')}</button>
-        </div>
-        <div class="text-muted" style="font-size:12px">Total en productos · lo que tu empresa tiene</div>
-        <div class="grid grid-3 mt-4" style="gap:12px">
-          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Total deuda</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.pasivo)}</div><div class="text-muted" style="font-size:11px">productos de pasivo</div></div>
-          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Deuda en tarjetas</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.deudaTarjetas)}</div><div class="text-muted" style="font-size:11px">crédito rotativo</div></div>
-          <div class="pos-tile"><div class="text-muted" style="font-size:12px">Cupo disponible</div><div class="num" style="font-weight:800;font-size:20px">${State.masked?'••••':money(N.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:11px">de ${money(N.cupoGlobal)} · global Diners</div></div>
-        </div>
-        <div class="qa-grid mt-6">
+        <div class="qa-grid">
           <button class="qa" data-nav="transferencias"><span class="qa__ic">${icon('send')}</span><span class="qa__label">Transferir</span></button>
           <button class="qa" data-nav="carga-archivo"><span class="qa__ic">${icon('upload')}</span><span class="qa__label">Pago masivo</span></button>
           <button class="qa" data-nav="aprobaciones" style="position:relative"><span class="qa__ic">${icon('approve')}</span><span class="qa__label">Aprobaciones</span><span class="badge badge--error" style="position:absolute;top:8px;right:12px;padding:2px 7px">3</span></button>
@@ -375,8 +400,6 @@ Screens.inicio = {
         <div id="prodXlExtra" class="mt-4"></div>
       </div>`;
 
-      $('#maskBtn').onclick = toggleMask;
-
       // "Ver todo" consistente: cada categoría lleva a ver todos los productos de ESA categoría
       const seeAllNav = { tarjeta:'tarjetas', prepago:'tarjetas', cuenta:'cuentas?cat=cuenta', credito:'cuentas?cat=credito', inversion:'cuentas?cat=inversion', caja:'caja' };
       const solicitarRoute = { tarjeta:'onboarding-signature', prepago:'ofertas', cuenta:'onboarding-blu-plus', credito:'sim-credito', inversion:'ofertas' };
@@ -390,60 +413,17 @@ Screens.inicio = {
       }
 
       const prodExtra = (kind) => {
-        if (kind === 'tarjeta') return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Tus tarjetas con nosotros</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(N.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:12px">de ${money(N.cupoGlobal)} de cupo · compartido entre todas tus tarjetas</div>${ctaRow('tarjeta')}</div>`;
+        if (kind === 'tarjeta') return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Tus tarjetas con nosotros</div><div class="text-muted" style="font-size:12px;margin-top:8px">Cupo disponible</div><div class="kpi__value num" style="font-size:22px">${State.masked?'••••':money(N.cupoGlobalDisp)}</div><div class="text-muted" style="font-size:12px">de ${money(N.cupoGlobal)} de cupo total · compartido entre todas tus tarjetas</div>${ctaRow('tarjeta')}</div>`;
         if (kind === 'cuenta') { const t=DB.accounts.filter(a=>a.estado!=='cancelada').reduce((s,a)=>s+a.saldo,0); return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Tu saldo total en cuentas con nosotros</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(t)}</div>${ctaRow('cuenta')}</div>`; }
         if (kind === 'credito') { const t=DB.credits.reduce((s,c)=>s+c.saldo,0); return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Total de tus créditos con nosotros</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${money(t)}</div>${ctaRow('credito')}</div>`; }
         if (kind === 'inversion') { const t=DB.investments.reduce((s,i)=>s+i.monto,0); return `<div class="card card--pad section"><div class="text-muted" style="font-size:13px">Total de tus inversiones</div><div class="kpi__value num" style="font-size:22px;margin-top:4px">${State.masked?'••••':money(t)}</div>${ctaRow('inversion')}</div>`; }
         return '';
       };
 
-      // Prepago: buscador arriba + tarjetas recientes por defecto (para empresas con
-      // muchas tarjetas, el buscador evita listar todo; igual se muestran las recientes
-      // para que la sección no quede vacía y tenga un tamaño similar a las demás).
-      const PREP_RECENT = 6;
-      function prepagoSearchUI() {
-        return `<div class="card card--pad section">
-          <p class="text-muted mb-4" style="font-size:13px">Busca la tarjeta prepago de tu colaborador por nombre y apellido, o por los últimos 4 dígitos.</p>
-          <div class="grid grid-2" style="gap:10px">
-            <div class="control">${icon('user')}<input id="prepName" placeholder="Nombre y apellido" autocomplete="off"></div>
-            <div class="control">${icon('card')}<input id="prepLast4" placeholder="Últimos 4 dígitos" inputmode="numeric" maxlength="4" autocomplete="off"></div>
-          </div>
-          <div class="row between mt-6 mb-2"><span class="text-muted" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em" id="prepLbl">Tarjetas recientes</span><span class="text-muted" style="font-size:12px">${DB.prepaid.length} en total</span></div>
-          <div id="prepResults"></div>
-          <button class="btn btn--secondary btn--sm mt-4" data-nav="ofertas">${icon('plus')} Solicitar prepago</button>
-        </div>`;
-      }
-      function prepSearch() {
-        const nameQ = ($('#prepName')?.value || '').trim().toLowerCase();
-        const l4Q = ($('#prepLast4')?.value || '').trim();
-        const resEl = $('#prepResults'), lbl = $('#prepLbl'); if (!resEl) return;
-        const searching = !!(nameQ || l4Q);
-        if (lbl) lbl.textContent = searching ? 'Resultados' : 'Tarjetas recientes';
-        if (!searching) { resEl.innerHTML = `<div class="pcard-grid">${DB.prepaid.slice(0, PREP_RECENT).map(prepaidRow).join('')}</div>`; return; }
-        const matches = DB.prepaid.filter(c => (!nameQ || (c.titular||'').toLowerCase().includes(nameQ)) && (!l4Q || c.last4.includes(l4Q)));
-        resEl.innerHTML = matches.length ? `<div class="pcard-grid">${matches.map(prepaidRow).join('')}</div>` : emptyState('Sin resultados', 'No encontramos una tarjeta con esos datos.', 'search');
-      }
-
-      // Ventas (adquirencia): tip de cierre de POS + fecha de actualización + "Pendiente de pago"
-      const cajaCard = () => `<div class="card card--pad section">
-        <p class="text-muted mb-4" style="font-size:13px">${icon('info')} Este es el resumen de tus ventas de hoy. Para ver la información al día, primero debes hacer el cierre de tu POS.</p>
-        <div class="row between wrap" style="gap:12px">
-          <div><div class="text-muted" style="font-size:13px">${icon('store')} Ventas de hoy</div><div class="kpi__value num" style="font-size:26px;margin-top:4px">${money(12480.50)}</div><div class="text-success" style="font-size:12px;font-weight:600">+12,4% vs. ayer · 148 ventas</div></div>
-          <div><div class="text-muted" style="font-size:13px">Pendiente de pago</div><div class="kpi__value num" style="font-size:26px;margin-top:4px">${money(8920.30)}</div><div class="text-muted" style="font-size:12px">se deposita mañana en tu cuenta</div></div>
-        </div>
-        <div class="text-muted mt-4" style="font-size:12px">Actualizado hasta hoy · 14:20</div>
-        <button class="btn btn--primary btn--block mt-4" data-nav="caja">Ver el detalle de tus ventas</button>
-      </div>`;
-
+      // Todos los productos homologados como cards prod-xl, en carrusel con scroll horizontal.
+      const cardBuilder = { tarjeta: homeTarjetaCard, cuenta: homeAcctRow, credito: homeCreditRow, inversion: homeInvestRow };
       function renderProducts(kind) {
-        if (kind === 'caja') { $('#prodXlHost').innerHTML = cajaCard(); $('#prodXlExtra').innerHTML = ''; return; }
-        if (kind === 'prepago') { $('#prodXlHost').innerHTML = prepagoSearchUI(); $('#prodXlExtra').innerHTML = ''; prepSearch(); $('#prepName').oninput = prepSearch; $('#prepLast4').oninput = () => { const i=$('#prepLast4'); i.value=i.value.replace(/\D/g,'').slice(0,4); prepSearch(); }; return; }
-        if (kind === 'tarjeta') {
-          $('#prodXlHost').innerHTML = `<div class="prod-strip">${DB.cards.map(homeTarjetaCard).join('')}</div>`;
-        } else {
-          const builder = { cuenta: homeAcctRow, credito: homeCreditRow, inversion: homeInvestRow }[kind];
-          $('#prodXlHost').innerHTML = `<div class="pcard-grid">${(prodData[kind]||[]).map(builder).join('')}</div>`;
-        }
+        $('#prodXlHost').innerHTML = `<div class="prod-strip">${(prodData[kind]||[]).map(cardBuilder[kind]).join('')}</div>`;
         $('#prodXlExtra').innerHTML = prodExtra(kind);
       }
       view.querySelectorAll('#prodTabs [data-c]').forEach(b => b.onclick = () => {
@@ -554,7 +534,7 @@ Screens.tarjetas = {
     const adicionales = DB.cards.filter(c => c.principal === false);
     const deuda = DB.cards.reduce((s,c)=>s+c.pagoTotal,0);
     view.innerHTML = `
-    ${premiumHead('Mis tarjetas de crédito', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio',
+    ${premiumHead('Mira tus tarjetas', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio',
       `<button class="btn btn--primary btn--sm" data-nav="onboarding-signature">${icon('plus')} Solicitar tarjeta</button>`, 'Productos')}
     <div class="stat-tiles section mb-6">
       ${statTile('card', 'card', 'Cupo global', State.masked?'••••':money(N.cupoGlobal))}
@@ -594,6 +574,41 @@ Screens.tarjetas = {
   }
 };
 
+/* ---------- PREPAGO (pantalla propia, accesible desde el menú Productos) ---------- */
+Screens.prepago = {
+  title: 'Prepago',
+  render(view) {
+    const PREP_RECENT = 6;
+    const total = DB.prepaid.reduce((s,c)=>s+c.saldo,0);
+    view.innerHTML = `
+    ${premiumHead('Tarjetas prepago', `${DB.prepaid.length} tarjetas · saldo total ${State.masked?'••••':money(total)}`, 'inicio',
+      `<button class="btn btn--primary btn--sm" data-nav="ofertas">${icon('plus')} Solicitar prepago</button>`, 'Productos')}
+    <div class="card card--pad section">
+      <p class="text-muted mb-4" style="font-size:13px">Busca la tarjeta prepago de tu colaborador por nombre y apellido, o por los últimos 4 dígitos.</p>
+      <div class="grid grid-2" style="gap:10px">
+        <div class="control">${icon('user')}<input id="prepName" placeholder="Nombre y apellido" autocomplete="off"></div>
+        <div class="control">${icon('card')}<input id="prepLast4" placeholder="Últimos 4 dígitos" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      </div>
+      <div class="row between mt-6 mb-2"><span class="text-muted" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em" id="prepLbl">Tarjetas recientes</span><span class="text-muted" style="font-size:12px">${DB.prepaid.length} en total</span></div>
+      <div id="prepResults"></div>
+    </div>`;
+
+    function search() {
+      const nameQ = ($('#prepName')?.value || '').trim().toLowerCase();
+      const l4Q = ($('#prepLast4')?.value || '').trim();
+      const resEl = $('#prepResults'), lbl = $('#prepLbl'); if (!resEl) return;
+      const searching = !!(nameQ || l4Q);
+      if (lbl) lbl.textContent = searching ? 'Resultados' : 'Tarjetas recientes';
+      if (!searching) { resEl.innerHTML = `<div class="pcard-grid">${DB.prepaid.slice(0, PREP_RECENT).map(prepaidRow).join('')}</div>`; return; }
+      const matches = DB.prepaid.filter(c => (!nameQ || (c.titular||'').toLowerCase().includes(nameQ)) && (!l4Q || c.last4.includes(l4Q)));
+      resEl.innerHTML = matches.length ? `<div class="pcard-grid">${matches.map(prepaidRow).join('')}</div>` : emptyState('Sin resultados', 'No encontramos una tarjeta con esos datos.', 'search');
+    }
+    search();
+    $('#prepName').oninput = search;
+    $('#prepLast4').oninput = () => { const i=$('#prepLast4'); i.value=i.value.replace(/\D/g,'').slice(0,4); search(); };
+  }
+};
+
 function freezeModal() {
   const ov = openModal(`
     <div class="modal__head"><h3 class="h3">Bloqueo temporal</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
@@ -626,7 +641,7 @@ Screens.cuentas = {
     const cat = getParam('cat'); // 'cuenta' | 'credito' | 'inversion' | null (todas)
     const saldo = DB.accounts.reduce((s,a)=>s+a.saldo,0), credito = DB.credits.reduce((s,c)=>s+c.saldo,0), invertido = DB.investments.reduce((s,i)=>s+i.monto,0);
     const total = DB.accounts.length + DB.credits.length + DB.investments.length;
-    const titulo = cat==='cuenta' ? 'Cuentas' : cat==='credito' ? 'Créditos' : cat==='inversion' ? 'Inversiones' : 'Cuentas y créditos';
+    const titulo = cat==='cuenta' ? 'Mira tus cuentas' : cat==='credito' ? 'Mira tus créditos' : cat==='inversion' ? 'Mira tus inversiones' : 'Mira tus cuentas y créditos';
     const secCuentas = `<div class="section mb-6"><h2 class="h4 mb-4">Cuentas <span class="text-muted" style="font-weight:400">· ${DB.accounts.length}</span></h2>
       <div class="pcard-grid">${DB.accounts.map(a=>acctRow(a,'account')).join('')}${addProductCard('onboarding-blu-plus','Abrir cuenta blu+')}</div></div>`;
     const secCreditos = `<div class="section mb-6"><h2 class="h4 mb-4">Créditos <span class="text-muted" style="font-weight:400">· ${DB.credits.length}</span></h2>
@@ -944,19 +959,19 @@ Screens.recompensas = {
   render(view) {
     const r = DB.rewards; const pct = Math.round(r.points/(r.points+r.toNext)*100);
     view.innerHTML = `
-    <div class="page-head section"><h1>Recompensas Club</h1><p>Acumula puntos y canjéalos por lo que quieras.</p></div>
+    <div class="page-head section"><h1>Tus ClubMiles</h1><p>Acumula ClubMiles y canjéalos por lo que quieras.</p></div>
     <div class="grid dash-grid">
       <div class="grid" style="gap:20px">
         <div class="bank-card section" style="aspect-ratio:auto;background:var(--grad-sky)">
           <div class="row between"><div><div class="bank-card__type">Programa</div><div class="bank-card__brand">Club ${r.tier}</div></div>${icon('star','')}</div>
-          <div style="margin-top:20px"><div style="font-size:13px;opacity:.85">Puntos disponibles</div><div class="num" style="font-size:38px;font-weight:800">${r.points.toLocaleString('es-EC')}</div></div>
-          <div style="margin-top:16px"><div class="row between" style="font-size:12px;opacity:.9"><span>Nivel ${r.tier}</span><span>${r.toNext.toLocaleString('es-EC')} pts para ${r.next}</span></div><div class="progress mt-2" style="background:rgba(255,255,255,.3)"><span style="width:${pct}%;background:#fff"></span></div></div>
+          <div style="margin-top:20px"><div style="font-size:13px;opacity:.85">ClubMiles disponibles</div><div class="num" style="font-size:38px;font-weight:800">${r.points.toLocaleString('es-EC')}</div></div>
+          <div style="margin-top:16px"><div class="row between" style="font-size:12px;opacity:.9"><span>Nivel ${r.tier}</span><span>${r.toNext.toLocaleString('es-EC')} ClubMiles para ${r.next}</span></div><div class="progress mt-2" style="background:rgba(255,255,255,.3)"><span style="width:${pct}%;background:#fff"></span></div></div>
         </div>
-        <div class="card card--pad section"><h2 class="h4 mb-4">Catálogo de canjes</h2><div class="grid grid-2">${r.catalog.map(c=>`<button class="card card--pad card--hover" data-redeem="${c.id}" style="text-align:left"><span class="prod__ic prod__ic--card">${icon(c.icon)}</span><div class="mt-4" style="font-weight:600">${c.name}</div><div class="text-muted" style="font-size:12px">${c.sub}</div><div class="row between mt-4"><span class="badge badge--info">${c.cost.toLocaleString('es-EC')} pts</span><span class="prod__chev">${icon('chevron')}</span></div></button>`).join('')}</div></div>
+        <div class="card card--pad section"><h2 class="h4 mb-4">Catálogo de canjes</h2><div class="grid grid-2">${r.catalog.map(c=>`<button class="card card--pad card--hover" data-redeem="${c.id}" style="text-align:left"><span class="prod__ic prod__ic--card">${icon(c.icon)}</span><div class="mt-4" style="font-weight:600">${c.name}</div><div class="text-muted" style="font-size:12px">${c.sub}</div><div class="row between mt-4"><span class="badge badge--info">${c.cost.toLocaleString('es-EC')} ClubMiles</span><span class="prod__chev">${icon('chevron')}</span></div></button>`).join('')}</div></div>
       </div>
       <div class="grid" style="gap:20px">
         <div class="card card--pad section"><div class="kpi"><div class="kpi__label">${icon('cash')} Cashback acumulado</div><div class="kpi__value num" style="font-size:26px">${money(r.cashback)}</div></div><button class="btn btn--secondary btn--block mt-4">Transferir a mi cuenta</button></div>
-        <div class="card card--pad section" style="background:var(--blu-50);border-color:var(--blu-100)"><div class="row" style="gap:10px;align-items:flex-start">${icon('sparkles','')}<div><div style="font-weight:600;font-size:14px">Multiplica tus puntos</div><div class="text-muted" style="font-size:13px">Paga con tu Diners Club en supermercados y gana 3x este mes.</div></div></div></div>
+        <div class="card card--pad section" style="background:var(--blu-50);border-color:var(--blu-100)"><div class="row" style="gap:10px;align-items:flex-start">${icon('sparkles','')}<div><div style="font-weight:600;font-size:14px">Multiplica tus ClubMiles</div><div class="text-muted" style="font-size:13px">Paga con tu Diners Club en supermercados y gana 3x este mes.</div></div></div></div>
       </div>
     </div>`;
     view.querySelectorAll('[data-redeem]').forEach(b=> b.onclick=()=>{ const c=r.catalog.find(x=>x.id===b.dataset.redeem); redeemModal(c); });
@@ -965,7 +980,7 @@ Screens.recompensas = {
 function redeemModal(c) {
   const ov=openModal(`
     <div class="modal__head"><h3 class="h3">Canjear recompensa</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
-    <div class="modal__body" style="text-align:center"><div class="state__art" style="margin:0 auto 12px">${icon(c.icon)}</div><h3 class="h3">${c.name}</h3><p class="text-muted">${c.sub}</p><div class="sum-total mt-6"><span class="k">Costo</span><span class="v num">${c.cost.toLocaleString('es-EC')} pts</span></div><p class="text-muted mt-2" style="font-size:12px">Saldo tras el canje: ${(DB.rewards.points-c.cost).toLocaleString('es-EC')} pts</p></div>
+    <div class="modal__body" style="text-align:center"><div class="state__art" style="margin:0 auto 12px">${icon(c.icon)}</div><h3 class="h3">${c.name}</h3><p class="text-muted">${c.sub}</p><div class="sum-total mt-6"><span class="k">Costo</span><span class="v num">${c.cost.toLocaleString('es-EC')} ClubMiles</span></div><p class="text-muted mt-2" style="font-size:12px">Saldo tras el canje: ${(DB.rewards.points-c.cost).toLocaleString('es-EC')} ClubMiles</p></div>
     <div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="doRedeem">Confirmar canje</button></div>`);
   ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(ov));
   ov.querySelector('#doRedeem').onclick=(e)=>{ e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ closeModal(ov); successModal('¡Canje exitoso!', `Canjeaste ${c.name}. Recibirás los detalles por correo.`, 'recompensas'); },1000); };
@@ -1019,8 +1034,8 @@ Screens.recuperar = {
    SHELL + ROUTER
    ============================================================ */
 const NAV_GROUPS = [
-  { label:'Principal', items:[ ['inicio','home','Inicio'], ['pantallas','grid','Todas las pantallas'] ] },
-  { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
+  { label:'Principal', items:[ ['inicio','home','Inicio'] ] },
+  { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
   { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pagos','receipt','Pago de servicios'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['programados','calendar','Programados'], ['contactos','contacts','Contactos'], ['mapa','map','Mapa de agencias'] ] },
   { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['aviso-viaje','plane','Aviso de viaje'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'], ['residencia-fiscal','shield','Residencia fiscal'], ['contactenos','headset','Contáctenos'] ] },
   { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
@@ -1055,7 +1070,6 @@ function shell(activeRoute, title) {
         <div class="topbar__title">${title}</div>
         <div class="topbar__spacer"></div>
         <div class="search">${icon('search')}<input placeholder="Buscar movimientos, servicios…" aria-label="Buscar"></div>
-        <button class="btn btn--secondary btn--sm tb-legacy" data-nav="${legacyEquivalent(activeRoute)}" title="Ver cómo es hoy esta pantalla en la app actual (repo Azure)" style="min-height:38px">${icon('clock')} <span class="tb-btn-label">Ver app actual</span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Cambiar tema" title="Modo ${State.theme==='dark'?'claro':'oscuro'}">${icon(State.theme==='dark'?'sun':'moon')}</button>
         <button class="icon-btn notif-dot" aria-label="Notificaciones" id="notifBtn">${icon('bell')}</button>
         <span class="avatar" style="cursor:pointer" data-nav="perfil">${DB.user.initials}</span>
@@ -1162,7 +1176,7 @@ setupNavDelegation();
 function notifPanel() {
   openModal(`<div class="modal__head"><h3 class="h3">Notificaciones</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
   <div class="modal__body">
-    ${[['Consumo aprobado','Supermaxi · $84,32 con Diners Club ···4417','store','Hace 2 h'],['Recordatorio de pago','Tu tarjeta vence el 02 ago','alert','Ayer'],['Puntos acreditados','+320 pts Club por tu consumo','gift','Ayer']].map(n=>`<div class="tx"><span class="tx__ic">${icon(n[2])}</span><div class="tx__main"><div class="tx__title">${n[0]}</div><div class="tx__meta">${n[1]}</div></div><span class="tx__meta">${n[3]}</span></div>`).join('')}
+    ${[['Consumo aprobado','Supermaxi · $84,32 con Diners Club ···4417','store','Hace 2 h'],['Recordatorio de pago','Tu tarjeta vence el 02 ago','alert','Ayer'],['ClubMiles acreditados','+320 ClubMiles por tu consumo','gift','Ayer']].map(n=>`<div class="tx"><span class="tx__ic">${icon(n[2])}</span><div class="tx__main"><div class="tx__title">${n[0]}</div><div class="tx__meta">${n[1]}</div></div><span class="tx__meta">${n[3]}</span></div>`).join('')}
   </div><div class="modal__foot"><button class="btn btn--secondary btn--block" data-close>Cerrar</button></div>`).querySelectorAll('[data-close]').forEach(b=>b.onclick=e=>closeModal(e.currentTarget));
 }
 

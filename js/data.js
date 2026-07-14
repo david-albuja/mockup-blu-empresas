@@ -3,6 +3,16 @@
 const DB = {
   user: { name: 'María Fernanda Robles', first: 'María Fernanda', role: 'Cliente Diners Club', initials: 'MR', email: 'm.robles@email.com', phone: '099 812 4471' },
 
+  // Empresa activa (multiempresa): el nombre encabeza el Home, como en la banca líder.
+  empresa: { name: 'Robles Comercial S.A.', ruc: '1791234567001', otras: ['Robles Retail S.A.S.'] },
+
+  // Resumen de ventas (adquirencia) que encabeza el Home en vez de la posición consolidada.
+  ventasResumen: {
+    porCobrar: 81200.00,      fechaCobro: 'Balance al 14 jul 2026',
+    pagosRecibidos: 96320.06, periodo: '14 jun – 14 jul 2026',
+    ventasMes: 128480.50,     crecimiento: 12.4,
+  },
+
   // Posición consolidada: activo = lo que la empresa TIENE (cuentas + inversiones);
   // pasivo = lo que DEBE (tarjetas de crédito + créditos). Cupo Diners es GLOBAL.
   net: {

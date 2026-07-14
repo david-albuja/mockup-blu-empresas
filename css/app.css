@@ -606,3 +606,30 @@
    En el Home la tarjeta SÍ muestra total a pagar + cupo disponible sobre la imagen
    (observación de negocio); "Pagar hasta" queda fuera, en el cuerpo. */
 .dtl-card .bank-card__foot { display: none; }
+
+/* Resumen de ventas del Home (reemplaza la posición consolidada) — estilo tarjetas
+   centradas: etiqueta arriba, monto grande, caption abajo. */
+.sales-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.sales-card {
+  display: flex; flex-direction: column; gap: 6px; text-align: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 22px 20px; cursor: pointer; width: 100%;
+  transition: box-shadow var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease), transform var(--dur-1) var(--ease);
+}
+.sales-card:hover { box-shadow: var(--e-2); border-color: var(--blu-200); }
+.sales-card:active { transform: translateY(1px); }
+.sales-card:focus-visible { box-shadow: var(--ring); outline: none; }
+.sales-card__label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.sales-card__amt { font-size: 30px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.sales-card__amt .cents { font-size: .58em; font-weight: 700; color: var(--muted); }
+.sales-card__cap { font-size: 12px; color: var(--muted); }
+/* Card destacada (Ventas del mes) + % de crecimiento enfatizado */
+.sales-card--hl { border-color: var(--blu-200); background: linear-gradient(180deg, var(--blu-50) 0%, var(--surface) 60%); text-align: left; }
+.sales-card--hl .sales-card__amt { color: var(--primary-strong); }
+.sales-card__grow {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--success-bg); color: var(--success);
+  font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: var(--r-full);
+}
+.sales-card__grow svg { width: 15px; height: 15px; }
+@media (max-width: 760px){ .sales-summary { grid-template-columns: 1fr; } .sales-card { text-align: left; } }

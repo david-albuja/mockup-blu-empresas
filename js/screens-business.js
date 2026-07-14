@@ -52,7 +52,7 @@ Screens['caja'] = {
     <div class="page-head section">
       <a class="row" style="gap:6px;color:var(--primary);font-weight:600;font-size:13px;margin-bottom:10px;cursor:pointer" data-nav="inicio">${icon('back')} Volver</a>
       <div class="row between wrap" style="gap:12px">
-        <div><p class="eyebrow">Comercios · Adquirencia</p><h1>Tus ventas</h1><p class="text-muted" style="font-size:13px;margin-top:4px">Para ver la información al día, primero haz el cierre de tu POS · Actualizado hasta hoy, 14:20</p></div>
+        <div><p class="eyebrow">Comercios · Adquirencia</p><h1>Mira tus ventas</h1><p class="text-muted" style="font-size:13px;margin-top:4px">Para ver la información al día, primero haz el cierre de tu POS · Actualizado hasta hoy, 14:20</p></div>
         <div class="row wrap" style="gap:8px">
           <div class="control" style="height:42px;width:210px;padding:0 12px">${icon('store')}<select id="cjBranch" aria-label="Local" style="font-weight:600;font-size:13px">${M.branches.map(b=>`<option>${b}</option>`).join('')}</select>${icon('chevronDown')}</div>
           <button class="btn btn--secondary btn--sm" onclick="toast({title:'Exportando',msg:'Se descargará un CSV con las transacciones.',type:'info'})">${icon('download')} Exportar</button>
