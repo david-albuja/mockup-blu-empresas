@@ -8,6 +8,8 @@ const MERCHANT = {
   brands: [ {n:'Visa', v:5820, pct:47, color:'#2C55F5'}, {n:'Mastercard', v:3640, pct:29, color:'#32C5FF'}, {n:'Diners Club', v:2100, pct:17, color:'#4C71FC'}, {n:'Amex', v:920, pct:7, color:'#B9C8FF'} ],
   terminals: [ {n:'POS-01', d:'Caja principal', v:6820, tx:82}, {n:'POS-02', d:'Caja 2', v:3960, tx:41}, {n:'Link de pago', d:'E-commerce', v:1700, tx:25} ],
   settlement: { next:'03 jul 2026', amount:11980.20, account:'Cuenta Corriente ···7781', batch:'#LOTE-2287', pending:2 },
+  weekly: [ {h:'Lun', v:9800.40}, {h:'Mar', v:11200.30}, {h:'Mié', v:8760.20}, {h:'Jue', v:12480.50}, {h:'Vie', v:10540.80}, {h:'Sáb', v:13320.90}, {h:'Dom', v:13537.10} ],
+  monthly: [ {h:'Sem 1', v:68200.10}, {h:'Sem 2', v:74650.30}, {h:'Sem 3', v:71360.15}, {h:'Sem 4', v:98270.20} ],
   tx: [
     ['#00184','14:20','Visa','1123','POS-01','Corriente','Aprobado',120.50],
     ['#00183','13:58','Diners Club','4417','POS-01','Diferido 3m','Aprobado',84.32],
@@ -21,6 +23,23 @@ const MERCHANT = {
     ['#00175','08:39','Visa','6612','POS-01','Corriente','Aprobado',22.10],
   ],
 };
+
+/* Config por rango (Hoy / 7 días / Mes): KPIs, deltas y datos del gráfico */
+const RANGE_DATA = (() => {
+  const COM_RATE = MERCHANT.kpis.comision / MERCHANT.kpis.ventas; // 1,5% + IVA, misma tasa en todos los rangos
+  const build = (ventas, tx, deltaVentas, deltaTx, chart, deltaLabel) => {
+    const comision = Math.round(ventas * COM_RATE * 100) / 100;
+    return { kpis: { ventas, tx, ticket: Math.round((ventas/tx)*100)/100, comision, neto: Math.round((ventas-comision)*100)/100, deltaVentas, deltaTx }, chart, deltaLabel };
+  };
+  return {
+    hoy: build(MERCHANT.kpis.ventas, MERCHANT.kpis.tx, MERCHANT.kpis.deltaVentas, MERCHANT.kpis.deltaTx,
+      { title:'Ventas por hora', sub:'Hoy · actualizado hace 2 min', data:MERCHANT.hourly }, 'vs. ayer'),
+    '7d': build(79640.20, 1042, 9.6, 76,
+      { title:'Ventas por día', sub:'Últimos 7 días', data:MERCHANT.weekly }, 'vs. semana anterior'),
+    mes: build(312480.75, 4180, 14.8, 310,
+      { title:'Ventas por semana', sub:'Este mes', data:MERCHANT.monthly }, 'vs. mes anterior'),
+  };
+})();
 
 /* Gráfico de área (ventas por hora) — SVG, con tooltip por punto */
 function drawArea(host, data) {
@@ -70,14 +89,19 @@ Screens['caja'] = {
     const stBadge = s => `<span class="badge ${s==='Aprobado'?'badge--success':s==='Rechazado'?'badge--error':'badge--neutral'}"><span class="dot"></span>${s}</span>`;
 
     /* ---- Tab Resumen ---- */
+    const RANGE_LABEL = { hoy:'Ventas de hoy', '7d':'Ventas de la semana', mes:'Ventas del mes' };
     function resumen() {
+      const rd = RANGE_DATA[range], rk = rd.kpis;
       const kpis = [
-        ['Ventas de hoy', fmt(k.ventas), 'arrowUp', `+${k.deltaVentas}% vs. ayer`, 'success'],
-        ['Ventas realizadas', k.tx, 'receipt', `+${k.deltaTx} vs. ayer`, 'info'],
-        ['Ticket promedio', fmt(k.ticket), 'chart', 'por venta', 'muted'],
-        ['Comisión', fmt(k.comision), 'coins', '1,5% + IVA', 'muted'],
-        ['Pendiente de pago', fmt(k.neto), 'wallet', 'se deposita el 03 jul', 'success'],
+        [RANGE_LABEL[range], fmt(rk.ventas), 'arrowUp', `+${rk.deltaVentas}% ${rd.deltaLabel}`, 'success'],
+        ['Ventas realizadas', rk.tx, 'receipt', `+${rk.deltaTx} ${rd.deltaLabel}`, 'info'],
+        ['Ticket promedio', fmt(rk.ticket), 'chart', 'por venta', 'muted'],
+        ['Comisión', fmt(rk.comision), 'coins', '1,5% + IVA', 'muted'],
+        ['Pendiente de pago', fmt(rk.neto), 'wallet', 'se deposita el 03 jul', 'success'],
       ];
+      const ventaRatio = rk.ventas / MERCHANT.kpis.ventas, txRatio = rk.tx / MERCHANT.kpis.tx;
+      const brands = M.brands.map(b=>({...b, v: Math.round(b.v*ventaRatio*100)/100}));
+      const terminals = M.terminals.map(t=>({...t, v: Math.round(t.v*ventaRatio*100)/100, tx: Math.round(t.tx*txRatio)}));
       return `
       <div class="grid section mb-6" style="grid-template-columns:repeat(5,1fr);gap:16px">
         ${kpis.map(x=>`<div class="card card--pad"><div class="kpi"><div class="kpi__label">${icon(x[2])} ${x[0]}</div><div class="kpi__value num" style="font-size:22px">${x[1]}</div><div class="kpi__delta ${x[4]==='success'?'text-success':'text-muted'}" style="font-size:12px">${x[3]}</div></div></div>`).join('')}
@@ -85,7 +109,7 @@ Screens['caja'] = {
       <div class="grid dash-grid">
         <div class="grid" style="gap:20px">
           <div class="card card--pad section">
-            <div class="row between mb-4"><div><h2 class="h4">Ventas por hora</h2><span class="text-muted" style="font-size:12px">Hoy · actualizado hace 2 min</span></div><span class="badge badge--info">${fmt(k.ventas)}</span></div>
+            <div class="row between mb-4"><div><h2 class="h4">${rd.chart.title}</h2><span class="text-muted" style="font-size:12px">${rd.chart.sub}</span></div><span class="badge badge--info">${fmt(rk.ventas)}</span></div>
             <div id="cjArea"></div>
           </div>
           <div class="list-card section">
@@ -108,11 +132,11 @@ Screens['caja'] = {
           <div class="card card--pad section">
             <h2 class="h4 mb-4">Ventas por marca</h2>
             <div id="cjBrands"></div>
-            <div class="mt-4">${M.brands.map(b=>`<div class="row between" style="padding:6px 0"><span class="row" style="gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${b.color}"></span>${b.n}</span><span class="num" style="font-weight:600">${fmt(b.v)} · ${b.pct}%</span></div>`).join('')}</div>
+            <div class="mt-4">${brands.map(b=>`<div class="row between" style="padding:6px 0"><span class="row" style="gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${b.color}"></span>${b.n}</span><span class="num" style="font-weight:600">${fmt(b.v)} · ${b.pct}%</span></div>`).join('')}</div>
           </div>
           <div class="card card--pad section">
             <h2 class="h4 mb-4">Ventas por terminal</h2>
-            ${M.terminals.map(t=>`<div class="row between" style="padding:10px 0;border-bottom:1px solid var(--line-2)"><div class="row" style="gap:10px"><span class="prod__ic prod__ic--card" style="width:36px;height:36px">${icon(t.n==='Link de pago'?'bolt':'store')}</span><div><div style="font-weight:600;font-size:13px">${t.n}</div><div class="text-muted" style="font-size:11px">${t.d} · ${t.tx} tx</div></div></div><span class="num" style="font-weight:700">${fmt(t.v)}</span></div>`).join('')}
+            ${terminals.map(t=>`<div class="row between" style="padding:10px 0;border-bottom:1px solid var(--line-2)"><div class="row" style="gap:10px"><span class="prod__ic prod__ic--card" style="width:36px;height:36px">${icon(t.n==='Link de pago'?'bolt':'store')}</span><div><div style="font-weight:600;font-size:13px">${t.n}</div><div class="text-muted" style="font-size:11px">${t.d} · ${t.tx} tx</div></div></div><span class="num" style="font-weight:700">${fmt(t.v)}</span></div>`).join('')}
           </div>
         </div>
       </div>`;
@@ -167,8 +191,9 @@ Screens['caja'] = {
       const body = $('#cjBody');
       if (tab === 'resumen') {
         body.innerHTML = resumen();
-        drawArea($('#cjArea'), M.hourly);
-        drawDonut($('#cjBrands'), M.brands.map(b=>({cat:b.n, pct:b.pct, val:b.v, color:b.color})));
+        const ventaRatio = RANGE_DATA[range].kpis.ventas / MERCHANT.kpis.ventas;
+        drawArea($('#cjArea'), RANGE_DATA[range].chart.data);
+        drawDonut($('#cjBrands'), M.brands.map(b=>({cat:b.n, pct:b.pct, val:Math.round(b.v*ventaRatio*100)/100, color:b.color})));
         $('#cjSeeAll').onclick = () => { tab='transacciones'; syncTabs(); mount(); };
       } else {
         body.innerHTML = transacciones();
@@ -189,7 +214,11 @@ Screens['caja'] = {
     function syncTabs() { view.querySelectorAll('#cjTabs [data-t]').forEach(b=> b.classList.toggle('is-active', b.dataset.t===tab)); }
 
     view.querySelectorAll('#cjTabs [data-t]').forEach(b => b.onclick = () => { tab = b.dataset.t; syncTabs(); mount(); });
-    view.querySelectorAll('#cjRange [data-r]').forEach(b => b.onclick = () => { view.querySelectorAll('#cjRange [data-r]').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); range=b.dataset.r; toast({title:'Rango actualizado', msg:{hoy:'Mostrando hoy',['7d']:'Últimos 7 días',mes:'Este mes'}[range], type:'info'}); });
+    view.querySelectorAll('#cjRange [data-r]').forEach(b => b.onclick = () => {
+      if (b.dataset.r === range) return;
+      view.querySelectorAll('#cjRange [data-r]').forEach(x=>x.classList.remove('is-active'));
+      b.classList.add('is-active'); range = b.dataset.r; mount();
+    });
     $('#cjBatch').onclick = () => { const ov=openModal(`<div class="modal__head"><h3 class="h3">Cerrar lote</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><p class="text-slate">Cerrarás el lote <strong>${M.settlement.batch}</strong> con <strong>${k.tx} transacciones</strong> por <strong>${fmt(k.ventas)}</strong>. El neto de ${fmt(k.neto)} se enviará a liquidación.</p></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="cjDo">Cerrar lote</button></div>`); ov.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>closeModal(ov)); ov.querySelector('#cjDo').onclick=(e)=>{e.currentTarget.classList.add('is-loading');setTimeout(()=>{closeModal(ov);toast({title:'Lote cerrado',msg:'La liquidación se procesará en 24h.',type:'success'});},900);}; };
 
     mount();
