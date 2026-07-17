@@ -75,3 +75,22 @@ function dinersMark(size = 40, fill = '#2E5BFF') {
 }
 /* Wordmark "blu" en minúscula (identidad de marca) */
 function bluWord(cls = '') { return `<span class="blu-word ${cls}">blu</span>`; }
+
+/* QR simulado (no es escaneable) — solo representa "abre la app blu Empresas" */
+function qrPlaceholder(size = 152) {
+  const n = 15, cell = size / n;
+  const finder = (x, y) => `
+    <rect x="${x*cell}" y="${y*cell}" width="${7*cell}" height="${7*cell}" fill="none" stroke="#14182B" stroke-width="${cell}"/>
+    <rect x="${(x+2)*cell}" y="${(y+2)*cell}" width="${3*cell}" height="${3*cell}" fill="#14182B"/>`;
+  let cells = '';
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const inFinder = (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+      if (inFinder) continue;
+      if (((r * 31 + c * 17 + r * c) % 5) < 2) cells += `<rect x="${c*cell}" y="${r*cell}" width="${cell}" height="${cell}" fill="#14182B"/>`;
+    }
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Código QR para abrir la app blu Empresas">
+    <rect width="${size}" height="${size}" fill="#fff"/>${finder(0,0)}${finder(n-7,0)}${finder(0,n-7)}${cells}
+  </svg>`;
+}

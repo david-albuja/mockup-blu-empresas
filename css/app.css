@@ -591,10 +591,19 @@
 .acct-interes--warn { background: var(--warn-bg,#FEF3E2); color: var(--warn,#B7791F); box-shadow: 0 2px 8px rgba(183,121,31,.18); border-color: color-mix(in srgb, var(--warn,#B7791F) 25%, transparent); }
 .acct-interes--danger { background: var(--error-bg); color: var(--error); box-shadow: 0 2px 8px rgba(220,38,38,.18); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
 
+/* QR para continuar en la app (recuperar acceso / crear usuario) */
+.qr-card {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 16px; margin: 0 auto 24px; background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: var(--r-lg); box-shadow: var(--e-1);
+}
+.qr-card svg { border-radius: var(--r-sm); }
+.qr-card span { font-size: 12px; color: var(--muted); font-weight: 500; max-width: 26ch; text-align: center; }
+
 /* ----- Barra de acciones compacta del detalle (patrón Revolut/N26) ----- */
-.act-bar { display: flex; gap: 4px; }
+.act-bar { display: flex; flex-wrap: wrap; gap: 12px 4px; }
 .act-bar button {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  flex: 1 1 30%; min-width: 68px; display: flex; flex-direction: column; align-items: center; gap: 7px;
   background: transparent; border: 0; cursor: pointer; padding: 4px 2px; min-height: 0;
   transition: transform var(--dur-2) var(--ease-out);
 }
@@ -690,3 +699,17 @@
 }
 .sales-card__grow svg { width: 15px; height: 15px; }
 @media (max-width: 760px){ .sales-summary { grid-template-columns: 1fr; } .sales-card { text-align: left; } }
+
+/* ---------- Ventas: barra de filtros ---------- */
+.cj-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cj-filters .control { flex: 1 1 190px; min-width: 160px; gap: 8px; padding: 0 12px; }
+.cj-filters .control select, .cj-filters .control input { font-weight: 600; font-size: 13px; }
+.cj-filters .cj-dl { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--primary); }
+.cj-filters .cj-dl:hover { background: var(--primary-soft); }
+@media (max-width: 640px){ .cj-filters .control { flex-basis: 100%; } }
+
+/* ---------- Ventas: tabla de desglose por canal ---------- */
+.cj-channel th, .cj-channel td { white-space: nowrap; }
+.cj-channel td.num { text-align: right; }
+.cj-cell-meta { font-size: 10px; color: var(--muted); font-weight: 500; margin-bottom: 2px; }
+.cj-channel .cj-total td { background: var(--primary-soft); border-top: 2px solid var(--line); }

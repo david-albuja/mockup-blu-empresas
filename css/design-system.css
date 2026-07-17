@@ -6,47 +6,47 @@
 
 /* ---------- Design Tokens ---------- */
 :root {
-  /* Brand blues (derivados de la paleta real del repo) */
-  --blu-50:  #EDF1FF;
-  --blu-100: #DCE4FF;
-  --blu-200: #B9C8FF;
-  --blu-300: #8FA6FF;
-  --blu-400: #6E8BFF;
-  --blu-500: #4C71FC;   /* picton-blue: primario de marca */
-  --blu-600: #2C55F5;
-  --blu-700: #124CFD;   /* blue-ribbon: acción fuerte */
-  --blu-800: #0E3AC2;
-  --blu-900: #0A277E;
-  --sky:     #32C5FF;
-  --soap:    #44AAFF;
+  /* Brand — escala navy del Tribu Design System (primitives.color.blu) */
+  --blu-50:  #e6e8ef;
+  --blu-100: #b1b8cd;
+  --blu-200: #8c95b4;
+  --blu-300: #576592;
+  --blu-400: #36477d;
+  --blu-500: #04195D;   /* primario de marca (blu.500) */
+  --blu-600: #041755;
+  --blu-700: #031242;   /* acción fuerte (blu.700) */
+  --blu-800: #020e33;
+  --blu-900: #020b27;
+  --sky:     #51C0C2;   /* feedback.new (cian corporativo) */
+  --soap:    #0B56A4;   /* info / link */
 
-  /* Semánticos */
-  --primary:        var(--blu-600);
-  --primary-strong: var(--blu-700);
-  --primary-soft:   var(--blu-50);
+  /* Semánticos — brand primary navy */
+  --primary:        #04195D;
+  --primary-strong: #031242;
+  --primary-soft:   #e6e8ef;
   --on-primary:     #FFFFFF;
 
-  --success:   #107549;
-  --success-bg:#E7F6EF;
-  --warning:   #A28211;
-  --warning-bg:#FFF8EC;
-  --error:     #D0161F;
-  --error-bg:  #FFF0F0;
-  --info:      #2C55F5;
-  --info-bg:   #EDF1FF;
+  --success:   #096B3A;
+  --success-bg:#E8F5E9;
+  --warning:   #8B6901;
+  --warning-bg:#FFF9E6;
+  --error:     #B61010;
+  --error-bg:  #FDEAEA;
+  --info:      #0B56A4;
+  --info-bg:   #E5F1FF;
 
-  /* Neutros */
-  --ink:      #14182B;   /* texto principal */
-  --slate:    #3D4356;   /* texto secundario */
-  --muted:    #6D7278;   /* texto terciario / hints */
+  /* Neutros (surface.text / border del DS) */
+  --ink:      #141414;   /* texto principal (surface.text.primary) */
+  --slate:    #333333;   /* texto secundario (surface.text.secondary) */
+  --muted:    #757575;   /* texto terciario (surface.text.tertiary) */
   --disabled: #A6ABB8;
-  --line:     #E6E9F2;   /* bordes/dividers */
-  --line-2:   #EEF1F8;
-  --bg:       #F4F6FC;   /* fondo app */
-  --bg-2:     #EFF2FA;
+  --line:     #CBCBCB;   /* bordes/dividers (surface.border.default) */
+  --line-2:   #EEEEEE;   /* surface.border.faint */
+  --bg:       #F6F6F6;   /* fondo app (surface.background.default) */
+  --bg-2:     #EEEEEE;
   --surface:  #FFFFFF;   /* cards */
-  --surface-2:#FBFCFE;
-  --overlay:  rgba(16, 22, 51, 0.52);
+  --surface-2:#F8F8FB;   /* slate.50 */
+  --overlay:  rgba(20, 20, 20, 0.55);
 
   /* Navy premium (derivado de la identidad de marca BLU / Diners Club) */
   --navy-950: #0B1230;
@@ -58,15 +58,19 @@
   --royal-2:  #2E5BFF;   /* azul Diners Club (acento) */
   --gold:     #E4B876;   /* luz cálida ambiente (acento premium) */
 
-  /* Gradientes de marca */
-  --grad-brand: linear-gradient(135deg, #2C55F5 0%, #4C71FC 55%, #44AAFF 100%);
-  --grad-card:  linear-gradient(135deg, #0A277E 0%, #124CFD 55%, #32C5FF 130%);
-  --grad-sky:   linear-gradient(120deg, #4C71FC 0%, #32C5FF 100%);
-  --grad-navy:  linear-gradient(160deg, #16224D 0%, #24345F 55%, #3D549E 120%);
-  --grad-navy-soft: linear-gradient(135deg, #16204A 0%, #232F5E 100%);
+  /* Gradientes de marca — navy DS */
+  --grad-brand: linear-gradient(135deg, #04195D 0%, #36477d 60%, #576592 120%);
+  --grad-card:  linear-gradient(135deg, #031242 0%, #04195D 55%, #36477d 130%);
+  --grad-sky:   linear-gradient(120deg, #04195D 0%, #002fc9 100%);
+  --grad-navy:  linear-gradient(160deg, #020b27 0%, #04195D 55%, #36477d 120%);
+  --grad-navy-soft: linear-gradient(135deg, #031242 0%, #04195D 100%);
 
-  /* Tipografía */
-  --font: 'Roboto', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  /* Alias warn (usado por pills de interés/estado) */
+  --warn:    #8B6901;
+  --warn-bg: #FFF9E6;
+
+  /* Tipografía — Mulish (Tribu Design System) */
+  --font: 'Mulish', -apple-system, 'Segoe UI', system-ui, sans-serif;
   --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px;
   --fs-16: 16px; --fs-18: 18px; --fs-20: 20px; --fs-24: 24px;
   --fs-30: 30px; --fs-36: 36px;
