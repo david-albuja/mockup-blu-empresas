@@ -87,10 +87,25 @@ Screens['caja'] = {
   title: 'Ventas',
   render(view) {
     const M = MERCHANT, k = M.kpis;
-    let tab = 'resumen', filterMarca = 'all', filterEstado = 'all';
+    let tab = 'resumen';
+    const filters = { local: 'all', rango: 'mes', estado: 'all', marca: 'all' };
 
     const fmt = n => '$' + n.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const ticket = Math.round((k.ventas / k.tx) * 100) / 100; // fórmula real: ventas / nº transacciones
+
+    // Filtros funcionales: establecimiento y rango escalan todos los montos.
+    const LOCAL_F = { all: 1, 'Local Centro Histórico': 0.42, 'Local Quicentro Norte': 0.33, 'Local Cumbayá': 0.25 };
+    const RANGO = { mes: { f: 1, label: M.periodo }, '7d': { f: 0.34, label: 'Últimos 7 días' }, hoy: { f: 0.10, label: 'Hoy · 14 jul 2026' } };
+    function scaled() {
+      const f = (LOCAL_F[filters.local] ?? 0.3) * RANGO[filters.rango].f;
+      const ventas = k.ventas * f, tx = Math.max(1, Math.round(k.tx * f));
+      return {
+        f, ventas, tx, ticket: ventas / tx, comision: k.comision * f,
+        pagos: M.pagosRecibidos * f, porCobrar: M.porCobrar * f,
+        deltaTx: Math.round(k.deltaTx * f),
+        periodo: RANGO[filters.rango].label,
+        localLabel: filters.local === 'all' ? 'Todos los locales' : filters.local,
+      };
+    }
 
     view.innerHTML = `
     <div class="page-head section">
@@ -104,8 +119,8 @@ Screens['caja'] = {
       </div>
       <!-- Filtros -->
       <div class="cj-filters mt-4">
-        <div class="control" style="height:42px"><span class="text-muted" style="font-size:12px;white-space:nowrap">Establecimiento</span><select id="cjBranch" aria-label="Establecimiento">${M.branches.map((b,i)=>`<option>${i===0?'Seleccionados (11)':b}</option>`).join('')}</select>${icon('chevronDown')}</div>
-        <div class="control" style="height:42px"><span class="text-muted" style="font-size:12px;white-space:nowrap">Fecha</span><input value="${M.periodo}" aria-label="Rango de fechas" readonly style="cursor:pointer">${icon('calendar')}</div>
+        <div class="control" style="height:42px"><span class="text-muted" style="font-size:12px;white-space:nowrap">Establecimiento</span><select id="cjBranch" aria-label="Establecimiento">${M.branches.map((b,i)=>`<option value="${i===0?'all':b}">${i===0?'Todos (11)':b}</option>`).join('')}</select>${icon('chevronDown')}</div>
+        <div class="control" style="height:42px"><span class="text-muted" style="font-size:12px;white-space:nowrap">Fecha</span><select id="cjFecha" aria-label="Rango de fechas"><option value="mes">Este periodo · ${M.periodo}</option><option value="7d">Últimos 7 días</option><option value="hoy">Hoy · 14 jul</option></select>${icon('calendar')}</div>
         <div class="control" style="height:42px"><span class="text-muted" style="font-size:12px;white-space:nowrap">Estado</span><select id="cjEstado" aria-label="Estado"><option value="all">Todos</option>${M.channelStates.map(s=>`<option>${s}</option>`).join('')}</select>${icon('chevronDown')}</div>
         <div class="control" style="height:42px"><span class="text-muted" style="font-size:12px;white-space:nowrap">Marca / tipo</span><select id="cjMarca" aria-label="Marca o tipo"><option value="all">Todas</option>${M.brandTx.map(b=>`<option>${b.n}</option>`).join('')}</select>${icon('chevronDown')}</div>
         <div class="row" style="gap:6px">
@@ -118,12 +133,13 @@ Screens['caja'] = {
 
     /* ---- Tab Resumen ---- */
     function resumen() {
+      const sc = scaled();
       const kpis = [
-        ['Ventas', fmt(k.ventas), 'arrowUp', `+${k.deltaVentas}% vs. periodo anterior`, 'success'],
-        ['Ventas realizadas', k.tx, 'receipt', `+${k.deltaTx} vs. periodo anterior`, 'info'],
-        ['Ticket promedio', fmt(ticket), 'chart', 'ventas ÷ nº de transacciones', 'muted'],
-        ['Comisión', fmt(k.comision), 'coins', 'Descarga los reportes para ver el detalle', 'muted'],
-        ['Pendiente de pago', fmt(M.porCobrar), 'wallet', 'por liquidar', 'muted'],
+        ['Ventas', fmt(sc.ventas), 'arrowUp', `+${k.deltaVentas}% vs. periodo anterior`, 'success'],
+        ['Ventas realizadas', sc.tx, 'receipt', `+${sc.deltaTx} vs. periodo anterior`, 'info'],
+        ['Ticket promedio', fmt(sc.ticket), 'chart', 'ventas ÷ nº de transacciones', 'muted'],
+        ['Comisión', fmt(sc.comision), 'coins', 'Descarga los reportes para ver el detalle', 'muted'],
+        ['Pendiente de pago', fmt(sc.porCobrar), 'wallet', 'por liquidar', 'muted'],
       ];
       return `
       <div class="grid section mb-6" style="grid-template-columns:repeat(5,1fr);gap:16px">
@@ -132,7 +148,7 @@ Screens['caja'] = {
       <div class="grid dash-grid">
         <div class="grid" style="gap:20px">
           <div class="card card--pad section">
-            <div class="row between mb-4"><div><h2 class="h4">Ventas por hora</h2><span class="text-muted" style="font-size:12px">Periodo ${M.periodo}</span></div><span class="badge badge--info">${fmt(k.ventas)}</span></div>
+            <div class="row between mb-4"><div><h2 class="h4">Ventas por hora</h2><span class="text-muted" style="font-size:12px">${sc.localLabel} · ${sc.periodo}</span></div><span class="badge badge--info">${fmt(sc.ventas)}</span></div>
             <div id="cjArea"></div>
           </div>
           <div class="card card--pad section">
@@ -143,8 +159,8 @@ Screens['caja'] = {
         <div class="grid" style="gap:20px">
           <div class="card card--pad section" style="background:var(--grad-card);color:#fff">
             <div class="row between"><span style="font-size:13px;opacity:.9">Pagos recibidos</span>${icon('wallet')}</div>
-            <div class="num" style="font-size:30px;font-weight:800;margin-top:8px">${fmt(M.pagosRecibidos)}</div>
-            <div style="font-size:13px;opacity:.9">Periodo ${M.periodo}</div>
+            <div class="num" style="font-size:30px;font-weight:800;margin-top:8px">${fmt(sc.pagos)}</div>
+            <div style="font-size:13px;opacity:.9">${sc.localLabel} · ${sc.periodo}</div>
             <div class="divider" style="background:rgba(255,255,255,.25)"></div>
             <div class="row between" style="font-size:13px;opacity:.95"><span>Cuenta destino</span><span>${M.settlement.account}</span></div>
             <div class="row between mt-2" style="font-size:13px;opacity:.95"><span>Próximo depósito</span><span class="num">${M.settlement.next}</span></div>
@@ -153,49 +169,57 @@ Screens['caja'] = {
           <div class="card card--pad section">
             <h2 class="h4 mb-4">Ventas por marca</h2>
             <div id="cjBrands"></div>
-            <div class="mt-4">${M.brands.map(b=>`<div class="row between" style="padding:6px 0"><span class="row" style="gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${b.color}"></span>${b.n}</span><span class="num" style="font-weight:600">${fmt(b.v)} · ${b.pct}%</span></div>`).join('')}</div>
+            <div class="mt-4">${M.brands.map(b=>`<div class="row between" style="padding:6px 0"><span class="row" style="gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${b.color}"></span>${b.n}</span><span class="num" style="font-weight:600">${fmt(b.v*sc.f)} · ${b.pct}%</span></div>`).join('')}</div>
           </div>
         </div>
       </div>`;
     }
 
-    /* ---- Tab Transacciones: desglose por canal y marca ---- */
-    function channelTable(brand) {
+    /* ---- Tab Transacciones: desglose por canal y marca (con filtros aplicados) ---- */
+    function channelTable(brand, f) {
       const rows = channelData(brand.n);
+      const states = filters.estado === 'all' ? M.channelStates : [filters.estado];
       const totals = {};
-      M.channelStates.forEach(st => totals[st] = rows.reduce((s,r)=>s+r.cells[st].valor, 0));
-      const cell = c => `<td class="num"><div class="cj-cell-meta">Recaps: ${c.recaps} · Valor: 15</div><div style="font-weight:700">${fmt(c.valor)}</div></td>`;
+      states.forEach(st => totals[st] = rows.reduce((s,r)=>s+r.cells[st].valor*f, 0));
+      const cell = c => `<td class="num"><div class="cj-cell-meta">Recaps: ${c.recaps} · Valor: 15</div><div style="font-weight:700">${fmt(c.valor*f)}</div></td>`;
       return `
       <div class="card card--pad section">
         <div class="row between wrap mb-4" style="gap:10px">
-          <div><h2 class="h4">${brand.n}</h2><p class="text-muted" style="font-size:12px;margin-top:2px">Para el periodo seleccionado existen ${brand.notas} notas de débito por anticipos de facturación por un monto de ${fmt(brand.notasMonto)}.</p></div>
+          <div><h2 class="h4">${brand.n}</h2><p class="text-muted" style="font-size:12px;margin-top:2px">Para el periodo seleccionado existen ${brand.notas} notas de débito por anticipos de facturación por un monto de ${fmt(brand.notasMonto*f)}.</p></div>
           <button class="btn btn--secondary btn--sm" onclick="toast({title:'Comprobantes virtuales',msg:'${brand.n}: se generará el archivo.',type:'info'})">${icon('receipt')} Comprobantes virtuales</button>
         </div>
         <div style="overflow-x:auto"><table class="tbl cj-channel">
-          <thead><tr><th>Canal</th>${M.channelStates.map(s=>`<th class="num">${s}</th>`).join('')}</tr></thead>
+          <thead><tr><th>Canal</th>${states.map(s=>`<th class="num">${s}</th>`).join('')}</tr></thead>
           <tbody>
-            ${rows.map(r=>`<tr><td style="font-weight:600">${r.canal}</td>${M.channelStates.map(st=>cell(r.cells[st])).join('')}</tr>`).join('')}
-            <tr class="cj-total"><td style="font-weight:800">Total:</td>${M.channelStates.map(st=>`<td class="num" style="font-weight:800">${fmt(totals[st])}</td>`).join('')}</tr>
+            ${rows.map(r=>`<tr><td style="font-weight:600">${r.canal}</td>${states.map(st=>cell(r.cells[st])).join('')}</tr>`).join('')}
+            <tr class="cj-total"><td style="font-weight:800">Total:</td>${states.map(st=>`<td class="num" style="font-weight:800">${fmt(totals[st])}</td>`).join('')}</tr>
           </tbody>
         </table></div>
       </div>`;
     }
     function transacciones() {
-      const brands = M.brandTx.filter(b => filterMarca === 'all' || b.n === filterMarca);
+      const sc = scaled();
+      const brands = M.brandTx.filter(b => filters.marca === 'all' || b.n === filters.marca);
       if (!brands.length) return emptyState('Sin resultados', 'No hay marcas que coincidan con el filtro.', 'search');
-      return brands.map(channelTable).join('');
+      const chips = [];
+      if (filters.local !== 'all') chips.push(scaled().localLabel);
+      if (filters.rango !== 'mes') chips.push(scaled().periodo);
+      if (filters.estado !== 'all') chips.push('Estado: ' + filters.estado);
+      const summary = chips.length ? `<p class="text-muted section" style="font-size:12px;margin-bottom:8px">Filtros aplicados: ${chips.join(' · ')}</p>` : '';
+      return summary + brands.map(b => channelTable(b, sc.f)).join('');
     }
 
     function mount() {
       const body = $('#cjBody');
+      const sc = scaled();
       if (tab === 'resumen') {
         body.innerHTML = resumen();
-        drawArea($('#cjArea'), M.hourly);
+        drawArea($('#cjArea'), M.hourly.map(d=>({ ...d, v: d.v * sc.f })));
         drawBars($('#cjPagos'), [
-          { label:'Pagos recibidos', v:M.pagosRecibidos, color:'var(--success)' },
-          { label:'Pendiente de pago', v:M.porCobrar, color:'var(--primary)' },
+          { label:'Pagos recibidos', v:sc.pagos, color:'var(--success)' },
+          { label:'Pendiente de pago', v:sc.porCobrar, color:'var(--primary)' },
         ]);
-        drawDonut($('#cjBrands'), M.brands.map(b=>({cat:b.n, pct:b.pct, val:b.v, color:b.color})));
+        drawDonut($('#cjBrands'), M.brands.map(b=>({cat:b.n, pct:b.pct, val:b.v*sc.f, color:b.color})));
       } else {
         body.innerHTML = transacciones();
       }
@@ -203,8 +227,10 @@ Screens['caja'] = {
     function syncTabs() { view.querySelectorAll('#cjTabs [data-t]').forEach(b=> b.classList.toggle('is-active', b.dataset.t===tab)); }
 
     view.querySelectorAll('#cjTabs [data-t]').forEach(b => b.onclick = () => { tab = b.dataset.t; syncTabs(); mount(); });
-    $('#cjMarca').onchange = (e) => { filterMarca = e.target.value; if (tab === 'transacciones') mount(); };
-    $('#cjEstado').onchange = (e) => { filterEstado = e.target.value; };
+    $('#cjBranch').onchange = (e) => { filters.local = e.target.value; mount(); };
+    $('#cjFecha').onchange  = (e) => { filters.rango = e.target.value; mount(); };
+    $('#cjEstado').onchange = (e) => { filters.estado = e.target.value; if (tab === 'transacciones') mount(); };
+    $('#cjMarca').onchange  = (e) => { filters.marca = e.target.value; if (tab === 'transacciones') mount(); };
 
     mount();
   }

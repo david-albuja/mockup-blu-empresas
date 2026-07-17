@@ -591,6 +591,17 @@
 .acct-interes--warn { background: var(--warn-bg,#FEF3E2); color: var(--warn,#B7791F); box-shadow: 0 2px 8px rgba(183,121,31,.18); border-color: color-mix(in srgb, var(--warn,#B7791F) 25%, transparent); }
 .acct-interes--danger { background: var(--error-bg); color: var(--error); box-shadow: 0 2px 8px rgba(220,38,38,.18); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
 
+/* Home carrusel: cuenta/crédito/inversión compactas para igualar el alto de la tarjeta */
+.prod-strip .prod-xl { min-height: 219px; }
+.prod-strip .acct-card-plain .prod-xl__body { padding-top: 14px; padding-bottom: 14px; justify-content: center; }
+.prod-strip .acct-card-plain .prod__ic { width: 42px; height: 42px; border-radius: 12px; margin-bottom: 4px !important; }
+.prod-strip .acct-card-plain .prod__ic svg { width: 21px; height: 21px; }
+.prod-strip .acct-card-plain .prod-xl__name { font-size: 15px; }
+.prod-strip .acct-card-plain .prod-xl__id { font-size: 12px; margin-top: 2px; }
+.prod-strip .acct-card-plain .prod-xl__amt { margin-top: 8px !important; }
+.prod-strip .acct-card-plain .prod-xl__sub { font-size: 12px; margin-top: 3px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prod-strip .acct-card-plain .acct-interes { margin-top: 8px !important; font-size: 12px; padding: 4px 10px; }
+
 /* QR para continuar en la app (recuperar acceso / crear usuario) */
 .qr-card {
   display: inline-flex; flex-direction: column; align-items: center; gap: 10px;
@@ -704,6 +715,7 @@
 .cj-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .cj-filters .control { flex: 1 1 190px; min-width: 160px; gap: 8px; padding: 0 12px; }
 .cj-filters .control select, .cj-filters .control input { font-weight: 600; font-size: 13px; }
+.cj-filters .control select { -webkit-appearance: none; appearance: none; }
 .cj-filters .cj-dl { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--primary); }
 .cj-filters .cj-dl:hover { background: var(--primary-soft); }
 @media (max-width: 640px){ .cj-filters .control { flex-basis: 100%; } }
