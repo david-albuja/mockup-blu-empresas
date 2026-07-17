@@ -9,19 +9,31 @@ Screens['detalle-producto'] = {
     const { type, item: p } = found;
     const usedPct = p.cupo ? Math.round((p.usado||0)/p.cupo*100) : 0;
     const movsBy = (name) => { const f = DB.movements.filter(m=>m.card===name); return (f.length?f:DB.movements.slice(0,5)); };
-    /* Movimientos a lo ancho, al final. Si el total supera el umbral, se ofrece Excel. */
-    const movsSection = (name, tabs='', total=null) => {
-      const n = (total == null) ? movsBy(name).length : total;
-      if (n > DATA_LIMIT.movimientos) {
-        return `<div class="section mt-6"><h2 class="h4 mb-4">Movimientos</h2>${bulkExport(n,'movimientos','movimientos.xlsx')}</div>`;
-      }
-      return `<div class="list-card section mt-6">
+    /* Movimientos con paginador simple (anterior/siguiente + contador). */
+    const movsSection = (name, tabs='') => `<div class="list-card section mt-6">
         <div class="list-card__head"><h2 class="h4">Movimientos</h2><div class="row" style="gap:8px">${tabs}${exportChip('movimientos.xlsx')}</div></div>
-        <div class="list-card__body" style="columns:340px 2;column-gap:40px">${movsBy(name).map(UI.txRow).join('')}</div>
+        <div class="list-card__body" id="mvRows"></div>
+        <div class="row between" style="padding:12px 20px;border-top:1px solid var(--line-2)">
+          <span class="text-muted" style="font-size:13px" id="mvInfo"></span>
+          <div class="row" style="gap:6px"><button class="btn btn--secondary btn--sm" id="mvPrev">${icon('back')} Anterior</button><button class="btn btn--secondary btn--sm" id="mvNext">Siguiente ${icon('chevron')}</button></div>
+        </div>
       </div>`;
-    };
-    /* Barra de acciones compacta (patrón Revolut/N26): íconos circulares en fila */
-    const actBar = (acts) => `<div class="card card--pad" style="padding:14px 10px"><div class="act-bar">${acts.map(a=>`<button class="act-bar__btn" data-nav="${a[2]}" aria-label="${a[1]}"><span class="act-bar__ic">${icon(a[0])}</span><span class="act-bar__lbl">${a[1]}</span></button>`).join('')}</div></div>`;
+    function wireMovs(name) {
+      const rowsEl = $('#mvRows'); if (!rowsEl) return;
+      const list = movsBy(name); const per = 5; let page = 0;
+      const pages = Math.max(1, Math.ceil(list.length / per));
+      const draw = () => {
+        rowsEl.innerHTML = list.slice(page*per, page*per+per).map(UI.txRow).join('');
+        $('#mvInfo').textContent = `Mostrando ${page*per+1}–${Math.min((page+1)*per, list.length)} de ${list.length}`;
+        $('#mvPrev').disabled = page===0; $('#mvNext').disabled = page>=pages-1;
+      };
+      $('#mvPrev').onclick = () => { if (page>0){ page--; draw(); } };
+      $('#mvNext').onclick = () => { if (page<pages-1){ page++; draw(); } };
+      draw();
+    }
+    /* Barra de acciones compacta (patrón Revolut/N26): íconos circulares.
+       Cada acción: [icono, label, ruta] o [icono, label, '', onclickJS]. */
+    const actBar = (acts) => `<div class="card card--pad" style="padding:14px 10px"><div class="act-bar">${acts.map(a=>`<button class="act-bar__btn" ${a[3]?`onclick="${a[3]}"`:`data-nav="${a[2]}"`} aria-label="${a[1]}"><span class="act-bar__ic">${icon(a[0])}</span><span class="act-bar__lbl">${a[1]}</span></button>`).join('')}</div></div>`;
 
     if (type === 'card') {
       const esAdic = p.principal === false;
@@ -30,12 +42,13 @@ Screens['detalle-producto'] = {
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid dtl-card" style="gap:16px">
           ${UI.bankCard(p)}
-          ${actBar([['receipt','Diferir','diferir'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo'],['gift','Beneficios','beneficios']])}
+          ${actBar([['receipt','Diferir','diferir'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo'],['gift','Beneficios','beneficios'],['chart','Spend Analyzer','',"toast({title:'Spend Analyzer',msg:'Analiza tus consumos por categoría y comercio.',type:'info'})"],['certificate','Certificado','certificados']])}
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Detalle de la tarjeta',
-            kv('Titular', esAdic ? (p.titular||'Adicional') : DB.user.name)
-            + kv('Tipo', esAdic ? 'Adicional' : 'Principal')
+            kv('Tipo', esAdic ? 'Adicional' : 'Principal')
+            + kv('Fecha de corte', p.corte || '—')
+            + kv('Deuda total', money(p.deudaTotal||0), 1)
             + kv('Pago mínimo', money(p.pagoMin), 1)
             + (p.pagoTotal>0
                 ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Total a pagar · hasta ${p.pago}</div><div class="detail-cta__amt num">${money(p.pagoTotal)}</div></div><button class="btn btn--primary" data-nav="pago-tarjeta">Pagar tarjeta</button></div>`
@@ -43,7 +56,8 @@ Screens['detalle-producto'] = {
           ${infoBanner('El cupo de crédito es global y compartido entre todas las tarjetas Diners de la empresa; por eso no se muestra un cupo por tarjeta.','card')}
         </div>
       </div>
-      ${movsSection(p.name, `<div class="segmented"><button class="is-active">Todos</button><button>Consumos</button><button>Diferidos</button></div>`, p.movTotal)}`;
+      ${movsSection(p.name, `<div class="segmented"><button class="is-active">Todos</button><button>Corriente</button><button>Diferidos</button></div>`)}`;
+      wireMovs(p.name);
       return;
     }
 
@@ -63,31 +77,39 @@ Screens['detalle-producto'] = {
         </div>
       </div>
       ${movsSection(p.name)}`;
+      wireMovs(p.name);
       return;
     }
 
     if (type === 'account') {
       const rate = p.tasa ? kv('Tasa de interés', `<span class="text-success" style="font-weight:700">${p.tasa}</span>`) : '';
+      const estadoCtaJs = `toast({title:'Estado de cuenta',msg:'Generado y enviado a tu correo.',type:'info'})`;
       view.innerHTML = `
-      ${pageHead(p.name, `${p.type} · ${p.num}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="toast({title:'Certificado de cuenta',msg:'Generado y enviado a tu correo.',type:'info'})">${icon('download')} Certificado</button>`)}
+      ${pageHead(p.name, `${p.type} · ${p.num}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="${estadoCtaJs}">${icon('download')} Estado de cuenta</button>`)}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid" style="gap:16px">
-          <div class="card card--pad" style="background:var(--grad-card);color:#fff">
-            <div class="row between"><span style="font-size:13px;opacity:.85">${p.type} · ${p.num}</span>${icon('wallet')}</div>
-            <div class="text-white" style="font-size:13px;opacity:.85;margin-top:16px">Saldo disponible</div>
-            <div class="num" style="font-size:32px;font-weight:800">${State.masked?'••••••':money(p.saldo)}</div>
-            ${p.tasa ? `<div style="margin-top:12px"><span class="prod-xl__cover-rate">${p.tasa}</span></div>` : ''}
+          <div class="prod-xl acct-card-plain" style="width:100%">
+            <div class="prod-xl__body">
+              <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
+              <div class="prod-xl__name">${p.name}</div>
+              <div class="prod-xl__id num">${p.type} · ${p.num}</div>
+              <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${State.masked?'$ ••••••':money(p.saldo)}</div>
+              <div class="prod-xl__sub">Saldo disponible</div>
+              ${p.interesMes ? `<div class="acct-interes">${icon('arrowUp')} <strong class="num">${money(p.interesMes, true)}</strong> este mes</div>` : (p.tasa ? `<div class="acct-interes">${icon('arrowUp')} ${p.tasa}</div>` : '')}
+            </div>
           </div>
-          ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['certificate','Certificado','certificados']])}
+          ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['services','Configurar','',"toast({title:'Configurar cuenta',msg:'Alias, alertas y preferencias.',type:'info'})"],['certificate','Estado de cuenta','',estadoCtaJs]])}
         </div>
         <div class="grid" style="gap:20px">
-          ${panel('Detalle de la cuenta', kv('Titular',DB.user.name)+kv('Tipo de cuenta',p.type)+kv('Número',p.num)+rate+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
+          ${panel('Detalle de la cuenta', kv('Tipo de cuenta',p.type)+kv('Número',p.num)+rate+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
             + (p.interesMes
                 ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Rendimiento este mes · ${p.tasa}</div><div class="detail-cta__amt num" style="color:var(--success)">${money(p.interesMes, true)}</div></div><button class="btn btn--primary" data-nav="transferencias">Transferir</button></div>`
                 : `<div class="detail-cta"><div class="text-muted" style="font-size:13px">Mueve tu dinero a otras cuentas o bancos</div><button class="btn btn--primary" data-nav="transferencias">Transferir</button></div>`))}
+          ${infoBanner('El retiro sin tarjeta desde cuenta aplica solo para personas naturales con RUC.','atm')}
         </div>
       </div>
-      ${movsSection('Ahorros', '', p.movTotal)}`;
+      ${movsSection('Ahorros')}`;
+      wireMovs('Ahorros');
       return;
     }
 
@@ -119,7 +141,8 @@ Screens['detalle-producto'] = {
           ${e.consultarDiners ? infoBanner(`Este crédito está ${e.label.toLowerCase()}. El saldo total y las condiciones se gestionan directamente con Diners Club.`,'alert') : infoBanner('Puedes abonar a capital para reducir tu plazo o cuota.','coins')}
         </div>
       </div>
-      ${movsSection(p.name, '', p.movTotal)}`;
+      ${movsSection(p.name)}`;
+      wireMovs(p.name);
       return;
     }
 
@@ -141,7 +164,8 @@ Screens['detalle-producto'] = {
           + `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Rendimiento estimado · ${p.vence}</div><div class="detail-cta__amt num" style="color:var(--success)">${money(p.monto*0.0725)}</div></div><button class="btn btn--primary" data-nav="sim-credito">Simular</button></div>`)}
       </div>
     </div>
-    ${movsSection(p.name, '', p.movTotal)}`;
+    ${movsSection(p.name)}`;
+    wireMovs(p.name);
   }
 };
 

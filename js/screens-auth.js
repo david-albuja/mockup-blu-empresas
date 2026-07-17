@@ -33,16 +33,18 @@ Screens['registro'] = {
   }
 };
 
-/* Crear usuario y clave */
+/* Crear usuario y clave — por seguridad se hace desde la app blu Empresas */
 Screens['crear-usuario'] = {
   title: 'Crear usuario', full: true,
   render(view) {
-    view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><form class="auth__form"><div class="brand" style="padding-left:0"><div class="brand__mark">b</div><div class="brand__name">blu</div></div><h2 class="h2 mt-4">Crea tu usuario y clave</h2><p class="text-muted mb-6">Configura tus credenciales de acceso.</p>
-      <div class="field"><label>Usuario</label><div class="control">${icon('user')}<input placeholder="Elige un usuario"></div><span class="hint">Entre 6 y 20 caracteres, sin espacios.</span></div>
-      <div class="field"><label>Contraseña</label><div class="control">${icon('lock')}<input type="password" id="p1" placeholder="••••••••"><button type="button" class="eye-toggle" onclick="const i=this.previousElementSibling;i.type=i.type==='password'?'text':'password'">${icon('eye')}</button></div></div>
-      <div class="field"><label>Confirmar contraseña</label><div class="control">${icon('lock')}<input type="password" id="p2" placeholder="••••••••"></div><span class="error-text">${icon('alert')} Las contraseñas no coinciden.</span></div>
-      <button class="btn btn--primary btn--lg btn--block" type="button" id="cuBtn">Guardar credenciales</button></form></section></div>`;
-    $('#cuBtn').onclick=()=>{ const a=$('#p1').value,b=$('#p2').value; const f=$('#p2').closest('.field'); if(!a||a!==b){ f.classList.add('has-error'); return; } f.classList.remove('has-error'); location.hash='#/inicio'; toast({title:'Credenciales creadas',type:'success'}); };
+    view.innerHTML = `<div class="auth"><section class="auth__panel" style="grid-column:1/-1"><div class="auth__form" style="text-align:center">
+      <a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;margin-bottom:16px;justify-content:center">${icon('back')} Volver al ingreso</a>
+      <div class="state__art" style="margin:0 auto 16px;background:var(--blu-50);color:var(--primary)">${icon('shield')}</div>
+      <h2 class="h2">Crea tu usuario desde la app</h2>
+      <p class="text-muted mt-2 mb-6" style="max-width:42ch;margin-left:auto;margin-right:auto">Para tu seguridad, la creación de usuario y contraseña se hace desde la app blu Empresas. Escanea el código y sigue los pasos desde ahí.</p>
+      <div class="qr-card">${qrPlaceholder(140)}<span>Escanea con tu celular para abrir blu Empresas</span></div>
+      <a class="btn btn--primary btn--lg btn--block" href="#/login">Entendido, volver al ingreso</a>
+    </div></section></div>`;
   }
 };
 

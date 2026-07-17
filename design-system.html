@@ -6,9 +6,9 @@
 <title>BLU Empresas · Design System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/design-system.css?v=45">
-<link rel="stylesheet" href="css/app.css?v=45">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/design-system.css?v=48">
+<link rel="stylesheet" href="css/app.css?v=48">
 <style>
   /* ---------- Motor de presentación (deck) — mismo patrón que presentacion.html ---------- */
   *{box-sizing:border-box}
@@ -154,7 +154,7 @@
     <div class="wrap">
       <div class="ds-eyebrow">Fundamentos · Tipografía</div>
       <h2 class="ds-h2">Una sola familia, jerarquía clara.</h2>
-      <p class="ds-lead"><b style="color:var(--ink)">Roboto</b> en toda la plataforma. Escala de tamaños fija (<code>--fs-11</code> a <code>--fs-36</code>) y utilidades <code>.h1</code>–<code>.h4</code> para encabezados.</p>
+      <p class="ds-lead"><b style="color:var(--ink)">Mulish</b> en toda la plataforma (fuente del Tribu Design System). Escala de tamaños fija (<code>--fs-11</code> a <code>--fs-36</code>) y utilidades <code>.h1</code>–<code>.h4</code> para encabezados.</p>
       <div class="ds-grid" style="margin-top:24px">
         <div class="type-row"><span class="tag">.h1 · 30px</span><span class="sample h1">Encabezado principal</span></div>
         <div class="type-row"><span class="tag">.h2 · 24px</span><span class="sample h2">Encabezado de sección</span></div>
@@ -328,8 +328,10 @@
       <div class="gov-list">
         <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Botones</b><p>Primario navy #04195d sólido, pill, estados hover/press/disabled y theme-aware — tomado 1:1 de <code>/tokens/components/button.json</code>.</p></div></div>
         <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Modo oscuro</b><p>Tokens paralelos completos (color, sombra, superficie) bajo <code>[data-theme="dark"]</code>, no solo inversión de brillo.</p></div></div>
-        <div class="gov-item pending"><span class="ic gov-ic-alert"></span><div><b>Resto de acentos</b><p>Links, tabs activos y gráficos siguen en el azul del rediseño (<code>--blu-600/700</code>); un rebrand total a navy es una decisión de negocio aparte.</p></div></div>
-        <div class="gov-item pending"><span class="ic gov-ic-alert"></span><div><b>Naming --warn vs. --warning</b><p>Componentes nuevos (pills de interés) usan <code>--warn</code> con fallback; el resto del sistema usa <code>--warning</code>. Unificar en la próxima pasada de tokens.</p></div></div>
+        <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Color de marca navy</b><p>Toda la app usa la escala <code>blu</code> navy del DS (primario <code>#04195D</code>): botones, links, tabs, gráficos e íconos. Ya no quedan acentos del azul del rediseño anterior.</p></div></div>
+        <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Tipografía Mulish</b><p>Fuente <code>Mulish</code> del Tribu Design System aplicada en toda la plataforma (antes Roboto).</p></div></div>
+        <div class="gov-item ok"><span class="ic gov-ic-check"></span><div><b>Colores semánticos</b><p>Feedback (success/warning/error/info), superficies y texto tomados de <code>080726 V2</code> (semantic/light).</p></div></div>
+        <div class="gov-item pending"><span class="ic gov-ic-alert"></span><div><b>Modo oscuro</b><p>Funcional con tokens paralelos; queda pendiente mapear los valores exactos de <code>semantic/dark</code> del DS.</p></div></div>
       </div>
     </div>
   </section>
@@ -343,7 +345,7 @@
   <div class="ds-nav"><button id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></button></div>
 </div>
 
-<script src="js/icons.js?v=45"></script>
+<script src="js/icons.js?v=48"></script>
 <script>
   // Íconos reales del sistema (misma librería que la app)
   document.querySelector('.prod__ic--acct').innerHTML = icon('wallet');

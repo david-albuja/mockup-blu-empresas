@@ -27,11 +27,11 @@ const DB = {
   // pago total, pago mínimo y fecha máxima de pago propios. "principal" separa
   // las tarjetas principales de la empresa de las adicionales.
   cards: [
-    { id: 'diners', name: 'Diners Club', type: 'Internacional', variant: 'diners', principal: true, last4: '4417', number: '5412 •••• •••• 4417', pago: '02 ago', pagoMin: 210.40, pagoTotal: 2340.18, status: 'active' },
-    { id: 'black', name: 'Mastercard Black', type: 'World Elite', variant: 'black', principal: true, last4: '2051', number: '5301 •••• •••• 2051', pago: '05 ago', pagoMin: 480.00, pagoTotal: 5800.00, status: 'active', movTotal: 247 },
-    { id: 'visa', name: 'Visa blu', type: 'Adicional · Signature', variant: 'indigo', principal: false, titular: 'Carla Robles', last4: '8890', number: '4023 •••• •••• 8890', pago: '07 ago', pagoMin: 0, pagoTotal: 0, status: 'active' },
-    { id: 'platinum', name: 'Diners Club Platinum', type: 'Adicional · Rewards', variant: 'teal', principal: false, titular: 'Luis Robles', last4: '3376', number: '5488 •••• •••• 3376', pago: '12 ago', pagoMin: 88.00, pagoTotal: 879.50, status: 'active' },
-    { id: 'diners-add', name: 'Diners Club', type: 'Adicional', variant: 'diners', principal: false, titular: 'Andrés Robles', last4: '5521', number: '5412 •••• •••• 5521', pago: '02 ago', pagoMin: 20.00, pagoTotal: 160.00, status: 'active' },
+    { id: 'diners', name: 'Diners Club', type: 'Internacional', variant: 'diners', principal: true, last4: '4417', number: '5412 •••• •••• 4417', corte: '18 jul', pago: '02 ago', pagoMin: 210.40, pagoTotal: 2340.18, deudaTotal: 12480.50, status: 'active' },
+    { id: 'black', name: 'Mastercard Black', type: 'World Elite', variant: 'black', principal: true, last4: '2051', number: '5301 •••• •••• 2051', corte: '20 jul', pago: '05 ago', pagoMin: 480.00, pagoTotal: 5800.00, deudaTotal: 24800.00, status: 'active', movTotal: 247 },
+    { id: 'visa', name: 'Visa blu', type: 'Adicional · Signature', variant: 'indigo', principal: false, titular: 'Carla Robles', last4: '8890', number: '4023 •••• •••• 8890', corte: '22 jul', pago: '07 ago', pagoMin: 0, pagoTotal: 0, deudaTotal: 0, status: 'active' },
+    { id: 'platinum', name: 'Diners Club Platinum', type: 'Adicional · Rewards', variant: 'teal', principal: false, titular: 'Luis Robles', last4: '3376', number: '5488 •••• •••• 3376', corte: '27 jul', pago: '12 ago', pagoMin: 88.00, pagoTotal: 879.50, deudaTotal: 4200.00, status: 'active' },
+    { id: 'diners-add', name: 'Diners Club', type: 'Adicional', variant: 'diners', principal: false, last4: '5521', number: '5412 •••• •••• 5521', corte: '18 jul', pago: '02 ago', pagoMin: 20.00, pagoTotal: 160.00, deudaTotal: 980.00, status: 'active', titular: 'Andrés Robles' },
   ],
   // Tarjetas prepago (producto aparte, sin cupo de crédito — funciona con saldo)
   prepaid: [

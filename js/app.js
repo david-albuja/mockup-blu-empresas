@@ -1042,7 +1042,8 @@ Screens.recuperar = {
       <a href="#/login" class="row" style="gap:6px;color:var(--primary);font-weight:600;margin-bottom:16px;justify-content:center">${icon('back')} Volver al ingreso</a>
       <div class="state__art" style="margin:0 auto 16px;background:var(--blu-50);color:var(--primary)">${icon('phone')}</div>
       <h2 class="h2">Recupera tu acceso desde la app</h2>
-      <p class="text-muted mt-2 mb-6" style="max-width:42ch;margin-left:auto;margin-right:auto">Para tu seguridad, la recuperación de usuario y contraseña se hace desde la app blu Empresas. Ábrela en tu celular y sigue los pasos desde ahí.</p>
+      <p class="text-muted mt-2 mb-6" style="max-width:42ch;margin-left:auto;margin-right:auto">Para tu seguridad, la recuperación de usuario y contraseña se hace desde la app blu Empresas. Escanea el código y sigue los pasos desde ahí.</p>
+      <div class="qr-card">${qrPlaceholder(140)}<span>Escanea con tu celular para abrir blu Empresas</span></div>
       <a class="btn btn--primary btn--lg btn--block" href="#/login">Entendido, volver al ingreso</a>
     </div></section></div>`;
   }
