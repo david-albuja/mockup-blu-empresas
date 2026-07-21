@@ -42,7 +42,7 @@ Screens['detalle-producto'] = {
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid dtl-card" style="gap:16px">
           ${UI.bankCard(p)}
-          ${actBar([['receipt','Diferir','diferir'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo'],['gift','Beneficios','beneficios'],['chart','Spend Analyzer','',"toast({title:'Spend Analyzer',msg:'Analiza tus consumos por categoría y comercio.',type:'info'})"],['certificate','Certificado','certificados']])}
+          ${actBar([['receipt','Diferir','diferir'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo'],['gift','Beneficios','beneficios'],['chart','Spend Analyzer','',"toast({title:'Spend Analyzer',msg:'Analiza tus consumos por categoría y comercio.',type:'info'})"],['certificate','Certificado','certificados'],['plus','Solicitar adicional','onboarding-signature']])}
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Detalle de la tarjeta',
@@ -67,11 +67,11 @@ Screens['detalle-producto'] = {
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid dtl-card" style="gap:16px">
           ${UI.bankCard(p)}
-          ${actBar([['send','Recargar','transferencias'],['services','Configurar','config-tarjeta'],['lock','Bloquear','bloqueo']])}
+          ${actBar([['eye','Ver datos','',`toast({title:'Datos de la tarjeta',msg:'${p.name} · ${p.number} · titular ${p.titular||'—'}',type:'info'})`],['eyeOff','Desactivar','',"toast({title:'Tarjeta desactivada',msg:'Podrás activarla cuando quieras.',type:'success'})"],['check','Activar','',"toast({title:'Tarjeta activada',msg:'Lista para usar.',type:'success'})"],['lock','Bloquear','bloqueo']])}
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Detalle de la prepago',
-            kv('Tipo', p.type)+kv('Número', '•••• '+p.last4)+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
+            kv('Titular', p.titular||'—')+kv('Tipo', p.type)+kv('Número', '•••• '+p.last4)+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
             + `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Saldo disponible · recargable</div><div class="detail-cta__amt num">${State.masked?'••••':money(p.saldo)}</div></div><button class="btn btn--primary" data-nav="transferencias">Recargar</button></div>`)}
           ${infoBanner('La tarjeta prepago funciona con saldo cargado, no consume cupo de crédito.','card')}
         </div>
@@ -98,7 +98,7 @@ Screens['detalle-producto'] = {
               ${p.interesMes ? `<div class="acct-interes">${icon('arrowUp')} <strong class="num">${money(p.interesMes, true)}</strong> este mes</div>` : (p.tasa ? `<div class="acct-interes">${icon('arrowUp')} ${p.tasa}</div>` : '')}
             </div>
           </div>
-          ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['services','Configurar','',"toast({title:'Configurar cuenta',msg:'Alias, alertas y preferencias.',type:'info'})"],['certificate','Estado de cuenta','',estadoCtaJs]])}
+          ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['services','Configurar','',"toast({title:'Configurar cuenta',msg:'Alias, alertas y preferencias.',type:'info'})"],['certificate','Certificado','certificados']])}
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Detalle de la cuenta', kv('Tipo de cuenta',p.type)+kv('Número',p.num)+rate+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
@@ -194,7 +194,7 @@ Screens['config-tarjeta'] = {
   title: 'Configurar tarjeta',
   render(view) {
     const cards = DB.cards;
-    const S = {}; cards.forEach(c => S[c.id] = { online:true, abroad:true, atm:false, contactless:true, notify:true, security:true, limit:1500 });
+    const S = {}; cards.forEach(c => S[c.id] = { ecCard:true, ecOnline:true, ecAtm:true, exCard:true, exOnline:false, exAtm:false, notify:true, security:true, limit:1500 });
     let selId = (getParam('id') && cards.find(c=>c.id===getParam('id'))?.id) || cards[0].id;
     const cardOf = id => cards.find(c => c.id === id);
     const grad = v => (typeof CARD_GRAD !== 'undefined' ? CARD_GRAD[v] : null) || 'var(--grad-card)';
@@ -218,8 +218,8 @@ Screens['config-tarjeta'] = {
       $('#cfgList').innerHTML = cards.map(row).join('');
       view.querySelectorAll('[data-cfg]').forEach(b => b.onclick = () => { selId = b.dataset.cfg; renderList(); renderPanel(); });
     }
-    function ctl(id, key, label, sub, ic) {
-      return `<div class="row between" style="padding:14px 0;border-bottom:1px solid var(--line-2)"><span class="row" style="gap:12px">${icon(ic)}<div><div style="font-weight:500;font-size:14px">${label}</div><div class="text-muted" style="font-size:12px">${sub}</div></div></span><label class="switch"><input type="checkbox" data-ctl="${key}" ${S[id][key]?'checked':''}><span class="track"></span></label></div>`;
+    function ctl(id, key, label, sub, ic, locked) {
+      return `<div class="row between" style="padding:14px 0;border-bottom:1px solid var(--line-2)"><span class="row" style="gap:12px">${icon(ic)}<div><div style="font-weight:500;font-size:14px">${label}${locked?' <span class="text-muted" style="font-size:11px;font-weight:600">· Obligatorio</span>':''}</div><div class="text-muted" style="font-size:12px">${sub}</div></div></span><label class="switch"><input type="checkbox" data-ctl="${key}" ${S[id][key]?'checked':''} ${locked?'checked disabled':''}><span class="track"></span></label></div>`;
     }
     function renderPanel() {
       const c = cardOf(selId), s = S[selId];
@@ -230,20 +230,22 @@ Screens['config-tarjeta'] = {
           <div><div class="h4">${c.name}</div><div class="text-muted" style="font-size:13px">${c.type} · ···${c.last4}</div></div>
           <span class="badge badge--success" style="margin-left:auto"><span class="dot"></span>Activa</span>
         </div>
-        <div class="mt-6"><div class="eyebrow mb-2">Canales de consumo</div>
-          ${ctl(c.id,'online','Compras por internet','Pagos en comercios en línea','bolt')}
-          ${ctl(c.id,'abroad','Compras en el exterior','Consumos fuera del país','plane')}
-          ${ctl(c.id,'atm','Retiros y avances en cajero','Disponible en ATM','atm')}
-          ${ctl(c.id,'contactless','Pago sin contacto','Contactless / NFC','swap')}
+        <div class="mt-6"><div class="eyebrow mb-2">Uso en Ecuador</div>
+          ${ctl(c.id,'ecCard','Con la tarjeta','Compras presenciales en el país','card')}
+          ${ctl(c.id,'ecOnline','Por internet','Pagos en comercios en línea','bolt')}
+          ${ctl(c.id,'ecAtm','Cajero automático','Retiros y avances en ATM','atm')}
+        </div>
+        <div class="mt-6"><div class="eyebrow mb-2">Uso fuera de Ecuador</div>
+          ${ctl(c.id,'exCard','Con la tarjeta','Compras presenciales en el exterior','card')}
+          ${ctl(c.id,'exOnline','Por internet','Pagos internacionales en línea','bolt')}
+          ${ctl(c.id,'exAtm','Cajero automático','Retiros en ATM en el exterior','atm')}
         </div>
         <div class="mt-6"><div class="eyebrow mb-2">Límite de consumo diario</div>
-          <div class="row between mb-2"><span class="text-muted" style="font-size:13px">Límite actual</span><span class="h4 num" id="cfgLimVal">${money(s.limit)}</span></div>
-          ${slider('cfgLim',100,10000,s.limit,100)}
-          <div class="row between mt-2" style="font-size:12px;color:var(--muted)"><span>$100</span><span>$10.000</span></div>
+          <div class="field" style="margin:0"><div class="control">${icon('coins')}<span class="prefix">$</span><input id="cfgLim" inputmode="decimal" value="${s.limit}" aria-label="Límite de consumo diario"></div><span class="hint">Monto máximo permitido por día.</span></div>
         </div>
         <div class="mt-6"><div class="eyebrow mb-2">Alertas</div>
-          ${ctl(c.id,'notify','Notificar cada consumo','Push y correo en tiempo real','bell')}
-          ${ctl(c.id,'security','Alertas de seguridad','Consumos inusuales o riesgo','shield')}
+          ${ctl(c.id,'notify','Notificar cada consumo','Push y correo en tiempo real','bell',true)}
+          ${ctl(c.id,'security','Alertas de seguridad','Consumos inusuales o riesgo','shield',true)}
         </div>
         <button class="btn btn--secondary btn--block mt-6" data-pin>${icon('lock')} Cambiar PIN</button>
       </div>`;
@@ -251,7 +253,7 @@ Screens['config-tarjeta'] = {
     }
     function wirePanel() {
       const s = S[selId];
-      const lim = $('#cfgLim'); if (lim) lim.oninput = () => { s.limit = +lim.value; $('#cfgLimVal').textContent = money(s.limit); };
+      const lim = $('#cfgLim'); if (lim) lim.oninput = () => { s.limit = parseFloat((lim.value||'').replace(',','.')) || 0; };
       view.querySelectorAll('#cfgPanel [data-ctl]').forEach(t => t.onchange = () => { s[t.dataset.ctl] = t.checked; toast({ title: 'Preferencia actualizada', type: 'success' }); });
       const pin = $('#cfgPanel [data-pin]');
       if (pin) pin.onclick = () => {
@@ -289,7 +291,6 @@ Screens['tarjetas-adicionales'] = {
     ${pageHead('Tarjetas adicionales','Administra las tarjetas de tus beneficiarios.','tarjetas', `<button class="btn btn--primary btn--sm" data-nav="solicitud-tarjeta">${icon('plus')} Nueva adicional</button>`)}
     <div class="grid grid-2">
       ${[['Andrés Robles','···5521','$800','active'],['Sofía Robles','···5522','$500','active']].map(a=>`<div class="card card--pad card--hover"><div class="row between"><span class="avatar">${a[0].split(' ').map(x=>x[0]).join('')}</span><span class="badge badge--success"><span class="dot"></span>Activa</span></div><div class="mt-4"><div class="h4">${a[0]}</div><div class="text-muted" style="font-size:13px">Diners Club ${a[1]}</div></div><div class="row between mt-4"><div><div class="text-muted" style="font-size:12px">Cupo asignado</div><div class="num" style="font-weight:700">${a[2]}</div></div><button class="btn btn--secondary btn--sm" data-nav="config-tarjeta">Gestionar</button></div></div>`).join('')}
-      <button class="card card--pad card--hover" data-nav="solicitud-tarjeta" style="display:flex;align-items:center;justify-content:center;gap:10px;border-style:dashed;color:var(--primary);font-weight:600;min-height:150px">${icon('plus')} Agregar tarjeta adicional</button>
     </div>`;
   }
 };
@@ -307,12 +308,14 @@ Screens['solicitud-tarjeta'] = {
           <div class="field" style="margin:0"><label>Apellidos <span class="req">*</span></label><div class="control">${icon('user')}<input placeholder="Apellidos"></div></div>
         </div>
         <div class="field mt-4"><label>Cédula <span class="req">*</span></label><div class="control">${icon('file')}<input inputmode="numeric" placeholder="0102030405"></div></div>
-        <div class="field"><label>Parentesco</label><div class="control">${icon('users')}<select><option>Hijo/a</option><option>Cónyuge</option><option>Otro</option></select>${icon('chevronDown')}</div></div>
-        <div class="field"><label>Cupo a asignar</label><div class="row between mb-2"><span class="text-muted" style="font-size:13px">Del cupo disponible ${money(DB.cards[0].disponible)}</span><span class="num" style="font-weight:700" id="cupoVal">$500</span></div>${slider('cupoSlider',100,3000,500,100)}</div>
+        <div class="grid grid-2" style="gap:12px 16px">
+          <div class="field" style="margin:0"><label>Celular <span class="req">*</span></label><div class="control">${icon('phone')}<input inputmode="numeric" placeholder="099 000 0000"></div></div>
+          <div class="field" style="margin:0"><label>Correo electrónico <span class="req">*</span></label><div class="control">${icon('receipt')}<input type="email" placeholder="correo@empresa.com"></div></div>
+        </div>
+        <div class="field mt-4"><label>Cupo a asignar</label><div class="control">${icon('coins')}<span class="prefix">$</span><input id="cupoInput" inputmode="decimal" value="500" placeholder="0,00"></div><span class="hint">Del cupo disponible ${money(DB.cards[0].disponible)}.</span></div>
         <button class="btn btn--primary btn--lg btn--block" id="solBtn">Enviar solicitud</button>`)}
       ${infoBanner('La emisión toma de 3 a 5 días hábiles. Recibirás la tarjeta en tu dirección registrada.','clock')}
     </div>`;
-    const s=$('#cupoSlider'); if(s) s.oninput=()=>$('#cupoVal').textContent='$'+(+s.value).toLocaleString('es-EC');
     $('#solBtn').onclick=(e)=>{e.currentTarget.classList.add('is-loading');setTimeout(()=>{e.target.classList.remove('is-loading');successModal('Solicitud enviada','Revisaremos tu solicitud y te avisaremos por correo.','tarjetas-adicionales');},1000);};
   }
 };
