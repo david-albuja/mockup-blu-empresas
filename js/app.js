@@ -250,17 +250,19 @@ Screens.login = {
    (global, el mismo valor en todas las tarjetas — el cupo nunca es por tarjeta).
    "Pagar hasta X" NO va sobre la imagen; se muestra debajo, en el cuerpo. */
 function homeCardFace(c) {
+  // Datos propios de cada tarjeta (no el cupo global compartido)
   const totalTxt = c.pagoTotal > 0 ? (State.masked ? '••••••' : money(c.pagoTotal)) : 'Al día';
-  const cupoTxt = State.masked ? '••••' : money(DB.net.cupoGlobalDisp);
-  return `<div class="bank-card ${c.variant?'bank-card--'+c.variant:''}" tabindex="0" role="group" aria-label="Tarjeta ${c.name} terminación ${c.last4}">
+  const consumidoTxt = State.masked ? '••••••' : money(c.deudaTotal || 0);
+  const kind = c.kind || (c.principal === false ? 'Adicional' : 'Principal');
+  return `<div class="bank-card ${c.variant?'bank-card--'+c.variant:''}" tabindex="0" role="group" aria-label="Tarjeta ${c.name} ${kind} terminación ${c.last4}">
     <div class="row between">
-      <div><div class="bank-card__brand">blu</div><div class="bank-card__type">${c.name} · ${c.type}</div></div>
+      <div><div class="bank-card__brand">blu</div><div class="bank-card__type">${c.name} · ${c.type}</div><span class="bank-card__kind">${kind}</span></div>
       <div class="bank-card__chip"></div>
     </div>
     <div class="bank-card__number num">•••• ${c.last4}</div>
     <div class="bank-card__foot">
-      <div><small>Total a pagar</small><strong class="num">${totalTxt}</strong></div>
-      <div style="text-align:right"><small>Cupo disponible</small><strong class="num">${cupoTxt}</strong></div>
+      <div><small>Saldo consumido</small><strong class="num">${consumidoTxt}</strong></div>
+      <div style="text-align:right"><small>Total a pagar</small><strong class="num">${totalTxt}</strong></div>
     </div>
   </div>`;
 }
@@ -408,7 +410,7 @@ Screens.inicio = {
       // "Ver todo" consistente: cada categoría lleva a ver todos los productos de ESA categoría
       const seeAllNav = { tarjeta:'tarjetas', prepago:'tarjetas', cuenta:'cuentas?cat=cuenta', credito:'cuentas?cat=credito', inversion:'cuentas?cat=inversion', caja:'caja' };
       const solicitarRoute = { tarjeta:'onboarding-signature', prepago:'ofertas', cuenta:'onboarding-blu-plus', credito:'sim-credito', inversion:'ofertas' };
-      const solicitarLabel = { tarjeta:'Solicitar tarjeta', prepago:'Solicitar prepago', cuenta:'Abrir cuenta', credito:'Solicitar crédito', inversion:'Invertir ahora' };
+      const solicitarLabel = { tarjeta:'Solicitar tarjeta adicional', prepago:'Solicitar prepago', cuenta:'Abrir cuenta', credito:'Solicitar crédito', inversion:'Invertir ahora' };
       // Un botón "Solicitar" por producto (no genérico) + "Ver todo" junto al total monetario
       function ctaRow(kind) {
         return `<div class="row wrap mt-4" style="gap:8px">
@@ -441,7 +443,7 @@ Screens.inicio = {
 };
 
 /* Donut chart (SVG puro) */
-function drawDonut(host, data) {
+function drawDonut(host, data, centerLabel='Total mes') {
   if(!host) return;
   const size=160, r=58, c=2*Math.PI*r, cx=size/2;
   let off=0;
@@ -449,7 +451,7 @@ function drawDonut(host, data) {
   const total = data.reduce((a,b)=>a+b.val,0);
   host.innerHTML = `<div style="display:flex;justify-content:center"><svg viewBox="0 0 ${size} ${size}" width="180" height="180" role="img" aria-label="Distribución de gastos del mes">
     <circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="var(--bg-2)" stroke-width="18"/>${segs}
-    <text x="${cx}" y="${cx-4}" text-anchor="middle" font-size="11" fill="var(--muted)">Total mes</text>
+    <text x="${cx}" y="${cx-4}" text-anchor="middle" font-size="11" fill="var(--muted)">${centerLabel}</text>
     <text x="${cx}" y="${cx+16}" text-anchor="middle" font-size="20" font-weight="700" fill="var(--ink)">${money(-total).replace('-','')}</text>
   </svg></div>`;
 }
@@ -552,8 +554,7 @@ Screens.tarjetas = {
     const adicionales = DB.cards.filter(c => c.principal === false);
     const deuda = DB.cards.reduce((s,c)=>s+c.pagoTotal,0);
     view.innerHTML = `
-    ${premiumHead('Mira tus tarjetas', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio',
-      `<button class="btn btn--primary btn--sm" data-nav="onboarding-signature">${icon('plus')} Solicitar tarjeta</button>`, 'Productos')}
+    ${premiumHead('Mira tus tarjetas', `${DB.cards.length} tarjetas · el cupo es global y compartido`, 'inicio', '', 'Productos')}
     <div class="stat-tiles section mb-6">
       ${statTile('card', 'card', 'Cupo global', State.masked?'••••':money(N.cupoGlobal))}
       ${statTile('wallet', 'navy', 'Cupo disponible', State.masked?'••••':money(N.cupoGlobalDisp))}
@@ -573,12 +574,14 @@ Screens.tarjetas = {
         body.innerHTML = `<div class="pcard-list section mb-6">${principales.map(tarjetaListRow).join('')}</div>`;
       } else if (t === 'adicionales') {
         body.innerHTML = `
-        <div class="row between wrap mb-4" style="gap:10px">${adicionales.length > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
+        <div class="row between wrap mb-4" style="gap:10px"><button class="btn btn--primary btn--sm" data-nav="onboarding-signature">${icon('plus')} Solicitar tarjeta adicional</button>${adicionales.length > DATA_LIMIT.adicionales ? '' : exportChip('tarjetas-adicionales.xlsx')}</div>
         ${adicionales.length > DATA_LIMIT.adicionales
           ? bulkExport(adicionales.length, 'tarjetas adicionales', 'tarjetas-adicionales.xlsx')
           : `<div class="pcard-list section mb-6">${adicionales.map(tarjetaListRow).join('')}${addProductCard('tarjetas-adicionales', 'Administrar adicionales')}</div>`}`;
       } else {
-        body.innerHTML = `<div class="pcard-list section mb-6">${DB.prepaid.map(prepagoListRow).join('')}</div>`;
+        body.innerHTML = `
+        <div class="row between wrap mb-4" style="gap:10px"><button class="btn btn--primary btn--sm" data-nav="solicitar-prepago">${icon('plus')} Solicitar prepago</button></div>
+        <div class="pcard-list section mb-6">${DB.prepaid.map(prepagoListRow).join('')}</div>`;
       }
     }
     view.querySelectorAll('#tcTabs [data-t]').forEach(b => b.onclick = () => {
@@ -621,6 +624,42 @@ Screens.prepago = {
     search();
     $('#prepName').oninput = search;
     $('#prepLast4').oninput = () => { const i=$('#prepLast4'); i.value=i.value.replace(/\D/g,'').slice(0,4); search(); };
+  }
+};
+
+/* ---------- SOLICITAR PREPAGO (mismos campos que una tarjeta adicional) ---------- */
+Screens['solicitar-prepago'] = {
+  title: 'Solicitar prepago',
+  render(view) {
+    view.innerHTML = `
+    ${premiumHead('Solicita una tarjeta prepago', 'Asígnala a un colaborador con un saldo de recarga inicial.', 'prepago', '', 'Productos')}
+    <div class="grid" style="grid-template-columns:1fr 340px;gap:20px;align-items:start">
+      <div class="card card--pad section">
+        <h2 class="h4 mb-4">Datos del colaborador</h2>
+        <div class="field" id="spNombreF"><label>Nombre completo <span class="req">*</span></label><div class="control">${icon('user')}<input id="spNombre" placeholder="Nombre y apellidos"></div><span class="error-text">${icon('alert')} Ingresa el nombre completo.</span></div>
+        <div class="grid grid-2" style="gap:0 16px">
+          <div class="field" id="spCedF"><label>Cédula <span class="req">*</span></label><div class="control">${icon('file')}<input id="spCedula" inputmode="numeric" placeholder="0102030405"></div><span class="error-text">${icon('alert')} Ingresa la cédula.</span></div>
+          <div class="field"><label>Celular <span class="req">*</span></label><div class="control">${icon('phone')}<input id="spCelular" inputmode="numeric" placeholder="099 000 0000"></div></div>
+        </div>
+        <div class="field"><label>Correo electrónico <span class="req">*</span></label><div class="control">${icon('receipt')}<input id="spCorreo" type="email" placeholder="correo@empresa.com"></div></div>
+        <div class="divider"></div>
+        <div class="field"><label>Saldo de recarga inicial</label><div class="control">${icon('coins')}<span class="prefix">$</span><input id="spMonto" inputmode="decimal" placeholder="0,00" value="500"></div><span class="hint">Puedes recargar más saldo en cualquier momento.</span></div>
+        <button class="btn btn--primary btn--lg btn--block mt-4" id="spBtn">${icon('card')} Solicitar prepago</button>
+      </div>
+      <aside style="position:sticky;top:calc(var(--topbar-h) + 24px)">
+        ${infoBanner('La tarjeta prepago funciona con saldo cargado, no consume cupo de crédito.','card')}
+      </aside>
+    </div>`;
+    $('#spBtn').onclick = () => {
+      const n=$('#spNombre'), c=$('#spCedula');
+      let ok=true;
+      if(!n.value.trim()){ $('#spNombreF').classList.add('has-error'); ok=false; }
+      if(!c.value.trim()){ $('#spCedF').classList.add('has-error'); ok=false; }
+      if(!ok) return;
+      $('#spBtn').classList.add('is-loading');
+      setTimeout(()=>{ successModal('Prepago solicitada', `La tarjeta prepago para ${n.value.trim()} quedó en proceso. Te avisaremos cuando esté lista.`, 'prepago'); }, 1000);
+    };
+    ['spNombre','spCedula'].forEach(id=>{ const e=$('#'+id); e.oninput=()=>e.closest('.field').classList.remove('has-error'); });
   }
 };
 
@@ -842,7 +881,7 @@ Screens['pago-tarjeta'] = {
     const RATE_M = 0.015; // interés mensual referencial
     const DUE_DAYS = { diners:5, black:8, visa:10, platinum:15, 'diners-add':5 }; // días para vencer (demo)
     let sel = (getParam('id') && DB.cards.find(c=>c.id===getParam('id'))) || DB.cards.find(c=>c.pagoTotal>0) || DB.cards[0];
-    let optIdx = 0, otherVal = 0, fromIdx = 0, when = 'hoy', progDate = '';
+    let optIdx = 0, otherVal = 0, fromIdx = 0;
 
     view.innerHTML = `
     ${premiumHead('Pagar tarjeta de crédito', 'Paga tu estado de cuenta y evita intereses.', 'inicio', '', 'Pagos')}
@@ -850,20 +889,14 @@ Screens['pago-tarjeta'] = {
       <div class="grid" style="gap:20px">
         <!-- Estado de cuenta -->
         <div class="card card--pad section" id="pcStmt"></div>
-        <!-- Monto -->
+        <!-- Datos del pago -->
         <div class="card card--pad section">
           <div class="field" style="margin-bottom:16px"><label>Tarjeta a pagar</label><div class="control">${icon('card')}<select id="pcSelect">${DB.cards.map(c=>`<option value="${c.id}">${c.name} ···${c.last4}${c.pagoTotal>0?` — debes ${money(c.pagoTotal)}`:' — al día'}</option>`).join('')}</select>${icon('chevronDown')}</div></div>
+          <div class="field" style="margin-bottom:16px"><label>Pagar desde</label><div class="control" id="pcFromCtl">${icon('wallet')}<select id="pcFrom">${DB.accounts.map((a,i)=>`<option value="${i}">${a.name} ${a.num} — ${money(a.saldo)}</option>`).join('')}</select>${icon('chevronDown')}</div><span class="error-text" id="pcFromErr">${icon('alert')} Saldo insuficiente en la cuenta seleccionada.</span></div>
           <label class="h4" style="display:block;margin-bottom:12px">¿Cuánto quieres pagar?</label>
           <div class="grid" style="gap:10px" id="payOpts" role="radiogroup" aria-label="Monto a pagar"></div>
           <div class="field mt-4" id="otherWrap" style="display:none"><label>Ingresa el valor</label><div class="control"><span class="prefix">$</span><input id="otherVal" inputmode="decimal" placeholder="0,00" aria-label="Otro valor"></div><span class="hint" id="otherHint">Debe ser menor o igual a tu deuda total.</span></div>
-        </div>
-        <!-- Origen + fecha -->
-        <div class="card card--pad section">
-          <div class="field"><label>Pagar desde</label><div class="control" id="pcFromCtl">${icon('wallet')}<select id="pcFrom">${DB.accounts.map((a,i)=>`<option value="${i}">${a.name} ${a.num} — ${money(a.saldo)}</option>`).join('')}</select>${icon('chevronDown')}</div><span class="error-text" id="pcFromErr">${icon('alert')} Saldo insuficiente en la cuenta seleccionada.</span></div>
-          <div class="field" style="margin:0"><label>¿Cuándo?</label>
-            <div class="segmented" id="pcWhen" style="margin-top:2px"><button class="is-active" data-w="hoy">Ahora</button><button data-w="corte">En la fecha de pago</button><button data-w="prog">Programar</button></div>
-            <div id="pcProgWrap" style="display:none;margin-top:12px"><div class="control">${icon('calendar')}<input type="date" id="pcProg"></div></div>
-          </div>
+          <div class="row" style="gap:8px;align-items:center;margin-top:18px;font-size:13px;color:var(--muted)">${icon('bolt')}<span>El pago se realiza <strong style="color:var(--ink)">ahora</strong>, de forma inmediata a tu tarjeta.</span></div>
         </div>
       </div>
 
@@ -916,7 +949,7 @@ Screens['pago-tarjeta'] = {
       const c = sel, amt = amountFor(), acc = DB.accounts[fromIdx];
       const insufficient = amt > acc.saldo;
       const overPay = optIdx===2 && c.pagoTotal>0 && otherVal > c.pagoTotal;
-      const whenLbl = when==='hoy' ? 'Hoy · inmediato' : when==='corte' ? `El ${c.pago}` : (progDate ? new Date(progDate+'T00:00').toLocaleDateString('es-EC',{day:'2-digit',month:'short'}) : 'Selecciona fecha');
+      const whenLbl = 'Hoy · inmediato';
       $('#pcFromCtl').classList.toggle('is-invalid', insufficient && amt>0);
       $('#pcFromErr').parentElement.classList.toggle('has-error', insufficient && amt>0);
       const oh = $('#otherHint'); if (oh) { if (overPay) { oh.textContent = `El valor supera tu deuda de ${money(c.pagoTotal)}.`; oh.style.color = 'var(--error)'; } else { oh.textContent = 'Debe ser menor o igual a tu deuda total.'; oh.style.color = ''; } }
@@ -931,7 +964,7 @@ Screens['pago-tarjeta'] = {
         ${kv('Fecha', whenLbl)}
         ${kv('Comisión', '<span class="text-success">Sin costo</span>')}
         <div class="sum-total" style="margin-top:8px"><span class="k">Total a pagar</span><span class="v num">${money(amt)}</span></div>
-        <button class="btn btn--primary btn--lg btn--block mt-4" id="payCardBtn" ${(amt<=0||insufficient||overPay||(when==='prog'&&!progDate))?'disabled':''}>${when==='hoy'?'Pagar':'Programar'} ${amt>0?money(amt):''}</button>
+        <button class="btn btn--primary btn--lg btn--block mt-4" id="payCardBtn" ${(amt<=0||insufficient||overPay)?'disabled':''}>Pagar ${amt>0?money(amt):''}</button>
         <div class="row" style="gap:8px;align-items:flex-start;margin-top:14px;font-size:12px;color:var(--muted)">${icon('shield')}<span>Pago protegido. ¿Quieres olvidarte de pagar? <a data-nav="programados" style="color:var(--primary);font-weight:600">Activa débito automático</a></span></div>
       </div>`;
       $('#payCardBtn').onclick = doPay;
@@ -940,7 +973,7 @@ Screens['pago-tarjeta'] = {
     function doPay() {
       const amt = amountFor();
       $('#payCardBtn').classList.add('is-loading');
-      setTimeout(()=>{ $('#payCardBtn').classList.remove('is-loading'); successModal(when==='hoy'?'Pago aplicado':'Pago programado', `${when==='hoy'?'Pagaste':'Programaste'} ${money(amt)} a tu ${sel.name}.`, 'inicio'); }, 1000);
+      setTimeout(()=>{ $('#payCardBtn').classList.remove('is-loading'); successModal('Pago aplicado', `Pagaste ${money(amt)} a tu ${sel.name}.`, 'inicio'); }, 1000);
     }
 
     renderStmt(); renderOpts(); renderSummary();
@@ -948,8 +981,6 @@ Screens['pago-tarjeta'] = {
     $('#pcSelect').onchange = (e) => { sel = DB.cards.find(c=>c.id===e.target.value); optIdx=0; otherVal=0; $('#otherWrap').style.display='none'; renderStmt(); renderOpts(); renderSummary(); };
     $('#otherVal').oninput = (e) => { otherVal = parseFloat((e.target.value||'').replace(',','.'))||0; renderSummary(); };
     $('#pcFrom').onchange = (e) => { fromIdx = +e.target.value; renderSummary(); };
-    view.querySelectorAll('#pcWhen [data-w]').forEach(b => b.onclick = () => { view.querySelectorAll('#pcWhen [data-w]').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); when=b.dataset.w; $('#pcProgWrap').style.display = when==='prog'?'block':'none'; renderSummary(); });
-    const pd = $('#pcProg'); if (pd) pd.onchange = () => { progDate = pd.value; renderSummary(); };
   }
 };
 

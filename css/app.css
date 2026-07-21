@@ -128,6 +128,7 @@
 .bank-card > * { position: relative; z-index: 1; }
 .bank-card__brand { font-weight: 800; font-size: var(--fs-16); letter-spacing: -.02em; }
 .bank-card__type { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; opacity: .82; }
+.bank-card__kind { display: inline-block; margin-top: 8px; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.32); padding: 2px 9px; border-radius: 999px; }
 .bank-card__chip { width: 34px; height: 26px; border-radius: 6px; background: linear-gradient(135deg, #f5d98b, #c9a24b); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); }
 .bank-card__number { font-size: var(--fs-16); letter-spacing: .12em; font-weight: 500; }
 .bank-card__foot { display: flex; justify-content: space-between; align-items: flex-end; }

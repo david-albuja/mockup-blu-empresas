@@ -71,7 +71,7 @@ function drawArea(host, data) {
 }
 
 /* Gráfico de barras comparativo (Pagos recibidos vs Pendiente de pago) */
-function drawBars(host, items) {
+function drawPagosBars(host, items) {
   if (!host) return;
   const fmt = n => '$' + n.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const max = Math.max(...items.map(i => i.v)) * 1.1 || 1;
@@ -137,7 +137,7 @@ Screens['caja'] = {
       const kpis = [
         ['Ventas', fmt(sc.ventas), 'arrowUp', `+${k.deltaVentas}% vs. periodo anterior`, 'success'],
         ['Ventas realizadas', sc.tx, 'receipt', `+${sc.deltaTx} vs. periodo anterior`, 'info'],
-        ['Ticket promedio', fmt(sc.ticket), 'chart', 'ventas ÷ nº de transacciones', 'muted'],
+        ['Ticket promedio', fmt(sc.ticket), 'chart', 'por venta', 'muted'],
         ['Comisión', fmt(sc.comision), 'coins', 'Descarga los reportes para ver el detalle', 'muted'],
         ['Pendiente de pago', fmt(sc.porCobrar), 'wallet', 'por liquidar', 'muted'],
       ];
@@ -152,7 +152,7 @@ Screens['caja'] = {
             <div id="cjArea"></div>
           </div>
           <div class="card card--pad section">
-            <div class="row between mb-4"><h2 class="h4">Pagos recibidos y pendiente de pago</h2></div>
+            <div class="mb-4"><h2 class="h4">Liquidación del periodo</h2><span class="text-muted" style="font-size:12px">Comparativo: recibido vs. pendiente de pago</span></div>
             <div id="cjPagos"></div>
           </div>
         </div>
@@ -183,7 +183,7 @@ Screens['caja'] = {
       states.forEach(st => totals[st] = rows.reduce((s,r)=>s+r.cells[st].valor*f, 0));
       const cell = c => `<td class="num"><div class="cj-cell-meta">Recaps: ${c.recaps} · Valor: 15</div><div style="font-weight:700">${fmt(c.valor*f)}</div></td>`;
       return `
-      <div class="card card--pad section">
+      <div class="card card--pad section mb-6">
         <div class="row between wrap mb-4" style="gap:10px">
           <div><h2 class="h4">${brand.n}</h2><p class="text-muted" style="font-size:12px;margin-top:2px">Para el periodo seleccionado existen ${brand.notas} notas de débito por anticipos de facturación por un monto de ${fmt(brand.notasMonto*f)}.</p></div>
           <button class="btn btn--secondary btn--sm" onclick="toast({title:'Comprobantes virtuales',msg:'${brand.n}: se generará el archivo.',type:'info'})">${icon('receipt')} Comprobantes virtuales</button>
@@ -215,11 +215,11 @@ Screens['caja'] = {
       if (tab === 'resumen') {
         body.innerHTML = resumen();
         drawArea($('#cjArea'), M.hourly.map(d=>({ ...d, v: d.v * sc.f })));
-        drawBars($('#cjPagos'), [
+        drawPagosBars($('#cjPagos'), [
           { label:'Pagos recibidos', v:sc.pagos, color:'var(--success)' },
           { label:'Pendiente de pago', v:sc.porCobrar, color:'var(--primary)' },
         ]);
-        drawDonut($('#cjBrands'), M.brands.map(b=>({cat:b.n, pct:b.pct, val:b.v*sc.f, color:b.color})));
+        drawDonut($('#cjBrands'), M.brands.map(b=>({cat:b.n, pct:b.pct, val:b.v*sc.f, color:b.color})), 'Total ventas');
       } else {
         body.innerHTML = transacciones();
       }
