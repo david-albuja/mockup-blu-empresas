@@ -2,18 +2,27 @@
    Apertura 100% digital con meta de ahorro, redondeo y aporte recurrente. */
 
 Screens['onboarding-blu-plus'] = {
-  title: 'Abrir cuenta BLU+',
+  title: 'Abrir cuenta',
   render(view) {
+    // Catálogo de cuentas preaprobadas
+    const CATALOG = [
+      { id:'ahorro-blu', name:'Cuenta de Ahorros BLU+', sub:'Rendimiento 4% anual · sin costo', tasa:'4% anual' },
+      { id:'corriente', name:'Cuenta Corriente', sub:'Para operar tu negocio', tasa:'—' },
+      { id:'dolares', name:'Cuenta en Dólares', sub:'Ahorra en USD · 3,1% anual', tasa:'3,1% anual' },
+    ];
+    // Cliente Diners existente → aparece el paso "Primer depósito" (origen interno).
+    const esCliente = DB.accounts.length > 0;
     const S = {
       step: 0, done: false,
-      data: { goalName: 'Mi meta de ahorro', target: 5000, deadline: '', initial: 100,
-        source: 'Cuenta de Ahorros BLU ···2205', roundup: true, recurring: 'mensual', recurringAmt: 50, terms: false },
+      data: { producto:'ahorro-blu', nombre:'Mi cuenta de ahorro', montoObjetivo: 5000, initial: 100,
+        source: 'Cuenta de Ahorros BLU ···2205', terms: false },
     };
-    const STEPS = ['Tu cuenta', 'Tu meta', 'Primer depósito', 'Revisión'];
-    const RATE = 0.04;
+    const getProd = () => CATALOG.find(p => p.id === S.data.producto) || CATALOG[0];
+    // El paso "Primer depósito" (2) solo aparece si ya eres cliente Diners.
+    const STEPS = esCliente ? ['Tu cuenta', 'Cuenta de ahorro', 'Primer depósito', 'Revisión'] : ['Tu cuenta', 'Cuenta de ahorro', 'Revisión'];
 
     view.innerHTML = `
-    ${pageHead('Abre tu Cuenta de Ahorros BLU+', 'Ahorra con propósito y gana 4% anual.', 'ofertas')}
+    ${pageHead('Abre tu cuenta', 'Elige tu cuenta preaprobada y ábrela en minutos.', 'ofertas')}
     <div class="grid" style="grid-template-columns:1fr 360px;align-items:start;gap:28px">
       <div><div class="section" id="obSteps"></div><div id="obForm" class="section" style="margin-top:8px"></div></div>
       <aside style="position:sticky;top:calc(var(--topbar-h) + 24px)" id="obSide"></aside>
@@ -27,141 +36,122 @@ Screens['onboarding-blu-plus'] = {
       <div class="stepper" style="flex-wrap:wrap;gap:6px 4px">${STEPS.map((s,i)=>`<div class="step ${i===S.step?'is-active':i<S.step?'is-done':''}"><span class="bullet">${i<S.step?icon('check'):i+1}</span><span class="label" style="${i===S.step?'':'display:none'}">${s}</span></div>${i<STEPS.length-1?`<span class="bar ${i<S.step?'is-done':''}"></span>`:''}`).join('')}</div>`;
     }
 
+    // Vista previa estilo Home (sin imagen de tarjeta ni cuadro de resumen)
     function paintSide() {
       if (S.done) { $('#obSide').innerHTML = ''; return; }
-      const yearGain = S.data.target * RATE;
-      return $('#obSide').innerHTML = `
+      const p = getProd();
+      $('#obSide').innerHTML = `
       <div class="grid" style="gap:16px">
-        <div class="acct-card acct-card--acct" style="cursor:default;min-height:180px">
-          <div class="acct-card__top"><span class="ic">${icon('wallet')}</span><span class="badge badge--glass">BLU+ · 4% anual</span></div>
-          <div><div class="acct-card__label">${S.data.goalName || 'Cuenta BLU+'}</div><div class="acct-card__amt num">${money(S.data.initial)}</div>
-            <div style="margin-top:12px"><div class="row between" style="font-size:11px;opacity:.85"><span>Meta ${money(S.data.target)}</span><span>${Math.min(100,Math.round(S.data.initial/S.data.target*100))}%</span></div>
-            <div class="progress mt-2" style="background:rgba(255,255,255,.28)"><span style="width:${Math.min(100,S.data.initial/S.data.target*100)}%;background:#fff"></span></div></div>
+        <div class="prod-xl acct-card-plain" style="width:100%">
+          <div class="prod-xl__body">
+            <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
+            <div class="prod-xl__name">${p.name}</div>
+            <div class="prod-xl__id num">Nueva cuenta${p.tasa!=='—'?' · '+p.tasa:''}</div>
+            <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${money(S.data.initial)}</div>
+            <div class="prod-xl__sub">Depósito inicial</div>
           </div>
-        </div>
-        <div class="card card--pad">
-          <div class="eyebrow mb-2">Resumen</div>
-          ${kv('Producto','Cuenta de Ahorros BLU+')}
-          ${kv('Meta', money(S.data.target), 1)}
-          ${kv('Depósito inicial', money(S.data.initial), 1)}
-          ${kv('Aporte', S.data.recurring==='no'?'Sin aporte':`${money(S.data.recurringAmt)} / ${S.data.recurring}`)}
-          <div class="sum-total" style="margin-top:12px"><div><div class="text-muted" style="font-size:12px">Ganas al año (4%)</div><div class="v" style="font-size:16px;color:var(--success)">+ ${money(yearGain)}</div></div><span class="badge badge--success"><span class="dot"></span>Sin costo</span></div>
         </div>
         ${infoBanner('Tu dinero está siempre disponible. Sin monto mínimo ni comisiones de mantenimiento.','shield')}
       </div>`;
     }
 
-    const views = {
-      0: () => `
+    // Paso índice → clave lógica (para saltar "Primer depósito" si no es cliente)
+    const stepKey = () => STEPS[S.step];
+
+    function viewFor(key) {
+      if (key === 'Tu cuenta') return `
         <div class="card card--pad">
-          <div class="row between mb-4"><span class="badge badge--info">${icon('sparkles')} Nuevo producto</span><span class="text-muted" style="font-size:13px">Apertura en 2 minutos</span></div>
-          <h2 class="h2">Cuenta de Ahorros BLU+</h2>
-          <p class="text-muted mb-6">Ahorra para tus metas y gana <strong style="color:var(--ink)">4% de rendimiento anual</strong>, con tu dinero siempre disponible.</p>
-          <div class="grid grid-2" style="gap:12px">
-            ${[['4% anual','Rendimiento sobre tu saldo','coins'],['Sin costo','Ni mantenimiento ni mínimos','check'],['Metas de ahorro','Organiza por objetivos','star'],['Redondeo','Ahorra en cada compra','sparkles']].map(b=>`<div class="row" style="gap:12px;padding:10px 0"><span class="prod__ic prod__ic--acct" style="width:40px;height:40px">${icon(b[2])}</span><div><div style="font-weight:600;font-size:13px">${b[0]}</div><div class="text-muted" style="font-size:12px">${b[1]}</div></div></div>`).join('')}
+          <div class="row between mb-4"><span class="badge badge--info">${icon('sparkles')} Preaprobadas para ti</span><span class="text-muted" style="font-size:13px">Apertura en 2 minutos</span></div>
+          <h2 class="h3 mb-2">Elige tu cuenta</h2>
+          <p class="text-muted mb-6">Catálogo de cuentas preaprobadas para tu empresa.</p>
+          <div class="grid" style="gap:12px" id="obCatalog" role="radiogroup" aria-label="Cuenta a abrir">
+            ${CATALOG.map(p=>`<button type="button" class="pay-opt ${p.id===S.data.producto?'is-sel':''}" data-prod="${p.id}" role="radio" aria-checked="${p.id===S.data.producto}"><span class="pay-opt__radio"></span><span class="pay-opt__body"><span class="pay-opt__title">${p.name}</span><span class="pay-opt__sub">${p.sub}</span></span><span class="pay-opt__amt num" style="font-size:13px">${p.tasa}</span></button>`).join('')}
           </div>
           <label class="row" style="gap:10px;margin-top:16px;cursor:pointer"><input type="checkbox" id="obAck" checked><span class="text-slate" style="font-size:13px">Acepto que se verifique mi identidad para abrir la cuenta.</span></label>
-        </div>`,
-
-      1: () => `
+        </div>`;
+      if (key === 'Cuenta de ahorro') return `
         <div class="card card--pad">
-          <h2 class="h3 mb-2">¿Para qué estás ahorrando?</h2>
-          <p class="text-muted mb-6">Dale un nombre y una meta a tu cuenta (podrás cambiarlo luego).</p>
-          <div class="field"><label>Nombre de tu meta</label><div class="control">${icon('star')}<input id="obGoal" value="${S.data.goalName}" maxlength="28" placeholder="Ej. Viaje, Fondo de emergencia"></div></div>
-          <label style="font-size:13px;font-weight:600;color:var(--slate)">Monto objetivo</label>
-          <div class="row between mb-2 mt-2"><span class="text-muted" style="font-size:13px">$500</span><span class="h3 num" id="obTargetVal">${money(S.data.target)}</span><span class="text-muted" style="font-size:13px">$50.000</span></div>
-          ${slider('obTarget',500,50000,S.data.target,500)}
-          <div class="field mt-6"><label>Fecha objetivo (opcional)</label><div class="control">${icon('calendar')}<input type="date" id="obDeadline"></div><span class="hint">Te ayudamos a calcular cuánto ahorrar cada mes.</span></div>
-        </div>`,
-
-      2: () => `
+          <h2 class="h3 mb-2">Tu cuenta de ahorro</h2>
+          <p class="text-muted mb-6">Dale un nombre a tu cuenta de ahorro.</p>
+          <div class="field"><label>Nombre de la cuenta</label><div class="control">${icon('star')}<input id="obNombre" value="${S.data.nombre}" maxlength="28" placeholder="Ej. Ahorro operativo"></div></div>
+          <div class="field"><label>Monto objetivo (opcional)</label><div class="control">${icon('coins')}<span class="prefix">$</span><input id="obTarget" inputmode="decimal" value="${S.data.montoObjetivo}" placeholder="0,00"></div><span class="hint">Un monto de referencia para tu cuenta de ahorro.</span></div>
+        </div>`;
+      if (key === 'Primer depósito') return `
         <div class="card card--pad">
           <h2 class="h3 mb-2">Fondea tu cuenta</h2>
-          <p class="text-muted mb-6">Haz tu primer depósito y automatiza tu ahorro.</p>
-          <div class="field"><label>Depósito inicial</label><div class="control"><span class="prefix">$</span><input id="obInitial" inputmode="decimal" value="${S.data.initial}"></div><span class="hint">Desde $0. Puedes empezar con lo que quieras.</span></div>
-          <div class="field"><label>Desde</label><div class="control">${icon('wallet')}<select id="obSource"><option>Cuenta de Ahorros BLU ···2205 — ${money(DB.accounts[0].saldo)}</option><option>Cuenta Corriente ···7781 — ${money(DB.accounts[1].saldo)}</option></select>${icon('chevronDown')}</div></div>
-          <div class="card card--pad mt-4" style="background:var(--surface-2)">
-            <label class="row between" style="cursor:pointer;align-items:flex-start"><span class="row" style="gap:10px">${icon('sparkles')}<span><span style="font-weight:600;font-size:14px">Redondeo automático</span><span class="text-muted" style="display:block;font-size:12px">Redondea tus compras y ahorra la diferencia</span></span></span><label class="switch"><input type="checkbox" id="obRound" ${S.data.roundup?'checked':''}><span class="track"></span></label></label>
-          </div>
-          <div class="field mt-4"><label>Aporte recurrente</label><div class="scroll-x" id="obRec">${[['no','Sin aporte'],['semanal','Semanal'],['mensual','Mensual']].map(r=>`<button class="chip ${r[0]===S.data.recurring?'is-active':''}" data-rec="${r[0]}">${r[1]}</button>`).join('')}</div></div>
-          <div class="field" id="obRecAmtWrap" style="${S.data.recurring==='no'?'display:none':''}"><label>Monto del aporte</label><div class="control"><span class="prefix">$</span><input id="obRecAmt" inputmode="decimal" value="${S.data.recurringAmt}"></div></div>
-        </div>`,
-
-      3: () => `
+          <p class="text-muted mb-6">Haz tu primer depósito desde una de tus cuentas.</p>
+          <div class="field"><label>Depósito inicial</label><div class="control">${icon('coins')}<span class="prefix">$</span><input id="obInitial" inputmode="decimal" value="${S.data.initial}"></div><span class="hint">Desde $0. Puedes empezar con lo que quieras.</span></div>
+          <div class="field"><label>Cuenta de origen del depósito</label><div class="control">${icon('wallet')}<select id="obSource">${DB.accounts.map(a=>`<option>${a.name} ${a.num} — ${money(a.saldo)}</option>`).join('')}</select>${icon('chevronDown')}</div></div>
+        </div>`;
+      // Revisión
+      return `
         <div class="card card--pad">
           <h2 class="h3 mb-2">Revisa y confirma</h2>
-          <p class="text-muted mb-6">Todo listo para abrir tu cuenta BLU+.</p>
+          <p class="text-muted mb-6">Todo listo para abrir tu cuenta.</p>
           ${kv('Titular', DB.user.name)}
-          ${kv('Meta', S.data.goalName)}
-          ${kv('Monto objetivo', money(S.data.target), 1)}
-          ${kv('Depósito inicial', money(S.data.initial), 1)}
-          ${kv('Origen', S.data.source)}
-          ${kv('Redondeo automático', S.data.roundup ? 'Activado' : 'Desactivado')}
-          ${kv('Aporte recurrente', S.data.recurring==='no'?'Sin aporte':`${money(S.data.recurringAmt)} / ${S.data.recurring}`)}
-          ${kv('Rendimiento', '4% anual')}
+          ${kv('Producto', getProd().name)}
+          ${kv('Nombre de la cuenta', S.data.nombre)}
+          ${esCliente ? kv('Origen del depósito', S.data.source) : ''}
           <label class="row" style="gap:10px;cursor:pointer;align-items:flex-start;margin-top:14px" id="fTerm"><input type="checkbox" id="obTerm" style="margin-top:3px"><span class="text-slate" style="font-size:13px">Acepto el <a href="#/onboarding-blu-plus" onclick="event.preventDefault();openTermsPlus()" style="color:var(--primary);font-weight:600">contrato de la cuenta de ahorros</a> y la tabla de costos.</span></label>
           <div id="termErr" style="display:none;color:var(--error);font-size:12px;font-weight:500;margin-top:6px" class="row"><span>${icon('alert')} Debes aceptar los términos para continuar.</span></div>
-        </div>`,
-    };
+        </div>`;
+    }
 
     function paintDone() {
       $('#obSteps').innerHTML = ''; $('#obSide').innerHTML = '';
       $('#obForm').closest('.grid').style.gridTemplateColumns = '1fr';
-      const pct = Math.min(100, Math.round(S.data.initial / S.data.target * 100));
       $('#obForm').innerHTML = `
       <div class="card card--pad" style="max-width:600px;margin:0 auto;text-align:center">
         <div class="state__art" style="margin:0 auto 12px;background:var(--success-bg);color:var(--success)">${icon('checkCircle')}</div>
-        <h2 class="h2">¡Tu cuenta BLU+ está lista!</h2>
-        <p class="text-muted mt-2">Empezaste a ahorrar para <strong>${S.data.goalName}</strong>.</p>
-        <div class="acct-card acct-card--acct" style="cursor:default;text-align:left;margin-top:24px">
-          <div class="acct-card__top"><span class="ic">${icon('wallet')}</span><span class="badge badge--glass">BLU+ ···${Math.floor(1000+Math.random()*8999)}</span></div>
-          <div><div class="acct-card__label">${S.data.goalName}</div><div class="acct-card__amt num">${money(S.data.initial)}</div>
-            <div style="margin-top:12px"><div class="row between" style="font-size:11px;opacity:.85"><span>Meta ${money(S.data.target)}</span><span>${pct}%</span></div><div class="progress mt-2" style="background:rgba(255,255,255,.28)"><span style="width:${pct}%;background:#fff"></span></div></div>
+        <h2 class="h2">¡Tu cuenta está lista!</h2>
+        <p class="text-muted mt-2">Abriste tu <strong>${getProd().name}</strong>.</p>
+        <div class="prod-xl acct-card-plain" style="width:100%;max-width:300px;margin:24px auto 0">
+          <div class="prod-xl__body">
+            <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
+            <div class="prod-xl__name">${S.data.nombre}</div>
+            <div class="prod-xl__id num">${getProd().name} · ···${1000+Math.floor(Math.random()*8999)}</div>
+            <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${money(S.data.initial)}</div>
+            <div class="prod-xl__sub">Saldo disponible</div>
           </div>
         </div>
-        ${S.data.recurring!=='no' ? `<div class="card card--pad mt-4" style="background:var(--blu-50);border-color:var(--blu-100);text-align:left"><div class="row" style="gap:10px">${icon('calendar')}<div><div style="font-weight:600;font-size:13px">Aporte automático activado</div><div class="text-muted" style="font-size:12px">${money(S.data.recurringAmt)} cada ${S.data.recurring==='semanal'?'semana':'mes'} desde tu cuenta.</div></div></div></div>`:''}
-        <div class="row mt-6" style="gap:12px"><button class="btn btn--secondary" style="flex:1" data-nav="cuentas">Ver mis cuentas</button><button class="btn btn--primary" style="flex:1" data-nav="cuentas">Aportar ahora</button></div>
+        <div class="row mt-6" style="gap:12px"><button class="btn btn--secondary" style="flex:1" data-nav="inicio">Ir al inicio</button><button class="btn btn--primary" style="flex:1" data-nav="cuentas?cat=cuenta">Ver mis cuentas</button></div>
       </div>`;
       view.querySelectorAll('[data-nav]').forEach(n => n.onclick = () => location.hash = '#/' + n.dataset.nav);
     }
 
     function persist() {
       const g = id => { const e = $('#' + id); return e ? e.value : undefined; };
-      if (S.step === 1) { if (g('obGoal') !== undefined) S.data.goalName = g('obGoal') || 'Mi meta de ahorro'; if (g('obDeadline') !== undefined) S.data.deadline = g('obDeadline'); }
-      if (S.step === 2) { const iv = parseFloat((g('obInitial')||'').replace(',','.')); if (!isNaN(iv)) S.data.initial = iv; if (g('obSource') !== undefined) S.data.source = g('obSource').split(' — ')[0]; const rc = $('#obRound'); if (rc) S.data.roundup = rc.checked; const ra = parseFloat((g('obRecAmt')||'').replace(',','.')); if (!isNaN(ra)) S.data.recurringAmt = ra; }
-    }
-    function validate() {
-      if (S.step === 2) { const f = $('#obForm').querySelector('.field'); if (S.data.initial < 0) return false; }
-      return true;
+      const key = stepKey();
+      if (key === 'Cuenta de ahorro') { if (g('obNombre') !== undefined) S.data.nombre = g('obNombre') || 'Mi cuenta de ahorro'; const mv=parseFloat((g('obTarget')||'').replace(',','.')); if(!isNaN(mv)) S.data.montoObjetivo=mv; }
+      if (key === 'Primer depósito') { const iv = parseFloat((g('obInitial')||'').replace(',','.')); if (!isNaN(iv)) S.data.initial = iv; if (g('obSource') !== undefined) S.data.source = g('obSource').split(' — ')[0]; }
     }
 
     function paintForm() {
-      $('#obForm').innerHTML = views[S.step]() + navButtons();
+      $('#obForm').innerHTML = viewFor(stepKey()) + navButtons();
       wireStep(); paintSteps(); paintSide();
       $('#obForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     function navButtons() {
       const last = S.step === STEPS.length - 1;
-      return `<div class="row mt-4" style="gap:12px">${S.step>0?`<button class="btn btn--secondary" id="obBack" style="flex:1">${icon('back')} Atrás</button>`:`<button class="btn btn--secondary" id="obCancel" style="flex:1">Cancelar</button>`}<button class="btn btn--primary" id="obNext" style="flex:2">${S.step===0?'Abrir mi cuenta':last?'Confirmar apertura':'Continuar'}</button></div>`;
+      return `<div class="row mt-4" style="gap:12px">${S.step>0?`<button class="btn btn--secondary" id="obBack" style="flex:1">${icon('back')} Atrás</button>`:`<button class="btn btn--secondary" id="obCancel" style="flex:1">Cancelar</button>`}<button class="btn btn--primary" id="obNext" style="flex:2">${S.step===0?'Continuar':last?'Confirmar apertura':'Continuar'}</button></div>`;
     }
     function wireStep() {
       const back = $('#obBack'); if (back) back.onclick = () => { persist(); S.step--; paintForm(); };
       const cancel = $('#obCancel'); if (cancel) cancel.onclick = () => location.hash = '#/ofertas';
-      if (S.step === 1) {
-        const g = $('#obGoal'); if (g) g.oninput = () => { S.data.goalName = g.value; paintSide(); };
-        const sl = $('#obTarget'); if (sl) sl.oninput = () => { S.data.target = +sl.value; $('#obTargetVal').textContent = money(S.data.target); paintSide(); };
+      const key = stepKey();
+      if (key === 'Tu cuenta') {
+        view.querySelectorAll('#obCatalog [data-prod]').forEach(b => b.onclick = () => { S.data.producto = b.dataset.prod; view.querySelectorAll('#obCatalog [data-prod]').forEach(x=>{x.classList.remove('is-sel');x.setAttribute('aria-checked','false');}); b.classList.add('is-sel'); b.setAttribute('aria-checked','true'); paintSide(); });
       }
-      if (S.step === 2) {
+      if (key === 'Cuenta de ahorro') {
+        const g = $('#obNombre'); if (g) g.oninput = () => { S.data.nombre = g.value; };
+      }
+      if (key === 'Primer depósito') {
         const ini = $('#obInitial'); if (ini) ini.oninput = () => { const v = parseFloat(ini.value.replace(',','.')); S.data.initial = isNaN(v)?0:v; paintSide(); };
-        view.querySelectorAll('#obRec [data-rec]').forEach(b => b.onclick = () => { view.querySelectorAll('#obRec .chip').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); S.data.recurring = b.dataset.rec; $('#obRecAmtWrap').style.display = b.dataset.rec==='no'?'none':''; paintSide(); });
-        const rc = $('#obRound'); if (rc) rc.onchange = () => { S.data.roundup = rc.checked; };
-        const ra = $('#obRecAmt'); if (ra) ra.oninput = () => { const v=parseFloat(ra.value.replace(',','.')); S.data.recurringAmt = isNaN(v)?0:v; paintSide(); };
       }
-      if (S.step === 3) { const t = $('#obTerm'); if (t) t.onchange = () => { S.data.terms = t.checked; $('#termErr').style.display = 'none'; }; }
+      if (key === 'Revisión') { const t = $('#obTerm'); if (t) t.onchange = () => { S.data.terms = t.checked; $('#termErr').style.display = 'none'; }; }
       $('#obNext').onclick = () => {
         persist();
-        if (!validate()) return;
-        if (S.step === 3) {
+        if (stepKey() === 'Revisión') {
           if (!$('#obTerm').checked) { $('#termErr').style.display = 'flex'; return; }
           confirmPlus(S, () => { S.done = true; paintDone(); });
           return;

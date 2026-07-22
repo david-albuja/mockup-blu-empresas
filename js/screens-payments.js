@@ -5,21 +5,32 @@ Screens['retiro-atm'] = {
   title: 'Retiro sin tarjeta',
   render(view) {
     view.innerHTML = `
-    ${pageHead('Retiro sin tarjeta','Genera un código para retirar en cajeros BLU.','inicio')}
+    ${pageHead('Retiro sin tarjeta','Genera un código y recíbelo en tu teléfono para retirar en cajeros BLU.','inicio')}
     <div class="grid" style="grid-template-columns:1fr 360px;align-items:start">
       ${panel('', `
         <div class="field"><label>Cuenta origen <span class="req">*</span></label><div class="control">${icon('wallet')}<select><option>Ahorros BLU ···2205 — ${money(DB.accounts[0].saldo)}</option></select>${icon('chevronDown')}</div></div>
         <div class="field"><label>Monto a retirar <span class="req">*</span></label><div class="scroll-x">${[20,40,60,100,200].map((m,i)=>`<button class="chip ${i===2?'is-active':''}" data-amt="${m}">$${m}</button>`).join('')}</div></div>
         <div class="field"><label>Otro monto</label><div class="control"><span class="prefix">$</span><input inputmode="decimal" placeholder="0,00"></div><span class="hint">Múltiplos de $10 · máximo $300 por retiro.</span></div>
+        <div class="field" id="atmPhoneF"><label>Teléfono para recibir el código <span class="req">*</span></label><div class="control">${icon('phone')}<input id="atmPhone" inputmode="numeric" value="${DB.user.phone}"></div><span class="error-text">${icon('alert')} Ingresa un teléfono válido.</span></div>
+        <div class="row" style="gap:8px;align-items:flex-start;margin:4px 0 14px;font-size:12px;color:var(--muted)">${icon('info')}<span>El código de retiro tiene una validez de <strong style="color:var(--ink)">4 horas</strong> y se envía por SMS al número indicado.</span></div>
         <button class="btn btn--primary btn--lg btn--block" id="atmBtn">${icon('key')} Generar código de retiro</button>`)}
-      <div class="card card--pad section" id="atmResult" style="text-align:center">
-        <div class="state__art" style="margin:0 auto 12px">${icon('atm')}</div>
-        <p class="text-muted">Genera tu código para verlo aquí. Es válido por 30 minutos.</p>
-      </div>
+      <aside style="position:sticky;top:calc(var(--topbar-h) + 24px)">
+        ${infoBanner('El retiro sin tarjeta está disponible únicamente para el dueño de la empresa (no aplica a perfiles Administrador).','shield')}
+      </aside>
     </div>`;
     let amt=60;
     view.querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{view.querySelectorAll('[data-amt]').forEach(x=>x.classList.remove('is-active'));b.classList.add('is-active');amt=+b.dataset.amt;});
-    $('#atmBtn').onclick=(e)=>{e.currentTarget.classList.add('is-loading');setTimeout(()=>{e.target.classList.remove('is-loading');const code=Math.floor(100000+Math.random()*899999);$('#atmResult').innerHTML=`<span class="badge badge--success mb-4"><span class="dot"></span>Código activo · 30:00</span><div class="text-muted" style="font-size:13px">Retiro de</div><div class="h2 num">$${amt}.00</div><div class="text-muted mt-6" style="font-size:13px">Ingresa este código en el cajero</div><div class="num" style="font-size:38px;font-weight:800;letter-spacing:.15em;color:var(--blu-700);margin:8px 0">${String(code).slice(0,3)} ${String(code).slice(3)}</div><button class="btn btn--secondary btn--block" onclick="toast({title:'Código copiado',type:'success'})">${icon('copy')} Copiar código</button>`;toast({title:'Código generado',msg:'Válido por 30 minutos.',type:'success'});},1100);};
+    $('#atmPhone').oninput=()=>$('#atmPhoneF').classList.remove('has-error');
+    $('#atmBtn').onclick=()=>{
+      const ph=$('#atmPhone'); if(!ph.value.trim()){ $('#atmPhoneF').classList.add('has-error'); return; }
+      const ov = openModal(`<div class="modal__head"><h3 class="h3">Verifica tu identidad</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
+        <div class="modal__body"><p class="text-slate">Ingresa el código de un solo uso (OTP) que enviamos a tu teléfono <strong>${ph.value.trim()}</strong> para generar el retiro de <strong>$${amt}.00</strong>.</p>
+        <div class="field mt-4"><label>Código OTP</label><div class="control" style="justify-content:center;gap:10px">${[0,0,0,0,0,0].map(()=>'<input maxlength="1" inputmode="numeric" style="width:40px;text-align:center;font-size:20px;font-weight:700" aria-label="Dígito OTP">').join('')}</div><span class="hint">El código de retiro será válido por 4 horas.</span></div></div>
+        <div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="atmOtp">Generar código</button></div>`);
+      const inp=ov.querySelectorAll('.control input'); inp.forEach((i,x)=>i.oninput=()=>{ if(i.value&&inp[x+1]) inp[x+1].focus(); });
+      ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(ov));
+      ov.querySelector('#atmOtp').onclick=(e)=>{ e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ closeModal(ov); toast({title:'Código enviado',msg:`Enviamos el código de retiro de $${amt}.00 a ${ph.value.trim()}. Válido por 4 horas.`,type:'success'}); },1000); };
+    };
   }
 };
 
@@ -90,37 +101,74 @@ Screens['servicios-inscritos'] = {
 Screens['pago-credito'] = {
   title: 'Pago de crédito',
   render(view) {
-    const cr=DB.credits[0];
+    const cr = (getParam('id') && DB.credits.find(c=>c.id===getParam('id'))) || DB.credits.find(c=>c.estado==='mora') || DB.credits[0];
     view.innerHTML = `
     ${pageHead('Pago de crédito','Paga la cuota de tu crédito.','cuentas')}
     <div class="grid" style="grid-template-columns:1fr 340px;align-items:start">
       ${panel('', `
         <div class="field"><label>Crédito</label><div class="control">${icon('coins')}<select><option>${cr.name} ${cr.num}</option></select>${icon('chevronDown')}</div></div>
-        <label class="h4" style="display:block;margin:8px 0">¿Cuánto quieres pagar?</label>
-        <label class="card card--pad" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-color:var(--blu-500);margin-bottom:10px"><span class="row" style="gap:12px"><input type="radio" name="pc" checked><span style="font-weight:600">Cuota del mes</span></span><span class="num" style="font-weight:700">${money(cr.cuota)}</span></label>
-        <label class="card card--pad" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center"><span class="row" style="gap:12px"><input type="radio" name="pc"><span style="font-weight:600">Abono a capital</span></span><span class="text-muted">Otro valor</span></label>
-        <div class="field mt-4"><label>Pagar desde</label><div class="control">${icon('wallet')}<select><option>Ahorros BLU ···2205</option></select>${icon('chevronDown')}</div></div>
-        <button class="btn btn--primary btn--lg btn--block" onclick="successModal('Pago realizado','Aplicamos ${money(cr.cuota)} a tu crédito.','cuentas')">Pagar ${money(cr.cuota)}</button>`)}
-      ${panel('Estado del crédito', kv('Saldo pendiente',money(cr.saldo),1)+kv('Cuota',cr.plazo)+kv('Próximo pago',cr.prox)+`<div class="progress mt-4"><span style="width:37%"></span></div><div class="text-muted mt-2" style="font-size:12px">18 de 48 cuotas pagadas</div>`)}
+        <label class="h4" style="display:block;margin:8px 0">Cuota a pagar</label>
+        <div class="card card--pad" style="display:flex;justify-content:space-between;align-items:center;border-color:var(--blu-500);margin-bottom:10px"><span class="row" style="gap:12px">${icon('receipt')}<span style="font-weight:600">Cuota del mes</span></span><span class="num" style="font-weight:700">${money(cr.cuota)}</span></div>
+        <div class="field mt-4"><label>Pagar desde</label><div class="control">${icon('wallet')}<select>${DB.accounts.map(a=>`<option>${a.name} ${a.num}</option>`).join('')}</select>${icon('chevronDown')}</div></div>
+        <div class="row" style="gap:8px;align-items:flex-start;margin:14px 0;font-size:12px;color:var(--muted)">${icon('shield')}<span>El pago quedará <strong style="color:var(--ink)">pendiente de autorizar</strong> por un perfil Aprobador.</span></div>
+        <button class="btn btn--primary btn--lg btn--block" data-nav="pendiente-autorizar">Pagar ${money(cr.cuota)}</button>`)}
+      ${panel('Estado del crédito', kv('Saldo pendiente',money(cr.saldo),1)+kv('Cuota',cr.plazo)+kv('Próximo pago',cr.prox)+`<div class="progress mt-4"><span style="width:37%"></span></div><div class="text-muted mt-2" style="font-size:12px">${cr.plazo!=='—'?cr.plazo.replace('/',' de ')+' cuotas pagadas':''}</div>`)}
     </div>`;
   }
 };
 
-/* Pago por carga de archivo */
-Screens['carga-archivo'] = {
-  title: 'Pago por archivo',
+/* Pantalla genérica: operación pendiente de autorizar (solo el perfil Aprobador la autoriza) */
+Screens['pendiente-autorizar'] = {
+  title: 'Pendiente de autorizar', full: false,
   render(view) {
     view.innerHTML = `
-    ${pageHead('Pago por carga de archivo','Procesa pagos masivos para tu empresa.','caja')}
+    <div class="section" style="max-width:560px;margin:0 auto;padding-top:24px">
+      <div class="card card--pad" style="text-align:center">
+        <div class="state__art" style="margin:0 auto 12px;background:var(--warning-bg);color:var(--warning)">${icon('clock')}</div>
+        <h2 class="h2">Pendiente de autorizar</h2>
+        <p class="text-muted mt-2">Tu operación se registró y quedó <strong>pendiente de autorización</strong>. Un usuario con perfil <strong>Aprobador</strong> debe autorizarla para que se ejecute.</p>
+        <div class="card card--pad mt-6" style="text-align:left;background:var(--surface-2)">
+          ${kv('N.º de operación','#OP-'+Math.floor(100000+Math.random()*899999))}
+          ${kv('Estado','<span class="badge badge--warning"><span class="dot"></span>Pendiente de autorizar</span>')}
+          ${kv('Autoriza','Perfil Aprobador')}
+        </div>
+        <div class="row mt-6" style="gap:12px"><button class="btn btn--secondary" style="flex:1" data-nav="inicio">Ir al inicio</button><button class="btn btn--primary" style="flex:1" data-nav="aprobaciones">Ver aprobaciones</button></div>
+      </div>
+    </div>`;
+  }
+};
+
+/* Pago masivo por carga de archivo */
+Screens['carga-archivo'] = {
+  title: 'Pago masivo',
+  render(view) {
+    let tipo = 'directa';
+    view.innerHTML = `
+    ${pageHead('Pago masivo por carga de archivo','Procesa pagos de nómina, proveedores y servicios.','inicio')}
     <div class="grid" style="grid-template-columns:1fr 340px;align-items:start">
       ${panel('', `
-        <div class="field"><label>Tipo de proceso</label><div class="control">${icon('swap')}<select><option>Pago a proveedores</option><option>Pago de nómina</option><option>Cobros</option></select>${icon('chevronDown')}</div></div>
-        <label style="font-size:13px;font-weight:600;color:var(--slate)">Archivo (.txt / .csv)</label>
-        <label id="drop" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px;border:2px dashed var(--blu-200);border-radius:var(--r-md);background:var(--surface-2);cursor:pointer;text-align:center;margin:6px 0 16px">${icon('upload','')}<span style="font-weight:600;color:var(--primary)">Arrastra tu archivo o haz clic</span><span class="text-muted" style="font-size:12px">Máx. 5 MB · formato BLU estándar</span><input type="file" hidden id="file"></label>
-        <button class="btn btn--secondary btn--block mb-4" onclick="toast({title:'Plantilla descargada',type:'success'})">${icon('download')} Descargar plantilla</button>
-        <button class="btn btn--primary btn--lg btn--block" onclick="successModal('Archivo cargado','Validamos 128 registros por $24.560,00. Requiere aprobación.','aprobaciones')">Cargar y validar</button>`)}
+        <div class="grid grid-2" style="gap:0 16px">
+          <div class="field"><label>Tipo de transferencia</label><div class="control">${icon('swap')}<select id="pmTipo"><option value="directa">Directa</option><option value="interbancaria">Interbancaria</option></select>${icon('chevronDown')}</div></div>
+          <div class="field"><label>Categoría</label><div class="control">${icon('grid')}<select><option>Nómina</option><option>Proveedor</option><option>Servicio</option></select>${icon('chevronDown')}</div></div>
+        </div>
+        <div class="field"><label>Cuenta de origen</label><div class="control">${icon('wallet')}<select>${DB.accounts.map(a=>`<option>${a.name} ${a.num} — ${money(a.saldo)}</option>`).join('')}</select>${icon('chevronDown')}</div></div>
+        <div class="grid grid-2" style="gap:0 16px">
+          <div class="field"><label>Fecha de pago</label><div class="control">${icon('calendar')}<input type="date"></div></div>
+          <div class="field"><label>Descripción</label><div class="control">${icon('info')}<input placeholder="Ej. Nómina julio 2026"></div></div>
+        </div>
+        <div class="divider"></div>
+        <label style="font-size:13px;font-weight:600;color:var(--slate)">Formato para la carga</label>
+        <div class="row wrap mt-2 mb-4" style="gap:10px">
+          <button class="btn btn--secondary btn--sm" onclick="toast({title:'Instructivo',msg:'Guía de llenado del archivo.',type:'info'})">${icon('file')} Instructivo</button>
+          <button class="btn btn--secondary btn--sm" id="pmPlantilla" onclick="toast({title:'Plantilla descargada',msg:'Formato para pago directo.',type:'success'})">${icon('download')} Formato (plantilla)</button>
+        </div>
+        <label style="font-size:13px;font-weight:600;color:var(--slate)">Carga de archivo</label>
+        <label id="drop" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px;border:2px dashed var(--blu-200);border-radius:var(--r-md);background:var(--surface-2);cursor:pointer;text-align:center;margin:6px 0 8px">${icon('upload','')}<span style="font-weight:600;color:var(--primary)">Arrastra tu archivo o haz clic</span><span class="text-muted" style="font-size:12px" id="pmFmt">Formato para pago directo · máx. 5 MB</span><input type="file" hidden id="file"></label>
+        <button class="btn btn--primary btn--lg btn--block mt-4" id="pmFin">Finalizar</button>`)}
       ${panel('Últimas cargas', [['nomina_jul.csv','Aprobado','$18.200'],['prov_070.txt','Pendiente','$6.360']].map(x=>`<div class="prod" style="padding:12px 0"><span class="prod__ic prod__ic--card">${icon('file')}</span><div class="prod__main"><div class="prod__title" style="font-size:13px">${x[0]}</div><div class="prod__sub">${x[2]}</div></div><span class="badge ${x[1]==='Aprobado'?'badge--success':'badge--warning'}"><span class="dot"></span>${x[1]}</span></div>`).join(''))}
     </div>`;
     const drop=$('#drop'); if(drop){ drop.querySelector('#file').onchange=(e)=>{ if(e.target.files[0]) toast({title:'Archivo seleccionado',msg:e.target.files[0].name,type:'success'}); }; }
+    $('#pmTipo').onchange = (e) => { tipo = e.target.value; $('#pmFmt').textContent = `Formato para pago ${tipo==='directa'?'directo':'interbancario'} · máx. 5 MB`; };
+    $('#pmFin').onclick = () => { $('#pmFin').classList.add('is-loading'); setTimeout(()=>{ toast({title:'Pago masivo cargado',msg:'Registros validados. Quedó pendiente de autorizar.',type:'success'}); location.hash='#/inicio'; }, 900); };
   }
 };

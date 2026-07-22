@@ -20,9 +20,9 @@ Screens.pantallas = {
   }
 };
 
-/* Ofertas / Contratar (MyValueOffers) */
+/* Ofertas / Para ti (MyValueOffers) */
 Screens.ofertas = {
-  title: 'Contratar',
+  title: 'Para ti',
   render(view) {
     const offers = [
       { name:'Tarjeta Diners Club Signature', sub:'Sin costo de emisión el 1er año', tag:'Preaprobada', icon:'card', cta:'Solicitar', route:'onboarding-signature' },
@@ -31,7 +31,7 @@ Screens.ofertas = {
       { name:'Seguro de protección', sub:'Cobertura de compras y viajes', tag:'', icon:'shield', cta:'Conocer' },
     ];
     view.innerHTML = `
-    ${pageHead('Contratar productos','Ofertas personalizadas según tu perfil.')}
+    ${pageHead('Para ti','Ofertas y productos personalizados según tu perfil.')}
     <div class="grid grid-2">
       ${offers.map(o=>`<div class="card card--pad card--hover section"><div class="row between"><span class="prod__ic prod__ic--card">${icon(o.icon)}</span>${o.tag?`<span class="badge badge--info">${o.tag}</span>`:''}</div><div class="mt-4"><div class="h4">${o.name}</div><div class="text-muted" style="font-size:13px">${o.sub}</div></div><button class="btn btn--primary btn--block mt-6" ${o.route?`data-nav="${o.route}"`:`data-offer="${o.name}"`}>${o.cta}</button></div>`).join('')}
     </div>`;

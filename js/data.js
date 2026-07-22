@@ -49,15 +49,15 @@ const DB = {
   // En mora/legal/judicial la fecha máxima es "Inmediato" y (legal/judicial) el saldo
   // total se consulta con Diners.
   credits: [
-    { id: 'auto', name: 'Crédito Automotriz', num: '••• 0091', saldo: 2340.18, cuota: 312.55, plazo: '18/48', prox: '05 ago', estado: 'al-dia' },
-    { id: 'consumo', name: 'Crédito de Consumo', num: '••• 3320', saldo: 1890.00, cuota: 156.20, plazo: '9/24', prox: 'Inmediato', estado: 'mora' },
-    { id: 'capital', name: 'Crédito Capital de Trabajo', num: '••• 7781', saldo: 8420.00, cuota: 640.00, plazo: '22/36', prox: 'Inmediato', estado: 'legal' },
-    { id: 'comercial', name: 'Crédito Comercial', num: '••• 5566', saldo: 15600.00, cuota: 0, plazo: '—', prox: 'Inmediato', estado: 'judicial' },
+    { id: 'auto', name: 'Crédito Automotriz', num: '••• 0091', saldo: 2340.18, cuota: 312.55, plazo: '18/48', prox: '05 ago', estado: 'al-dia', capitalOtorgado: 6000, capitalPagado: 3659.82, tasaNominal: '11.20%', tasaEfectiva: '11.83%', desembolso: '05 feb 2025', fin: '05 ago 2027', deudaFecha: 2372.40 },
+    { id: 'consumo', name: 'Crédito de Consumo', num: '••• 3320', saldo: 1890.00, cuota: 156.20, plazo: '9/24', prox: 'Inmediato', estado: 'mora', capitalOtorgado: 4000, capitalPagado: 2110.00, tasaNominal: '15.20%', tasaEfectiva: '16.30%', desembolso: '10 nov 2025', fin: '10 nov 2027', deudaFecha: 1946.20 },
+    { id: 'capital', name: 'Crédito Capital de Trabajo', num: '••• 7781', saldo: 8420.00, cuota: 640.00, plazo: '22/36', prox: 'Inmediato', estado: 'legal', capitalOtorgado: 20000, capitalPagado: 11580.00, tasaNominal: '9.80%', tasaEfectiva: '10.25%', desembolso: '01 mar 2024', fin: '01 mar 2027', deudaFecha: 8620.00 },
+    { id: 'comercial', name: 'Crédito Comercial', num: '••• 5566', saldo: 15600.00, cuota: 0, plazo: '—', prox: 'Inmediato', estado: 'judicial', capitalOtorgado: 30000, capitalPagado: 14400.00, tasaNominal: '9.50%', tasaEfectiva: '9.95%', desembolso: '01 ene 2023', fin: '01 ene 2026', deudaFecha: 15600.00 },
   ],
   investments: [
-    { id: 'dpf', name: 'Depósito a Plazo Fijo', tipo: 'Depósito a plazo fijo', last4: '3391', monto: 5000, tasa: '7.25%', interesGanado: 181.25, vence: '12 dic 2026' },
-    { id: 'dpf2', name: 'Depósito a Plazo 90 días', tipo: 'Depósito a plazo fijo', last4: '7204', monto: 8000, tasa: '6.80%', interesGanado: 136.00, vence: '20 sep 2026' },
-    { id: 'fondo', name: 'Fondo de Inversión blu', tipo: 'Fondo de inversión', last4: '5518', monto: 3200, tasa: '6.10%', interesGanado: 48.80, vence: 'Sin plazo fijo' },
+    { id: 'dpf', name: 'Depósito a Plazo Fijo', tipo: 'Depósito a plazo fijo', last4: '3391', monto: 5000, tasa: '7.25%', interesGanado: 181.25, interesMes: 30.21, plazoDias: 180, emision: '15 jun 2026', pagoInteres: 'Al vencimiento', beneficiario: 'Robles Comercial S.A.', montoFinal: 5181.25, retencion: 3.62, estadoInv: 'vigente', vence: '12 dic 2026' },
+    { id: 'dpf2', name: 'Depósito a Plazo 90 días', tipo: 'Depósito a plazo fijo', last4: '7204', monto: 8000, tasa: '6.80%', interesGanado: 136.00, interesMes: 45.33, plazoDias: 90, emision: '22 jun 2026', pagoInteres: 'Al vencimiento', beneficiario: 'Robles Comercial S.A.', montoFinal: 8136.00, retencion: 2.72, estadoInv: 'vigente', vence: '20 sep 2026' },
+    { id: 'fondo', name: 'Fondo de Inversión blu', tipo: 'Fondo de inversión', last4: '5518', monto: 3200, tasa: '6.10%', interesGanado: 48.80, interesMes: 16.27, plazoDias: 0, emision: '01 may 2026', pagoInteres: 'Mensual', beneficiario: 'Robles Comercial S.A.', montoFinal: 3248.80, retencion: 0.98, estadoInv: 'vigente', vence: 'Sin plazo fijo' },
   ],
 
   movements: [
@@ -74,10 +74,10 @@ const DB = {
   spend: [ { cat: 'Supermercado', pct: 34, val: 420.5, color: '#4C71FC' }, { cat: 'Servicios', pct: 22, val: 272.0, color: '#32C5FF' }, { cat: 'Combustible', pct: 18, val: 222.0, color: '#2C55F5' }, { cat: 'Salud', pct: 14, val: 173.0, color: '#44AAFF' }, { cat: 'Otros', pct: 12, val: 148.0, color: '#B9C8FF' } ],
 
   contacts: [
-    { id: 'c1', name: 'Juan Pérez', bank: 'Banco Pichincha', acc: '••• 4521', initials: 'JP', fav: true },
-    { id: 'c2', name: 'Ana Molina', bank: 'blu · Ahorros', acc: '••• 8830', initials: 'AM', fav: true },
-    { id: 'c3', name: 'Carlos Vega', bank: 'Produbanco', acc: '••• 1174', initials: 'CV', fav: false },
-    { id: 'c4', name: 'Lucía Torres', bank: 'blu · Ahorros', acc: '••• 9902', initials: 'LT', fav: false },
+    { id: 'c1', name: 'Juan Pérez', bank: 'Banco Pichincha', acc: '••• 4521', initials: 'JP', fav: true, producto: 'cuentas' },
+    { id: 'c2', name: 'Ana Molina', bank: 'blu · Ahorros', acc: '••• 8830', initials: 'AM', fav: true, producto: 'cuentas' },
+    { id: 'c3', name: 'Carlos Vega', bank: 'Produbanco', acc: '••• 1174', initials: 'CV', fav: false, producto: 'tarjetas' },
+    { id: 'c4', name: 'Lucía Torres', bank: 'blu · Ahorros', acc: '••• 9902', initials: 'LT', fav: false, producto: 'cuentas' },
   ],
 
   services: [

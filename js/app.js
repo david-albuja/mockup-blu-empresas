@@ -322,8 +322,8 @@ function homeInvestRow(iv) {
       <div class="prod-xl__name">${iv.tipo || iv.name}</div>
       <div class="prod-xl__id num">···${iv.last4} · ${iv.tasa}</div>
       <div class="prod-xl__amt num" style="font-size:22px;margin-top:10px">${State.masked?'$ ••••••':money(iv.monto)}</div>
-      <div class="prod-xl__sub">${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `Renueva el ${iv.vence}`}</div>
-      <div class="acct-interes">${icon('arrowUp')} <strong class="num">${State.masked?'••••':money(iv.interesGanado||0,true)}</strong> ganado</div>
+      <div class="prod-xl__sub">${iv.vence === 'Sin plazo fijo' ? 'Sin plazo fijo' : `Fecha de finalización: ${iv.vence}`}</div>
+      <div class="acct-interes">${icon('arrowUp')} <strong class="num">${State.masked?'••••':money(iv.interesMes||0,true)}</strong> este mes</div>
     </div>
   </button>`;
 }
@@ -712,11 +712,7 @@ Screens.cuentas = {
     ${premiumHead(titulo, cat ? '' : `${total} productos`, 'inicio',
       `<button class="btn btn--primary btn--sm" data-nav="ofertas">${icon('plus')} Abrir producto</button>`, 'Productos')}
     <div class="stat-tiles section mb-6">${tiles}</div>
-    ${secciones}
-    <div class="list-card section">
-      <div class="list-card__head"><h2 class="h4">Movimientos recientes</h2>${exportChip('movimientos-cuentas.xlsx')}</div>
-      <div class="list-card__body" style="columns:340px 2;column-gap:40px">${DB.movements.filter(m=>m.card==='Ahorros').map(UI.txRow).join('')}</div>
-    </div>`;
+    ${secciones}`;
   }
 };
 
@@ -725,7 +721,7 @@ Screens.transferencias = {
   title: 'Transferencias',
   render(view) {
     view.innerHTML = `
-    <div class="page-head section"><h1>Transferir dinero</h1><p>A cuentas propias, terceros u otros bancos.</p></div>
+    ${pageHead('Transferir dinero','A cuentas propias, terceros u otros bancos.','inicio')}
     <div class="grid" style="grid-template-columns: 1fr 340px; align-items:start">
       <div class="card card--pad section">
         <div class="stepper mb-6" id="steps">
@@ -737,6 +733,19 @@ Screens.transferencias = {
           <div class="field"><label>Desde</label><div class="control">${icon('wallet')}<select id="trFrom"><option>Cuenta de Ahorros BLU ···2205 — ${money(DB.accounts[0].saldo)}</option><option>Cuenta Corriente ···7781 — ${money(DB.accounts[1].saldo)}</option></select>${icon('chevronDown')}</div></div>
 
           <div class="field" id="fBenef"><label>Destinatario <span class="req">*</span></label><div class="control">${icon('contacts')}<select id="trBenef"><option value="">Selecciona un contacto…</option>${DB.contacts.map(c=>`<option value="${c.id}">${c.name} — ${c.bank} ${c.acc}</option>`).join('')}<option value="new">+ Nuevo destinatario</option></select>${icon('chevronDown')}</div><span class="error-text">${icon('alert')} Selecciona a quién transferir.</span></div>
+
+          <!-- Nuevo destinatario: campos según tipo de banco -->
+          <div id="newBenef" style="display:none;border:1px solid var(--line-2);border-radius:var(--r-md);padding:16px;margin-bottom:16px;background:var(--surface-2)">
+            <div class="field"><label>Tipo de transferencia</label><div class="control">${icon('building')}<select id="trTipo"><option value="diners">Mismo banco (Diners)</option><option value="banred">Otro banco · BANRED</option><option value="spi">Otro banco · SPI</option></select>${icon('chevronDown')}</div></div>
+            <div class="field" id="fAcc"><label>Número de cuenta <span class="req">*</span></label><div class="control">${icon('wallet')}<input id="trAcc" inputmode="numeric" placeholder="Número de cuenta"></div></div>
+            <div class="field" id="fId" style="display:none"><label>Identificación (cédula / RUC / pasaporte) <span class="req">*</span></label><div class="control">${icon('file')}<input id="trId" placeholder="Identificación del titular"></div></div>
+            <div class="field" id="fName" style="display:none"><label>Nombre del cliente <span class="req">*</span></label><div class="control">${icon('user')}<input id="trName" placeholder="Nombre del titular"></div></div>
+            <button type="button" class="btn btn--secondary btn--block" id="trVerify">${icon('search')} Verificar información</button>
+            <div id="trVerified" style="display:none;margin-top:12px" class="detail-cta detail-cta--ok">${icon('checkCircle')}<span>Titular verificado: <strong id="trVerifiedName">—</strong></span></div>
+            <div class="divider"></div>
+            <div class="field" style="margin:0"><label>Alias (opcional)</label><div class="control">${icon('star')}<input id="trAlias" maxlength="30" placeholder="Ej. Proveedor TIA"></div></div>
+            <label class="row" style="gap:10px;cursor:pointer;align-items:center;margin-top:10px"><input type="checkbox" id="trFav"><span class="text-slate" style="font-size:13px">Guardar en favoritos con este alias</span></label>
+          </div>
 
           <div class="field" id="fAmount"><label>Monto <span class="req">*</span></label><div class="control"><span class="prefix">$</span><input id="trAmount" inputmode="decimal" placeholder="0,00" aria-describedby="amtHint"></div><span class="hint" id="amtHint">Disponible: ${money(DB.accounts[0].saldo)}</span><span class="error-text">${icon('alert')} <span id="amtErr">Ingresa un monto válido.</span></span></div>
 
@@ -752,8 +761,25 @@ Screens.transferencias = {
       </div>
     </div>`;
 
-    const benef=$('#trBenef'), amount=$('#trAmount');
-    view.querySelectorAll('[data-fav]').forEach(b=> b.onclick=()=>{ benef.value=b.dataset.fav; $('#fBenef').classList.remove('has-error'); amount.focus(); });
+    const benef=$('#trBenef'), amount=$('#trAmount'), nb=$('#newBenef');
+    function applyTipo() {
+      const t=$('#trTipo').value;
+      $('#fId').style.display = (t==='banred'||t==='spi') ? 'block' : 'none';
+      $('#fName').style.display = (t==='spi') ? 'block' : 'none';
+      $('#trVerify').style.display = (t==='spi') ? 'none' : 'block';
+      $('#trVerified').style.display='none';
+    }
+    benef.onchange = () => { nb.style.display = benef.value==='new' ? 'block' : 'none'; if(benef.value==='new') applyTipo(); $('#fBenef').classList.remove('has-error'); };
+    $('#trTipo').onchange = applyTipo;
+    $('#trAcc').oninput = () => $('#fAcc').classList.remove('has-error');
+    $('#trVerify').onclick = () => {
+      const acc=$('#trAcc').value.trim(); if(!acc){ $('#fAcc').classList.add('has-error'); return; }
+      const t=$('#trTipo').value;
+      const nm = t==='diners' ? ('Titular Diners ···'+acc.slice(-4)) : ('Cliente BANRED ···'+acc.slice(-4));
+      $('#trVerifiedName').textContent = nm; $('#trVerified').style.display='flex';
+      toast({title:'Información verificada', msg:'Titular: '+nm, type:'success'});
+    };
+    view.querySelectorAll('[data-fav]').forEach(b=> b.onclick=()=>{ benef.value=b.dataset.fav; benef.onchange(); $('#fBenef').classList.remove('has-error'); amount.focus(); });
     amount.oninput = () => { let v=amount.value.replace(/[^\d,]/g,''); amount.value=v; };
     amount.onblur = () => validateAmount();
     function validateAmount() {
@@ -767,8 +793,20 @@ Screens.transferencias = {
       e.preventDefault(); let ok=true;
       if(!benef.value){ $('#fBenef').classList.add('has-error'); ok=false; } else $('#fBenef').classList.remove('has-error');
       if(!validateAmount()) ok=false;
-      if(!ok) return;
-      const c = DB.contacts.find(x=>x.id===benef.value) || {name:'Nuevo destinatario', bank:'—', acc:''};
+      let c;
+      if(benef.value==='new'){
+        const acc=$('#trAcc').value.trim(); if(!acc){ $('#fAcc').classList.add('has-error'); ok=false; }
+        const t=$('#trTipo').value;
+        const nombre = t==='spi' ? $('#trName').value.trim() : ($('#trVerified').style.display!=='none' ? $('#trVerifiedName').textContent : '');
+        const alias=$('#trAlias').value.trim();
+        if(!ok) return;
+        const label = alias || nombre || 'Nuevo destinatario';
+        c={ name:label, bank: t==='diners'?'blu · Diners':(t==='banred'?'Otro banco · BANRED':'Otro banco · SPI'), acc:'••• '+(acc.slice(-4)||'0000'), initials:label.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(), producto:'cuentas' };
+        if($('#trFav').checked){ c.fav=true; c.id='c'+Date.now().toString().slice(-5); DB.contacts.push(c); }
+      } else {
+        if(!ok) return;
+        c = DB.contacts.find(x=>x.id===benef.value) || {name:'Destinatario', bank:'—', acc:''};
+      }
       confirmTransfer(c, amount.value, $('#trConcept').value);
     };
   }
@@ -789,7 +827,8 @@ function confirmTransfer(c, amount, concept) {
   ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(ov));
   const inputs = ov.querySelectorAll('.control input');
   inputs.forEach((inp,i)=> inp.oninput=()=>{ if(inp.value && inputs[i+1]) inputs[i+1].focus(); });
-  ov.querySelector('#doTransfer').onclick=(e)=>{ e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ closeModal(ov); successModal('¡Transferencia exitosa!', `Enviaste $${amount} a ${c.name}.`, 'inicio'); },1200); };
+  // La transferencia queda pendiente de autorización de un perfil Aprobador.
+  ov.querySelector('#doTransfer').onclick=(e)=>{ e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ closeModal(ov); location.hash='#/pendiente-autorizar'; },1200); };
 }
 
 function successModal(title, msg, back) {
@@ -989,15 +1028,49 @@ Screens.contactos = {
   title: 'Contactos',
   render(view) {
     view.innerHTML = `
-    <div class="page-head section"><div class="row between wrap"><div><h1>Contactos</h1><p>Tus destinatarios guardados.</p></div><button class="btn btn--primary btn--sm" data-modal="add">${icon('plus')} Nuevo contacto</button></div></div>
+    <div class="page-head section"><div class="row between wrap"><div><h1>Contactos</h1><p>Tus destinatarios guardados.</p></div><button class="btn btn--primary btn--sm" data-nav="nuevo-contacto">${icon('plus')} Nuevo contacto</button></div></div>
     <div class="search mb-6" style="width:100%;max-width:420px">${icon('search')}<input placeholder="Buscar contacto…" id="cSearch"></div>
     <div class="list-card"><div class="list-card__body" style="padding-top:16px" id="cList">${renderContacts(DB.contacts)}</div></div>`;
-    $('#cSearch').oninput=(e)=>{ const q=e.target.value.toLowerCase(); const f=DB.contacts.filter(c=>c.name.toLowerCase().includes(q)||c.bank.toLowerCase().includes(q)); $('#cList').innerHTML = f.length?renderContacts(f):emptyState('Sin resultados','No encontramos contactos con ese nombre.','search'); };
-    view.querySelector('[data-modal="add"]').onclick=()=>toast({title:'Nuevo contacto', msg:'Ingresa nombre, banco y número de cuenta.', type:'info'});
-    view.querySelectorAll('.prod').forEach(p=> p.onclick=()=> location.hash='#/transferencias');
+    function wire() {
+      view.querySelectorAll('#cList [data-transfer]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); location.hash='#/transferencias'; });
+      view.querySelectorAll('#cList [data-edit]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const c=DB.contacts.find(x=>x.id===b.dataset.edit); toast({title:'Editar contacto', msg:`Actualiza los datos de ${c.name}.`, type:'info'}); });
+      view.querySelectorAll('#cList [data-del]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const c=DB.contacts.find(x=>x.id===b.dataset.del); const ov=openModal(`<div class="modal__head"><h3 class="h3">Eliminar contacto</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><p class="text-slate">¿Seguro que quieres eliminar a <strong>${c.name}</strong> de tus contactos?</p></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--danger" id="delDo">Eliminar</button></div>`); ov.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>closeModal(ov)); ov.querySelector('#delDo').onclick=()=>{ const i=DB.contacts.findIndex(x=>x.id===c.id); if(i>=0)DB.contacts.splice(i,1); closeModal(ov); $('#cList').innerHTML = DB.contacts.length?renderContacts(DB.contacts):emptyState('Sin contactos','Agrega tu primer destinatario.','contacts'); wire(); toast({title:'Contacto eliminado',type:'success'}); }; });
+    }
+    $('#cSearch').oninput=(e)=>{ const q=e.target.value.toLowerCase(); const f=DB.contacts.filter(c=>c.name.toLowerCase().includes(q)||c.bank.toLowerCase().includes(q)); $('#cList').innerHTML = f.length?renderContacts(f):emptyState('Sin resultados','No encontramos contactos con ese nombre.','search'); wire(); };
+    wire();
   }
 };
-function renderContacts(list) { return list.map(c=>`<div class="prod"><span class="avatar">${c.initials}</span><div class="prod__main"><div class="prod__title">${c.name} ${c.fav?icon('star',''):''}</div><div class="prod__sub">${c.bank} · ${c.acc}</div></div><button class="btn btn--secondary btn--sm">Transferir</button></div>`).join(''); }
+function renderContacts(list) { return list.map(c=>`<div class="prod"><span class="avatar">${c.initials}</span><div class="prod__main"><div class="prod__title">${c.name} ${c.fav?icon('star',''):''}</div><div class="prod__sub">${c.bank} · ${c.acc} · <span class="badge badge--neutral" style="padding:1px 8px;font-size:11px">${c.producto==='tarjetas'?'Tarjetas':'Cuentas'}</span></div></div><div class="row" style="gap:4px"><button class="icon-btn" aria-label="Editar contacto" data-edit="${c.id}">${icon('services')}</button><button class="icon-btn" aria-label="Eliminar contacto" data-del="${c.id}" style="color:var(--error)">${icon('close')}</button><button class="btn btn--secondary btn--sm" data-transfer="${c.id}">Transferir</button></div></div>`).join(''); }
+
+/* Nuevo contacto (pantalla propia) */
+Screens['nuevo-contacto'] = {
+  title: 'Nuevo contacto',
+  render(view) {
+    view.innerHTML = `
+    ${pageHead('Nuevo contacto','Guarda un destinatario para transferir más rápido.','contactos')}
+    <div class="grid" style="grid-template-columns:1fr 340px;align-items:start">
+      <div class="card card--pad section">
+        <div class="field" id="ncNombreF"><label>Nombre / alias <span class="req">*</span></label><div class="control">${icon('user')}<input id="ncNombre" placeholder="Ej. Juan Pérez o 'Proveedor TIA'"></div><span class="error-text">${icon('alert')} Ingresa un nombre o alias.</span></div>
+        <div class="field"><label>Producto</label><div class="control">${icon('grid')}<select id="ncProd"><option value="cuentas">Cuentas</option><option value="tarjetas">Tarjetas</option></select>${icon('chevronDown')}</div></div>
+        <div class="field"><label>Banco</label><div class="control">${icon('building')}<select><option>blu · Diners</option><option>Banco Pichincha</option><option>Produbanco</option><option>Banco Guayaquil</option><option>Otro (BANRED / SPI)</option></select>${icon('chevronDown')}</div></div>
+        <div class="field" id="ncNumF"><label>Número de cuenta <span class="req">*</span></label><div class="control">${icon('wallet')}<input id="ncNum" inputmode="numeric" placeholder="Número de cuenta"></div><span class="error-text">${icon('alert')} Ingresa el número de cuenta.</span></div>
+        <label class="row" style="gap:10px;cursor:pointer;align-items:center;margin-top:6px"><input type="checkbox" id="ncFav"><span class="text-slate" style="font-size:13px">Marcar como favorito</span></label>
+        <button class="btn btn--primary btn--lg btn--block mt-4" id="ncBtn">Guardar contacto</button>
+      </div>
+      <aside style="position:sticky;top:calc(var(--topbar-h) + 24px)">${infoBanner('Guarda el producto (cuentas o tarjetas) para identificar rápido a tu destinatario.','contacts')}</aside>
+    </div>`;
+    ['ncNombre','ncNum'].forEach(id=>{ const e=$('#'+id); e.oninput=()=>e.closest('.field').classList.remove('has-error'); });
+    $('#ncBtn').onclick=()=>{
+      const n=$('#ncNombre'), num=$('#ncNum'); let ok=true;
+      if(!n.value.trim()){ $('#ncNombreF').classList.add('has-error'); ok=false; }
+      if(!num.value.trim()){ $('#ncNumF').classList.add('has-error'); ok=false; }
+      if(!ok) return;
+      const name=n.value.trim();
+      DB.contacts.push({ id:'c'+(DB.contacts.length+1)+Date.now().toString().slice(-3), name, bank:'blu · Diners', acc:'••• '+(num.value.trim().slice(-4)||'0000'), initials:name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(), fav:$('#ncFav').checked, producto:$('#ncProd').value });
+      successModal('Contacto guardado', `${name} quedó guardado en tus contactos.`, 'contactos');
+    };
+  }
+};
 
 /* ---------- RECOMPENSAS / CLUB ---------- */
 Screens.recompensas = {
@@ -1085,7 +1158,7 @@ Screens.recuperar = {
    ============================================================ */
 const NAV_GROUPS = [
   { label:'Principal', items:[ ['inicio','home','Inicio'] ] },
-  { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas','wallet','Cuentas y créditos'], ['ofertas','sparkles','Contratar / Ofertas'] ] },
+  { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas?cat=cuenta','wallet','Cuentas'], ['cuentas?cat=credito','coins','Créditos'], ['cuentas?cat=inversion','chart','Inversiones'], ['ofertas','sparkles','Para ti'] ] },
   { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['contactos','contacts','Contactos'] ] },
   { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'] ] },
   { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
