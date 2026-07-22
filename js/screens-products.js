@@ -115,56 +115,84 @@ Screens['detalle-producto'] = {
 
     if (type === 'credit') {
       const e = creditEstado(p.estado);
-      // CTA: en legal/judicial no hay botón de pago; se debe contactar a Diners.
+      // El botón "Pagar cuota" solo aparece en mora; legal/judicial → contactar a Diners.
       const cta = e.consultarDiners
         ? `<div class="detail-cta" style="background:var(--warn-bg,#FEF3E2);color:var(--warn,#B7791F)">${icon('alert')}<span style="font-size:13px;font-weight:600">Crédito ${e.label.toLowerCase()}. Comunícate con Diners para conocer tu deuda total y regularizar.</span></div>`
-        : `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">${e.pagoLabel ? e.pagoLabel : 'Próxima cuota · '+p.prox}</div><div class="detail-cta__amt num">${money(p.cuota)}</div></div>${e.pagable?`<button class="btn btn--primary" data-nav="pago-credito">Pagar ${p.estado==='mora'?'ahora':'cuota'}</button>`:''}</div>`;
+        : (p.estado==='mora'
+            ? `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Cuota en mora · pago inmediato</div><div class="detail-cta__amt num">${money(p.cuota)}</div></div><button class="btn btn--primary" data-nav="pago-credito?id=${p.id}">Pagar cuota</button></div>`
+            : `<div class="detail-cta detail-cta--ok">${icon('shield')}<span>Tu crédito está al día. Próxima cuota ${money(p.cuota)} · vence ${p.prox}.</span></div>`);
+      // Tabla de amortización (simulada, determinista)
+      const meses = ['05 ago','05 sep','05 oct','05 nov','05 dic','05 ene'];
+      const amort = (() => { const rows=[]; let saldo=p.saldo; const rateM=(parseFloat(p.tasaNominal||'12')/100)/12; let n=parseInt((p.plazo||'1/1').split('/')[0])||1; for(let i=0;i<6 && saldo>0 && p.cuota>0;i++){ const interes=Math.round(saldo*rateM*100)/100; const capital=Math.round((p.cuota-interes)*100)/100; saldo=Math.max(0,Math.round((saldo-capital)*100)/100); rows.push({n:n+i, fecha:meses[i], capital, interes, saldo}); } return rows; })();
       view.innerHTML = `
       ${pageHead(p.name, `Crédito · ${p.num}`, 'inicio')}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid" style="gap:16px">
-          <div class="card card--pad" style="background:var(--grad-card);color:#fff">
-            <div class="row between"><span style="font-size:13px;opacity:.85">Crédito · ${p.num}</span>${icon('coins')}</div>
-            <div class="text-white" style="font-size:13px;opacity:.85;margin-top:16px">Saldo pendiente</div>
-            <div class="num" style="font-size:32px;font-weight:800">${e.consultarDiners ? 'Consultar' : money(p.saldo)}</div>
-            <div style="margin-top:12px"><span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span></div>
+          <div class="prod-xl acct-card-plain" style="width:100%">
+            <div class="prod-xl__body">
+              <span class="prod__ic prod__ic--credit" style="margin:0 auto 8px">${icon('coins')}</span>
+              <div class="prod-xl__name">${p.name}</div>
+              <div class="prod-xl__id num">${p.num}</div>
+              <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${e.consultarDiners ? 'Consultar' : money(p.saldo)}</div>
+              <div class="prod-xl__sub">Saldo del capital</div>
+              <div class="acct-interes ${e.cls==='badge--success'?'':e.cls==='badge--warning'?'acct-interes--warn':'acct-interes--danger'}">${icon(e.cls==='badge--success'?'check':'alert')} ${e.label}</div>
+            </div>
           </div>
-          ${e.consultarDiners ? actBar([['certificate','Certificado','certificados'],['services','Contactar','contactenos']]) : actBar([['coins','Abonar','precancelacion'],['certificate','Certificado','certificados']])}
+          ${e.consultarDiners ? actBar([['certificate','Certificado','certificados'],['services','Contactar','contactenos']]) : actBar([['coins','Precancelar','precancelacion'],['receipt','Realizar abono','',"toast({title:'Realizar abono',msg:'Abona a capital para reducir plazo o cuota.',type:'info'})"],['certificate','Certificado','certificados']])}
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Estado del crédito',
-            (e.consultarDiners ? '' : `<div class="progress mb-2"><span style="width:37%"></span></div><div class="text-muted" style="font-size:12px">${p.plazo!=='—'?p.plazo.replace('/',' de ')+' cuotas pagadas':''}</div><div class="divider"></div>`)
+            kv('Capital otorgado', money(p.capitalOtorgado||0), 1)
+            + kv('Capital pagado', money(p.capitalPagado||0), 1)
+            + kv('Saldo del capital', e.consultarDiners ? 'Consultar' : money(p.saldo), 1)
+            + kv('Tasa de interés nominal', p.tasaNominal||'—')
+            + kv('Tasa de interés efectiva', p.tasaEfectiva||'—')
+            + kv('Fecha de desembolso', p.desembolso||'—')
+            + kv('Fecha fin del crédito', p.fin||'—')
+            + kv('Deuda a la fecha', e.consultarDiners ? 'Consultar' : money(p.deudaFecha||p.saldo), 1)
             + kv('Estado', `<span class="badge ${e.cls}"><span class="dot"></span>${e.label}</span>`)
-            + (p.cuota>0 ? kv('Cuota mensual',money(p.cuota),1) : '')
-            + kv('Fecha máxima de pago', p.prox)
             + cta)}
-          ${e.consultarDiners ? infoBanner(`Este crédito está ${e.label.toLowerCase()}. El saldo total y las condiciones se gestionan directamente con Diners Club.`,'alert') : infoBanner('Puedes abonar a capital para reducir tu plazo o cuota.','coins')}
+          ${e.consultarDiners ? infoBanner(`Este crédito está ${e.label.toLowerCase()}. El saldo total y las condiciones se gestionan directamente con Diners Club.`,'alert') : `<div class="list-card"><div class="list-card__head"><h2 class="h4">Tabla de amortización</h2>${exportChip('tabla-amortizacion.xlsx')}</div><div style="padding:0 12px 12px;overflow-x:auto"><table class="tbl"><thead><tr><th>N.º</th><th>Fecha</th><th class="num">Capital</th><th class="num">Interés</th><th class="num">Saldo</th></tr></thead><tbody>${amort.map(r=>`<tr><td class="num" style="font-weight:600">${r.n}</td><td class="text-muted">${r.fecha}</td><td class="num">${money(r.capital)}</td><td class="num">${money(r.interes)}</td><td class="num">${money(r.saldo)}</td></tr>`).join('')}</tbody></table></div></div>`}
         </div>
-      </div>
-      ${movsSection(p.name)}`;
-      wireMovs(p.name);
+      </div>`;
       return;
     }
 
     // investment
+    const estMap = { vigente:['badge--success','Vigente'], bloqueado:['badge--neutral','Bloqueado'], garantia:['badge--info','En garantía'], pendiente:['badge--warning','Pendiente de instrucción'] };
+    const est = estMap[p.estadoInv] || estMap.vigente;
     view.innerHTML = `
-    ${pageHead(p.name, 'Inversión a plazo fijo', 'inicio')}
+    ${pageHead(p.name, p.tipo || 'Inversión', 'inicio')}
     <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
       <div class="grid" style="gap:16px">
-        <div class="card card--pad" style="background:var(--grad-card);color:#fff">
-          <div class="row between"><span style="font-size:13px;opacity:.85">Inversión · plazo fijo</span>${icon('chart')}</div>
-          <div class="text-white" style="font-size:13px;opacity:.85;margin-top:16px">Monto invertido</div>
-          <div class="num" style="font-size:32px;font-weight:800">${State.masked?'••••••':money(p.monto)}</div>
-          <div style="margin-top:12px"><span class="prod-xl__cover-rate">${p.tasa}</span></div>
+        <div class="prod-xl acct-card-plain" style="width:100%">
+          <div class="prod-xl__body">
+            <span class="prod__ic prod__ic--invest" style="margin:0 auto 8px">${icon('chart')}</span>
+            <div class="prod-xl__name">${p.tipo || p.name}</div>
+            <div class="prod-xl__id num">···${p.last4} · ${p.tasa}</div>
+            <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${State.masked?'$ ••••••':money(p.monto)}</div>
+            <div class="prod-xl__sub">Monto invertido</div>
+            <div class="acct-interes">${icon('arrowUp')} <strong class="num">${State.masked?'••••':money(p.interesMes||0,true)}</strong> este mes</div>
+          </div>
         </div>
-        ${actBar([['chart','Simular','sim-credito'],['plus','Nueva','ofertas']])}
+        ${actBar([['certificate','Certificado','certificados'],['calendar','Renovar','',"toast({title:'Renovación',msg:'Al vencer, elige renovar solo el capital o capital + intereses.',type:'info'})"]])}
       </div>
       <div class="grid" style="gap:20px">
-        ${panel('Detalle de la inversión', kv('Tasa anual',`<span class="text-success" style="font-weight:700">${p.tasa}</span>`)+kv('Vencimiento',p.vence)+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Vigente</span>')
-          + `<div class="detail-cta"><div><div class="text-muted" style="font-size:13px">Rendimiento estimado · ${p.vence}</div><div class="detail-cta__amt num" style="color:var(--success)">${money(p.monto*0.0725)}</div></div><button class="btn btn--primary" data-nav="sim-credito">Simular</button></div>`)}
+        ${panel('Detalle de la inversión',
+          kv('Monto final a recibir', money(p.montoFinal||0), 1)
+          + kv('Total de intereses', money(p.interesGanado||0), 1)
+          + kv('Retención por rendimiento', money(p.retencion||0), 1)
+          + kv('Plazo', p.plazoDias ? p.plazoDias+' días' : 'Sin plazo fijo')
+          + kv('Fecha de emisión', p.emision || '—')
+          + kv('Fecha de finalización', p.vence)
+          + kv('Tipo de pago de intereses', p.pagoInteres || '—')
+          + kv('Beneficiarios', p.beneficiario || '—')
+          + kv('Tasa anual', `<span class="text-success" style="font-weight:700">${p.tasa}</span>`)
+          + kv('Estado', `<span class="badge ${est[0]}"><span class="dot"></span>${est[1]}</span>`))}
       </div>
     </div>
-    ${movsSection(p.name)}`;
+    ${movsSection(p.name)}
+    ${infoBanner('Al culminar la inversión, el capital y los intereses se acreditan automáticamente y la cuenta de la inversión se cierra.','info')}`;
     wireMovs(p.name);
   }
 };
@@ -418,11 +446,11 @@ Screens['sim-credito'] = {
     ${pageHead('Simulador de crédito','Calcula tu cuota antes de solicitar.','cuentas')}
     <div class="grid" style="grid-template-columns:1fr 360px;align-items:start">
       ${panel('Personaliza tu crédito', `
-        <div class="row between mb-2"><span class="text-muted">Monto del crédito</span><span class="h3 num" id="scVal">$10.000</span></div>
-        ${slider('scMonto',1000,30000,10000,500)}
-        <div class="field mt-6"><label>Plazo (meses)</label><div class="scroll-x" id="scPlazo">${[12,24,36,48,60].map((p,i)=>`<button class="chip ${i===2?'is-active':''}" data-p="${p}">${p}</button>`).join('')}</div></div>
-        <div class="field"><label>Destino</label><div class="control">${icon('sparkles')}<select><option>Libre inversión</option><option>Vehículo</option><option>Vivienda</option><option>Educación</option></select>${icon('chevronDown')}</div></div>
-        <button class="btn btn--primary btn--lg btn--block" onclick="successModal('Solicitud en revisión','Un asesor validará tu crédito preaprobado.','cuentas')">Solicitar crédito</button>`)}
+        <div class="card card--pad" style="background:var(--blu-50);border-color:var(--blu-100);margin-bottom:16px"><div class="row between wrap" style="gap:10px"><div class="row" style="gap:12px">${icon('sparkles')}<div><div style="font-weight:700;font-size:14px">Tienes un crédito preaprobado</div><div class="text-muted" style="font-size:12px">Hasta $30.000 · tasa preferencial 11,20%</div></div></div><span class="badge badge--success"><span class="dot"></span>Preaprobado</span></div></div>
+        <div class="field"><label>Monto del crédito</label><div class="control">${icon('coins')}<span class="prefix">$</span><input id="scMonto" inputmode="decimal" value="10000" aria-label="Monto del crédito"></div><span class="hint">Hasta $30.000 preaprobados.</span></div>
+        <div class="field"><label>Plazo (meses)</label><div class="scroll-x" id="scPlazo">${[12,24,36,48,60].map((p,i)=>`<button class="chip ${i===2?'is-active':''}" data-p="${p}">${p}</button>`).join('')}</div></div>
+        <div class="field" id="scDestF"><label>Destino <span class="req">*</span></label><div class="control">${icon('sparkles')}<select id="scDest"><option value="">Selecciona un destino</option><option>Libre inversión</option><option>Vehículo</option><option>Vivienda</option><option>Educación</option><option>Capital de trabajo</option></select>${icon('chevronDown')}</div><span class="error-text">${icon('alert')} Selecciona el destino del crédito.</span></div>
+        <button class="btn btn--primary btn--lg btn--block" id="scBtn">Solicitar crédito</button>`)}
       <div class="card card--pad section" style="background:var(--grad-sky);color:#fff">
         <div style="font-size:13px;opacity:.9">Cuota mensual estimada</div>
         <div class="num" style="font-size:36px;font-weight:800" id="scCuota">$312,00</div>
@@ -433,9 +461,11 @@ Screens['sim-credito'] = {
       </div>
     </div>`;
     let m=10000,p=36,r=0.112;
-    function calc(){ const i=r/12; const cuota=m*i/(1-Math.pow(1+i,-p)); const total=cuota*p; $('#scVal').textContent='$'+m.toLocaleString('es-EC'); $('#scCuota').textContent='$'+cuota.toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2}); $('#scTotal').textContent='$'+total.toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2}); $('#scP').textContent=p+' meses'; }
-    $('#scMonto').oninput=(e)=>{m=+e.target.value;calc();};
+    function calc(){ const i=r/12; const cuota=m>0?m*i/(1-Math.pow(1+i,-p)):0; const total=cuota*p; $('#scCuota').textContent='$'+cuota.toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2}); $('#scTotal').textContent='$'+total.toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2}); $('#scP').textContent=p+' meses'; }
+    $('#scMonto').oninput=(e)=>{ m=parseFloat((e.target.value||'').replace(',','.'))||0; calc(); };
     view.querySelectorAll('#scPlazo [data-p]').forEach(b=>b.onclick=()=>{view.querySelectorAll('#scPlazo .chip').forEach(x=>x.classList.remove('is-active'));b.classList.add('is-active');p=+b.dataset.p;calc();});
+    $('#scDest').onchange=()=>$('#scDestF').classList.remove('has-error');
+    $('#scBtn').onclick=()=>{ if(!$('#scDest').value){ $('#scDestF').classList.add('has-error'); return; } successModal('Solicitud en revisión','Un asesor validará tu crédito preaprobado.','cuentas'); };
     calc();
   }
 };
