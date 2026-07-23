@@ -1,0 +1,734 @@
+{
+  "$schema": "https://json.schemastore.org/base.json",
+  "meta": {
+    "name": "BLU Empresas — Design System",
+    "version": "1.0.0",
+    "brand": "BLU · Diners Club Ecuador",
+    "locale": "es-EC",
+    "currency": "USD",
+    "updated": "2026-07-23",
+    "description": "Sistema de diseño del prototipo web de banca empresarial BLU. Contiene tokens, componentes, patrones de pantalla, API de helpers JS y reglas de contenido. Es la fuente de verdad para generar o modificar UI en este repo.",
+    "source": {
+      "tokens": "css/design-system.css",
+      "components": "css/design-system.css",
+      "appLayer": "css/app.css",
+      "legacySkin": "css/legacy.css",
+      "helpers": "js/app.js",
+      "icons": "js/icons.js",
+      "showcase": "design-system.html"
+    },
+    "upstream": {
+      "name": "Tribu Design System (blu-design-tokens-config)",
+      "host": "Azure DevOps",
+      "consumedPaths": ["/tokens/design/color.json", "/tokens/components/button.json"],
+      "note": "Los tokens de color de marca y de botón derivan del DS corporativo. No inventar valores nuevos de marca: si falta un tono, derivarlo de la escala blu-* existente."
+    }
+  },
+
+  "usage": {
+    "howToUse": [
+      "Antes de escribir CSS nuevo, buscar en `components` si ya existe la clase. Reutilizar antes que crear.",
+      "Nunca escribir un color, radio, sombra o duración en hex/px literal: usar siempre `var(--token)`.",
+      "El HTML se genera desde JS como template strings; usar los helpers de `helpers` en lugar de repetir markup.",
+      "Toda pantalla nueva se registra en el objeto global `Screens` y se navega por hash (`#/ruta`).",
+      "Al cambiar CSS o JS, subir el query de cache-busting `?v=N` en index.html y design-system.html."
+    ],
+    "hardRules": [
+      "Cero dependencias externas: vanilla JS + CSS. No agregar frameworks, bundlers ni librerías de UI.",
+      "Cero emojis como iconos: usar `icon('nombre')` del set SVG.",
+      "Todo texto de interfaz en español de Ecuador.",
+      "Todo importe monetario usa `.num` (tabular-nums) para evitar saltos de layout.",
+      "Soportar los 3 skins: light, dark (`[data-theme=\"dark\"]`) y legacy (`[data-skin=\"legacy\"]`). Cualquier token nuevo debe declararse al menos en light y dark."
+    ],
+    "cacheBusting": {
+      "pattern": "?v=N",
+      "files": ["index.html", "design-system.html"],
+      "current": 57,
+      "rule": "Incrementar en cada commit que toque css/ o js/."
+    }
+  },
+
+  "foundations": {
+    "color": {
+      "primitives": {
+        "blu": {
+          "description": "Escala navy de marca (primitives.color.blu del DS corporativo).",
+          "50": "#e6e8ef",
+          "100": "#b1b8cd",
+          "200": "#8c95b4",
+          "300": "#576592",
+          "400": "#36477d",
+          "500": "#04195D",
+          "600": "#041755",
+          "700": "#031242",
+          "800": "#020e33",
+          "900": "#020b27"
+        },
+        "accent": {
+          "sky": { "value": "#51C0C2", "use": "feedback.new — cian corporativo" },
+          "soap": { "value": "#0B56A4", "use": "info / links" },
+          "royal": { "value": "#3A4AA0", "use": "azul índigo del isotipo blu" },
+          "royal2": { "value": "#2E5BFF", "use": "azul Diners Club (acento)" },
+          "gold": { "value": "#E4B876", "use": "luz cálida ambiente / chip de tarjeta" }
+        },
+        "navyPremium": {
+          "description": "Navy profundo para superficies premium (hero, login aside, tarjetas).",
+          "950": "#0B1230",
+          "900": "#101838",
+          "800": "#18224A",
+          "700": "#23305F",
+          "600": "#2E3E7A"
+        }
+      },
+      "semantic": {
+        "description": "Tokens que SÍ se usan en componentes. Nunca usar un primitivo directamente si existe el semántico.",
+        "brand": {
+          "--primary": { "light": "#04195D", "dark": "#5B7BFF", "legacy": "#4C71FC", "use": "color de acción principal / acento de marca" },
+          "--primary-strong": { "light": "#031242", "dark": "#6E8BFF", "legacy": "#124CFD", "use": "estado presionado / énfasis" },
+          "--primary-soft": { "light": "#e6e8ef", "dark": "#1A2650", "legacy": "#ECF0FF", "use": "fondo suave de acento (detail-cta, banners)" },
+          "--on-primary": { "light": "#FFFFFF", "dark": "#0B1020", "use": "texto sobre --primary" }
+        },
+        "feedback": {
+          "--success": { "light": "#096B3A", "dark": "#34C77E", "legacy": "#107549" },
+          "--success-bg": { "light": "#E8F5E9", "dark": "#0F2A1E", "legacy": "#EBFFFC" },
+          "--warning": { "light": "#8B6901", "dark": "#E7B84B", "legacy": "#A28211", "alias": "--warn" },
+          "--warning-bg": { "light": "#FFF9E6", "dark": "#2A2410", "legacy": "#FFF8EC", "alias": "--warn-bg" },
+          "--error": { "light": "#B61010", "dark": "#FF6B72", "legacy": "#D0161F" },
+          "--error-bg": { "light": "#FDEAEA", "dark": "#2E1517", "legacy": "#FFF5F5" },
+          "--info": { "light": "#0B56A4", "dark": "#6E8BFF" },
+          "--info-bg": { "light": "#E5F1FF", "dark": "#1A2650" }
+        },
+        "neutral": {
+          "--ink": { "light": "#141414", "dark": "#E9EDF9", "legacy": "#4A4A4A", "use": "texto primario" },
+          "--slate": { "light": "#333333", "dark": "#B7C0D6", "legacy": "#4A4A4A", "use": "texto secundario" },
+          "--muted": { "light": "#757575", "dark": "#8B94AB", "legacy": "#6D7278", "use": "texto terciario / labels" },
+          "--disabled": { "light": "#A6ABB8", "dark": "#59617A", "legacy": "#b2b2b2" },
+          "--line": { "light": "#CBCBCB", "dark": "#262C40", "use": "bordes y dividers" },
+          "--line-2": { "light": "#EEEEEE", "dark": "#1E2437", "use": "bordes tenues (cards)" },
+          "--bg": { "light": "#F6F6F6", "dark": "#0B0F1E", "legacy": "#F0F3FF", "use": "fondo de la app" },
+          "--bg-2": { "light": "#EEEEEE", "dark": "#171D30", "legacy": "#ECF0FF", "use": "fondo de chips/segmented/skeleton" },
+          "--surface": { "light": "#FFFFFF", "dark": "#131A2C", "use": "cards, modales, sidebar" },
+          "--surface-2": { "light": "#F8F8FB", "dark": "#0F1524", "use": "inputs, hover de filas" },
+          "--overlay": { "light": "rgba(20,20,20,.55)", "dark": "rgba(3,6,16,.68)" }
+        }
+      },
+      "gradients": {
+        "--grad-brand": "linear-gradient(135deg, #04195D 0%, #36477d 60%, #576592 120%)",
+        "--grad-card": "linear-gradient(135deg, #031242 0%, #04195D 55%, #36477d 130%)",
+        "--grad-sky": "linear-gradient(120deg, #04195D 0%, #002fc9 100%)",
+        "--grad-navy": "linear-gradient(160deg, #020b27 0%, #04195D 55%, #36477d 120%)",
+        "--grad-navy-soft": "linear-gradient(135deg, #031242 0%, #04195D 100%)",
+        "rules": [
+          "Los gradientes son SOLO para superficies decorativas: bank-card, hero, avatar, brand__mark, progress.",
+          "Los botones NO usan gradiente: el primario es navy sólido (regla del DS corporativo).",
+          "En skin legacy todos los gradientes se aplanan a color sólido."
+        ]
+      },
+      "productTints": {
+        "description": "Tinte por tipo de producto. Usar en `.prod__ic--*`, `.stat-tile .st-ic` y arte de detalle.",
+        "card": { "class": "prod__ic--card", "bg": "var(--blu-50)", "fg": "var(--blu-600)" },
+        "account": { "class": "prod__ic--acct", "bg": "rgba(42,63,110,.12)", "fg": "#2E4A82", "label": "navy corporativo" },
+        "credit": { "class": "prod__ic--credit", "bg": "rgba(84,91,108,.15)", "fg": "#4A5262", "label": "grafito" },
+        "investment": { "class": "prod__ic--invest", "bg": "rgba(70,63,156,.14)", "fg": "#453FA0", "label": "índigo" }
+      },
+      "themes": {
+        "light": { "selector": ":root", "default": true },
+        "dark": {
+          "selector": "[data-theme=\"dark\"]",
+          "toggle": "toggleTheme() — persiste en localStorage['blu-theme']",
+          "rule": "El navy #04195D se pierde sobre fondos oscuros: en dark el primario cambia a la variante tonal #5B7BFF (regla color-dark-mode). Nunca invertir colores, usar variantes desaturadas."
+        },
+        "legacy": {
+          "selector": "[data-skin=\"legacy\"]",
+          "purpose": "Réplica de la app actual en producción, para comparativas 'Antes / Después'.",
+          "differences": ["Paleta azul #4C71FC en lugar de navy", "Radios menores (4–12px)", "Sombras azuladas", "Sin gradientes"]
+        }
+      }
+    },
+
+    "typography": {
+      "family": {
+        "--font": "'Mulish', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "source": "Mulish — familia del Tribu Design System",
+        "note": "Familia única para títulos y cuerpo. No introducir una segunda familia."
+      },
+      "scale": {
+        "--fs-11": "11px", "--fs-12": "12px", "--fs-13": "13px", "--fs-14": "14px",
+        "--fs-16": "16px", "--fs-18": "18px", "--fs-20": "20px", "--fs-24": "24px",
+        "--fs-30": "30px", "--fs-36": "36px"
+      },
+      "lineHeight": { "--lh-tight": 1.25, "--lh": 1.5, "--lh-loose": 1.65 },
+      "base": { "bodySize": "var(--fs-14)", "bodyLineHeight": "var(--lh)", "color": "var(--ink)" },
+      "roles": {
+        ".h1": { "size": "--fs-30", "weight": 700, "lh": "--lh-tight", "tracking": "-.02em", "use": "título de pantalla hero" },
+        ".h2": { "size": "--fs-24", "weight": 700, "lh": "--lh-tight", "tracking": "-.01em", "use": "título de pantalla estándar" },
+        ".h3": { "size": "--fs-20", "weight": 600, "lh": "--lh-tight", "use": "subtítulo de bloque" },
+        ".h4": { "size": "--fs-16", "weight": 600, "use": "título de card/panel" },
+        ".eyebrow": { "size": "--fs-12", "weight": 600, "tracking": ".08em", "transform": "uppercase", "color": "--muted" },
+        ".text-muted": { "color": "--muted" },
+        ".text-slate": { "color": "--slate" },
+        ".text-success": { "color": "--success" },
+        ".text-error": { "color": "--error" },
+        ".num": { "featureSettings": "tnum", "use": "OBLIGATORIO en importes, porcentajes, fechas en tabla y contadores" }
+      },
+      "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700, "extrabold": 800 },
+      "rules": [
+        "Inputs a 16px mínimo (var(--fs-16)) para evitar auto-zoom en iOS.",
+        "Los importes grandes usan weight 800 y tracking -.02em (ver .kpi__value, .prod-xl__amt, .detail-cta__amt).",
+        "Ningún texto de cuerpo por debajo de 12px; 11px queda reservado a labels de iconos (.act-bar__lbl, .prod-xl__id)."
+      ]
+    },
+
+    "spacing": {
+      "grid": "8px",
+      "scale": {
+        "--s-1": "4px", "--s-2": "8px", "--s-3": "12px", "--s-4": "16px",
+        "--s-5": "20px", "--s-6": "24px", "--s-7": "32px", "--s-8": "40px",
+        "--s-9": "48px", "--s-10": "64px"
+      },
+      "utilities": {
+        ".row": "display:flex; align-items:center; gap:var(--s-3)",
+        ".between": "justify-content:space-between",
+        ".wrap": "flex-wrap:wrap",
+        ".grid": "display:grid; gap:var(--s-5)",
+        ".grid-2 / .grid-3 / .grid-4": "columnas iguales",
+        ".dash-grid": "1.7fr 1fr — layout de dashboard (contenido + panel lateral)",
+        ".scroll-x": "scroll horizontal sin scrollbar visible",
+        ".mt-2 .mt-4 .mt-6 .mb-4 .mb-6": "márgenes puntuales del scale"
+      },
+      "conventions": {
+        "cardPadding": "var(--s-6) (.card--pad)",
+        "sectionGap": "var(--s-5) entre bloques de una pantalla",
+        "pagePadding": "var(--s-7) (.content)",
+        "formFieldGap": "var(--s-4) (margin-bottom de .field)"
+      }
+    },
+
+    "radius": {
+      "--r-xs": "8px", "--r-sm": "12px", "--r-md": "16px",
+      "--r-lg": "20px", "--r-xl": "28px", "--r-full": "999px",
+      "legacyOverride": { "--r-xs": "4px", "--r-sm": "6px", "--r-md": "8px", "--r-lg": "10px", "--r-xl": "12px" },
+      "conventions": {
+        "button": "--r-full (pill, regla del DS corporativo)",
+        "card": "--r-md",
+        "prodXl": "--r-lg",
+        "modal": "--r-lg",
+        "input": "--r-sm",
+        "chip/badge/avatar/switch": "--r-full"
+      }
+    },
+
+    "elevation": {
+      "--e-0": "none",
+      "--e-1": "0 1px 2px rgba(16,22,51,.06), 0 1px 3px rgba(16,22,51,.04)",
+      "--e-2": "0 4px 12px rgba(16,22,51,.07), 0 2px 4px rgba(16,22,51,.04)",
+      "--e-3": "0 12px 28px rgba(16,22,51,.10), 0 4px 10px rgba(16,22,51,.05)",
+      "--e-4": "0 24px 60px rgba(16,22,51,.16)",
+      "--ring": "0 0 0 4px rgba(76,113,252,.28)",
+      "scaleUse": {
+        "e-1": "reposo de cards y filas",
+        "e-2": "hover de cards planas / bank-card",
+        "e-3": "hover elevado (card--hover, prod-xl), toasts",
+        "e-4": "modales y overlays",
+        "ring": "focus-visible — NUNCA eliminar el outline sin reemplazarlo por --ring"
+      },
+      "buttonShadows": {
+        "--btn-shadow": "0 6px 16px rgba(4,25,93,.24)",
+        "--btn-shadow-hover": "0 10px 24px rgba(4,25,93,.30)"
+      }
+    },
+
+    "motion": {
+      "duration": { "--dur-1": "140ms", "--dur-2": "220ms", "--dur-3": "320ms" },
+      "easing": {
+        "--ease": "cubic-bezier(.4,0,.2,1)",
+        "--ease-out": "cubic-bezier(.16,1,.3,1)"
+      },
+      "keyframes": {
+        "spin": "loader de botón",
+        "shimmer": "skeleton",
+        "fadeIn": "overlay de modal",
+        "modalIn": "entrada de modal (translateY 16px + scale .97)",
+        "toastIn / toastOut": "toast desde la derecha",
+        "riseIn": "entrada de .section al montar pantalla",
+        "countUp": "aparición de .kpi__value"
+      },
+      "rules": [
+        "Solo animar transform y opacity. Nunca width/height/top/left.",
+        "Micro-interacciones 140–220ms; transiciones de pantalla 320ms.",
+        "@media (prefers-reduced-motion: reduce) ya anula todo globalmente — no volver a declararlo por componente.",
+        "El press de botón es translateY(1px) scale(.99)."
+      ]
+    },
+
+    "layout": {
+      "shell": {
+        "structure": ".app > .sidebar + .main( .topbar + .content )",
+        "--sidebar-w": "264px",
+        "--topbar-h": "68px (60px en ≤860px)",
+        "--content-max": "1000px",
+        "note": "En ≥1280px .content quita el max-width y usa todo el ancho junto al menú."
+      },
+      "topbar": { "sticky": true, "z": 30, "bg": "var(--topbar-bg)", "blur": "12px" },
+      "sidebar": { "sticky": true, "z": 40, "hiddenBelow": "860px" },
+      "bottomNav": { "visibleBelow": "860px", "maxItems": 5, "items": ["Inicio", "Tarjetas", "Enviar", "Club", "Perfil"] },
+      "zIndex": { "sidebar": 40, "topbar": 30, "searchResults": 60, "modal": 1300, "toast": 1400, "skipLink": 2000 }
+    },
+
+    "breakpoints": {
+      "1280": "content a ancho completo",
+      "1080": "dash-grid a 1 col; grid-4 → 2 col",
+      "900": "auth a 1 col (se oculta el aside)",
+      "860": "sidebar → bottom-nav; topbar 60px",
+      "760": "ajustes de tablas y strips",
+      "640": "layout móvil principal",
+      "560": "compactación de cards",
+      "400": "otp-box reducido",
+      "approach": "mobile-first en contenido, desktop-first en las media queries existentes (max-width). Mantener la convención del archivo al editar."
+    }
+  },
+
+  "components": {
+    "button": {
+      "class": "btn",
+      "file": "css/design-system.css",
+      "base": {
+        "minHeight": "48px",
+        "padding": "0 var(--s-6)",
+        "radius": "var(--r-full)",
+        "fontSize": "var(--fs-14)",
+        "fontWeight": 600,
+        "iconSize": "18px"
+      },
+      "variants": {
+        "btn--primary": { "bg": "--btn-primary-bg (#04195d)", "fg": "#FFFFFF", "hover": "#36477d", "active": "#031242", "shadow": "--btn-shadow", "note": "Sólido, sin gradiente. Uno solo por pantalla." },
+        "btn--secondary": { "bg": "--surface", "fg": "#04195d", "border": "#031242", "hover": "#E9EAF1", "active": "#CFD2E1" },
+        "btn--ghost": { "bg": "transparent", "fg": "#04195d", "hover": "subrayado", "use": "acción terciaria / link" },
+        "btn--danger": { "bg": "--error", "fg": "#fff", "use": "acciones destructivas confirmadas" }
+      },
+      "sizes": {
+        "btn--sm": { "minHeight": "38px", "padding": "0 var(--s-4)", "fontSize": "--fs-13" },
+        "default": { "minHeight": "48px" },
+        "btn--lg": { "minHeight": "54px", "fontSize": "--fs-16" },
+        "btn--block": "width:100%"
+      },
+      "states": {
+        "disabled": { "bg": "#E2E2E2", "fg": "#545454", "border": "#CBCBCB", "attr": "disabled o aria-disabled=\"true\"" },
+        "loading": { "class": "is-loading", "behavior": "texto transparente + spinner ::after, pointer-events:none" },
+        "focus": ":focus-visible → box-shadow var(--ring)"
+      },
+      "html": "<button class=\"btn btn--primary\" data-nav=\"transferencias\">{{icon}} Transferir</button>",
+      "rules": [
+        "Una sola acción primaria visible por pantalla; el resto secundaria o ghost.",
+        "Toda acción asíncrona debe pasar por is-loading antes de mostrar el resultado.",
+        "Botón con solo icono → usar .icon-btn con aria-label obligatorio."
+      ]
+    },
+
+    "iconButton": {
+      "class": "icon-btn",
+      "size": "44x44px",
+      "iconSize": "22px",
+      "radius": "--r-full",
+      "hover": "background var(--bg-2)",
+      "rules": ["aria-label obligatorio", "44px cumple el mínimo de touch target"]
+    },
+
+    "card": {
+      "class": "card",
+      "base": { "bg": "--surface", "border": "1px solid var(--line-2)", "radius": "--r-md", "shadow": "--e-1" },
+      "modifiers": {
+        "card--pad": "padding var(--s-6)",
+        "card--hover": "translateY(-3px) + --e-3 al hover; cursor pointer",
+        "card--interactive": "focus-visible con --ring"
+      },
+      "html": "<div class=\"card card--pad section\">…</div>"
+    },
+
+    "listCard": {
+      "class": "list-card",
+      "anatomy": [".list-card__head (título + acción)", ".list-card__body (filas)"],
+      "use": "Contenedor de listas de movimientos, contactos, productos.",
+      "html": "<div class=\"list-card section\"><div class=\"list-card__head\"><h2 class=\"h4\">Título</h2><button class=\"btn btn--ghost btn--sm\">Ver todo</button></div><div class=\"list-card__body\">…</div></div>"
+    },
+
+    "badge": {
+      "class": "badge",
+      "base": { "padding": "4px 10px", "radius": "--r-full", "fontSize": "--fs-12", "fontWeight": 600 },
+      "variants": ["badge--success", "badge--warning", "badge--error", "badge--info", "badge--neutral", "badge--glass"],
+      "dot": "<span class=\"dot\"></span> opcional, hereda currentColor",
+      "rule": "Un badge de estado nunca comunica solo por color: siempre lleva texto (regla color-not-only)."
+    },
+
+    "chip": {
+      "class": "chip",
+      "base": { "padding": "8px 14px", "radius": "--r-full", "border": "1px solid var(--line)" },
+      "states": { "hover": "border-color var(--blu-300)", "is-active": "bg var(--blu-600), texto blanco" },
+      "use": "Filtros (Hoy / 7 días / Mes), exportar, tags de acción."
+    },
+
+    "field": {
+      "class": "field",
+      "anatomy": ["label", ".control (contenedor del input)", ".hint", ".error-text"],
+      "control": {
+        "height": "52px",
+        "padding": "0 var(--s-4)",
+        "bg": "--surface-2",
+        "border": "1.5px solid var(--line)",
+        "radius": "--r-sm",
+        "focusWithin": "border --blu-500, bg #fff, box-shadow --ring",
+        "inputFontSize": "--fs-16"
+      },
+      "states": {
+        "is-valid": "border --success",
+        "is-invalid": "border --error + bg --error-bg",
+        "has-error": "en .field — muestra .error-text y oculta .hint"
+      },
+      "html": "<div class=\"field\"><label for=\"x\">Etiqueta <span class=\"req\">*</span></label><div class=\"control\"><input id=\"x\" type=\"text\"></div><div class=\"hint\">Texto de ayuda</div><div class=\"error-text\">Mensaje de error</div></div>",
+      "rules": [
+        "Label visible siempre. El placeholder nunca sustituye al label.",
+        "El error va debajo del campo, no en un resumen superior.",
+        "Validar en blur/submit, no en cada tecla.",
+        "Usar type semántico (tel, email, number) para el teclado móvil correcto."
+      ]
+    },
+
+    "switch": {
+      "class": "switch",
+      "size": "46x28px, thumb 22px",
+      "checked": "track var(--blu-600), thumb translateX(18px)",
+      "html": "<label class=\"switch\"><input type=\"checkbox\"><span class=\"track\"></span></label>",
+      "rule": "Un switch bloqueado por política se renderiza `checked disabled` y su label indica ' · Obligatorio'."
+    },
+
+    "avatar": { "class": "avatar", "size": "40px", "bg": "--grad-brand", "content": "iniciales, weight 600" },
+
+    "skeleton": {
+      "class": "sk",
+      "variants": ["sk--text", "sk--line", "sk--title", "sk--circle", "sk--card"],
+      "helper": "withSkeleton(view, skeletonHTML, buildFn, delay=650)",
+      "rule": "Cualquier carga > 300ms muestra skeleton, no spinner de pantalla completa."
+    },
+
+    "toast": {
+      "class": "toast",
+      "region": ".toast-region (fixed bottom-right, z 1400, max 380px)",
+      "variants": ["toast--success", "toast--error"],
+      "api": "toast({ title, msg, type })  // type: 'success' | 'error' | 'info'",
+      "rules": ["Auto-dismiss 3–5s", "No roba el foco", "Usar para confirmaciones no bloqueantes"]
+    },
+
+    "modal": {
+      "class": "modal",
+      "anatomy": [".modal-overlay", ".modal", ".modal__head", ".modal__body", ".modal__foot"],
+      "sizes": { "default": "max-width 460px", "modal--wide": "max-width 640px" },
+      "api": "openModal(html, { wide: true })  ·  closeModal(node)",
+      "rules": [
+        "Siempre una vía de escape visible (botón cerrar o Cancelar).",
+        "Entrada con modalIn, overlay con blur 4px.",
+        "Confirmación obligatoria antes de una acción destructiva."
+      ]
+    },
+
+    "state": {
+      "class": "state",
+      "anatomy": [".state__art (círculo 96px con icono)", "h3", "p", "acción opcional"],
+      "variants": ["state (vacío)", "state--error"],
+      "api": ["emptyState(title, msg, ic='search', action)", "errorState(title, msg, onRetry)"],
+      "rule": "Un estado vacío siempre ofrece una acción de salida."
+    },
+
+    "tabs": {
+      "segmented": { "class": "segmented", "use": "2–3 opciones cortas, filtro de vista", "active": ".is-active con fondo --surface" },
+      "tabs": { "class": "tabs", "use": "secciones de una pantalla", "active": ".is-active + indicador 3px var(--blu-600) animado con scaleX" }
+    },
+
+    "table": {
+      "class": "tbl",
+      "th": { "fontSize": "--fs-12", "weight": 600, "color": "--muted", "transform": "uppercase", "tracking": ".04em" },
+      "td": { "padding": "var(--s-4)", "border-bottom": "1px solid var(--line-2)", "fontSize": "--fs-14" },
+      "rowHover": "background var(--surface-2)",
+      "numeric": ".num en td → alineado a la derecha con tabular-nums",
+      "rule": "Toda tabla ancha va dentro de un contenedor con overflow-x:auto; la página nunca hace scroll horizontal."
+    },
+
+    "progress": { "class": "progress", "height": "8px", "fill": "--grad-brand", "html": "<div class=\"progress\"><span style=\"width:62%\"></span></div>" },
+
+    "stepper": {
+      "class": "stepper",
+      "anatomy": [".step > .bullet + .label", ".bar entre pasos"],
+      "states": { "is-active": "bullet --blu-600 + --ring", "is-done": "bullet --success y barra siguiente --success" },
+      "rule": "Todo flujo multi-paso muestra stepper y permite volver atrás."
+    },
+
+    "bankCard": {
+      "class": "bank-card",
+      "description": "Arte de tarjeta de crédito. Es superficie decorativa: los datos operativos viven en el cuerpo/CTA.",
+      "base": { "aspectRatio": 1.62, "radius": "--r-md", "padding": "--s-5", "bg": "--grad-card", "fg": "#fff", "shadow": "--e-2" },
+      "variants": ["bank-card--black", "bank-card--indigo", "bank-card--teal", "bank-card--mini"],
+      "anatomy": [".bank-card__brand", ".bank-card__type", ".bank-card__kind (pill Principal/Adicional)", ".bank-card__chip", ".bank-card__number", ".bank-card__foot"],
+      "hover": "translateY(-4px) rotate(-.4deg) + --e-4",
+      "rule": "En Home la cara muestra 'Saldo consumido' y 'Total a pagar'; 'Pagar hasta' va fuera del arte."
+    },
+
+    "prodXl": {
+      "class": "prod-xl",
+      "description": "Card grande de producto dentro de un .prod-strip horizontal. Homologa tarjeta, cuenta, crédito e inversión al mismo alto.",
+      "base": { "flex": "0 0 clamp(230px, 68%, 280px)", "radius": "--r-lg", "shadow": "--e-1", "scrollSnap": "start" },
+      "anatomy": [".prod-xl__media", ".prod-xl__body", ".prod-xl__name", ".prod-xl__id", ".prod-xl__amt", ".prod-xl__sub"],
+      "modifiers": {
+        "acct-card-plain": "variante plana sin arte de tarjeta — usada en detalle de cuenta, crédito e inversión",
+        "prod-xl__cover--cuenta / --credito / --inversion": "portadas por tipo de producto"
+      },
+      "hover": "translateY(-4px) + --e-3"
+    },
+
+    "prodRow": {
+      "class": "prod",
+      "description": "Fila compacta de producto/contacto.",
+      "anatomy": [".prod__ic (46px, tinte por producto)", ".prod__main > .prod__title + .prod__sub", ".prod__amt", ".prod__chev"],
+      "hover": "background var(--surface-2)"
+    },
+
+    "pcard": {
+      "class": "pcard",
+      "description": "Fila de producto corporativa (alternativa plana a las cards de gradiente).",
+      "layout": "pcard-grid / pcard-list",
+      "anatomy": [".pcard__art", ".pcard__body > .pcard__name + .pcard__num", ".pcard__value > .pcard__lbl + .pcard__amt", ".pcard__bar"],
+      "hover": "border --blu-200, --e-2, translateY(-2px)"
+    },
+
+    "actBar": {
+      "class": "act-bar",
+      "description": "Barra de atajos con icono circular + label, dentro de una card.",
+      "item": { "ic": "46px círculo, bg --blu-50, color --primary", "label": "11px weight 600, color --slate" },
+      "api": "actBar([[icon, label, route]] | [[icon, label, '', onclickJS]])",
+      "rules": ["Máximo 3 por fila (flex 1 1 30%)", "aria-label en cada botón", "Ordenar por frecuencia de uso"]
+    },
+
+    "detailCta": {
+      "class": "detail-cta",
+      "description": "Bloque de acción al pie del detalle de producto (monto + botón).",
+      "base": { "bg": "--primary-soft", "radius": "--r-md", "padding": "14px 16px" },
+      "variants": { "detail-cta--ok": "bg --success-bg, color --success — estado 'al día', sin botón" },
+      "rule": "Solo mostrar el botón de pago cuando hay algo que pagar (ej. crédito en mora); si está al día, usar detail-cta--ok."
+    },
+
+    "payOpt": {
+      "class": "pay-opt",
+      "description": "Opción tipo radio-card para catálogos y selección de pago.",
+      "anatomy": [".pay-opt__radio", ".pay-opt__body > .pay-opt__title + .pay-opt__sub", ".pay-opt__amt"],
+      "states": { "is-sel": "border --blu-500, bg --blu-50, box-shadow 0 0 0 1px --blu-500" }
+    },
+
+    "kpi": {
+      "class": "kpi",
+      "anatomy": [".kpi__label", ".kpi__value (30px/700, animación countUp)", ".kpi__delta"],
+      "sibling": { "class": "stat-tile", "description": "KPI en card con icono tintado 34px; grilla auto-fit minmax(190px,1fr)", "api": "statTile(ic, tint, label, value)" }
+    },
+
+    "transactionRow": {
+      "class": "tx",
+      "anatomy": [".tx__ic (40px)", ".tx__main > .tx__title + .tx__meta", ".tx__amt"],
+      "rule": "Importe negativo en --ink, positivo en --success con signo +."
+    },
+
+    "sumRow": {
+      "class": "sum-row",
+      "api": "kv(k, v, strong)",
+      "description": "Fila clave-valor de resumen/recibo, separador punteado.",
+      "total": ".sum-total — fondo --blu-50, valor 20px/700 en --blu-700"
+    },
+
+    "otp": { "class": "otp-box", "size": "46x54px (40x48 en ≤400px)", "fontSize": "22px/700", "focus": "border --primary + --ring" },
+
+    "carousel": {
+      "class": "carousel",
+      "anatomy": [".carousel__viewport", ".carousel__track", ".carousel__item", ".carousel__nav--prev/--next", ".carousel__dots"],
+      "api": ["carouselHTML(items, label)", "initCarousel(root)"]
+    },
+
+    "tooltip": { "class": "tip", "attr": "data-tip", "position": "debajo, centrado", "rule": "Nunca contener información crítica: hover no existe en táctil." },
+
+    "infoBanner": {
+      "api": "infoBanner(text, ic='shield')",
+      "render": "card con fondo var(--blu-50), borde var(--blu-100), icono + texto 13px",
+      "use": "Avisos informativos no bloqueantes (glosas de producto, notas de titularidad)."
+    }
+  },
+
+  "helpers": {
+    "description": "API de funciones globales en js/app.js. Usarlas en lugar de reescribir markup.",
+    "layout": {
+      "pageHead(title, sub, back='inicio', actions='')": "Encabezado de pantalla. Con `back` renderiza el link 'Volver'. `actions` es HTML de botones a la derecha.",
+      "premiumHead(title, sub, back, actions, eyebrow)": "Variante sobre fondo navy para pantallas hero.",
+      "panel(title, body, action='')": "Card con título h4 + acción opcional a la derecha.",
+      "shell(activeRoute, title)": "Estructura sidebar + topbar + content."
+    },
+    "content": {
+      "kv(k, v, strong)": "Fila clave-valor (.sum-row). `strong` aplica .num al valor.",
+      "infoBanner(text, ic)": "Banner informativo tintado.",
+      "emptyState(title, msg, ic, action)": "Estado vacío.",
+      "errorState(title, msg, onRetry)": "Estado de error con reintento.",
+      "statTile(ic, tint, label, value)": "KPI en card.",
+      "slider(id, min, max, val, step)": "Input range con accent --blu-600.",
+      "exportChip(filename)": "Chip 'Exportar Excel' que dispara un toast.",
+      "bulkExport(count, noun, filename)": "Exportación masiva con conteo.",
+      "creditEstado(estado)": "Devuelve el badge de estado de un crédito."
+    },
+    "feedback": {
+      "toast({title, msg, type})": "Notificación efímera.",
+      "openModal(html, {wide})": "Abre modal.",
+      "closeModal(node)": "Cierra el modal contenedor.",
+      "successModal(title, msg, back)": "Modal de éxito con retorno a una ruta.",
+      "confirmTransfer(c, amount, concept)": "Modal de confirmación de transferencia."
+    },
+    "products": {
+      "acctCard(item, kind, extraCls)": "Card de producto (kind: 'acct' | 'credit' | 'invest').",
+      "homeCardFace(c)": "Cara de tarjeta en Home (Saldo consumido / Total a pagar / Principal-Adicional).",
+      "homeAcctRow(a) · homeCreditRow(c) · homeInvestRow(iv)": "Filas de producto en Home.",
+      "acctRow(item, kind) · tarjetaListRow(c) · prepagoListRow(c)": "Filas de listado.",
+      "findProduct(id)": "Busca un producto por id en DB."
+    },
+    "system": {
+      "money(n, sign)": "Formatea un importe a $1.890,00 (definido en js/data.js). `sign` antepone + / −.",
+      "icon(name, cls)": "Devuelve el SVG del set. 58 iconos disponibles.",
+      "el(tag, cls, html)": "Crea un nodo.",
+      "render()": "Re-renderiza la pantalla activa.",
+      "getRoute()": "Ruta actual sin query params.",
+      "getParam(k)": "Lee un query param del hash.",
+      "goBack(fallback)": "Vuelve atrás con ruta de respaldo.",
+      "applyTheme(t) · toggleTheme()": "Tema claro/oscuro persistido en localStorage.",
+      "toggleMask()": "Oculta/muestra importes (.is-masked).",
+      "withSkeleton(view, skeletonHTML, buildFn, delay)": "Render con skeleton."
+    }
+  },
+
+  "routing": {
+    "mechanism": "Hash routing. `Screens` es un registro global: `Screens['mi-ruta'] = () => html`.",
+    "navigate": "Atributo `data-nav=\"ruta\"` en cualquier elemento, o `location.hash = '#/ruta'`.",
+    "params": "`#/detalle-producto?id=auto` → `getParam('id')`. `getRoute()` descarta el query.",
+    "gotcha": "Cambiar `location.hash` dispara un re-render ASÍNCRONO. Leer el DOM en la misma tick devuelve la pantalla anterior; verificar en un paso posterior.",
+    "navGroups": {
+      "Productos": [
+        { "route": "tarjetas", "icon": "card", "label": "Tarjetas de crédito" },
+        { "route": "prepago", "icon": "card", "label": "Prepago" },
+        { "route": "cuentas?cat=cuenta", "icon": "wallet", "label": "Cuentas" },
+        { "route": "cuentas?cat=credito", "icon": "coins", "label": "Créditos" },
+        { "route": "cuentas?cat=inversion", "icon": "chart", "label": "Inversiones" },
+        { "route": "ofertas", "icon": "sparkles", "label": "Para ti" }
+      ]
+    },
+    "files": {
+      "js/screens-products.js": "Detalle y listados de tarjetas, cuentas, créditos, inversiones",
+      "js/screens-payments.js": "Pagos, transferencias, pago masivo, retiro sin tarjeta",
+      "js/screens-business.js": "Ventas, aprobaciones, cash management",
+      "js/screens-services.js": "Servicios y seguridad",
+      "js/screens-catalog.js": "Catálogo de productos / Para ti",
+      "js/screens-auth.js": "Login, registro, recuperación",
+      "js/onboarding-blu-plus.js": "Wizard de apertura de cuenta",
+      "js/onboarding-signature.js": "Wizard de solicitud de tarjeta"
+    }
+  },
+
+  "icons": {
+    "api": "icon(name, cls) — devuelve <svg viewBox=\"0 0 24 24\">",
+    "defaultSize": "18px inline; 20–22px en contenedores circulares",
+    "set": [
+      "alert", "approve", "arrowDown", "arrowUp", "atm", "back", "bell", "bolt", "building",
+      "calendar", "card", "cash", "certificate", "chart", "check", "checkCircle", "chevron",
+      "chevronDown", "clock", "close", "coins", "contacts", "copy", "download", "eye", "eyeOff",
+      "file", "filter", "fingerprint", "gift", "grid", "headset", "home", "info", "key", "lock",
+      "logout", "map", "menu", "moon", "phone", "plane", "plus", "receipt", "search", "send",
+      "services", "shield", "sparkles", "star", "store", "sun", "swap", "transfer", "upload",
+      "user", "users", "wallet"
+    ],
+    "semanticMap": {
+      "cuenta": "wallet", "crédito": "coins", "inversión": "chart", "tarjeta": "card",
+      "transferir": "send", "pago": "receipt", "certificado": "certificate",
+      "aprobación": "approve", "seguridad": "shield", "pendiente": "clock",
+      "para ti / oferta": "sparkles", "editar": "services", "eliminar": "close"
+    },
+    "rules": ["Prohibido usar emojis como iconos", "Un solo set: no mezclar grosores ni estilos", "Icono sin texto → aria-label obligatorio"]
+  },
+
+  "content": {
+    "language": "es-EC",
+    "tone": "Cercano y directo, en segunda persona ('Mira tus tarjetas', 'Tus cuentas'). Sin jerga bancaria innecesaria.",
+    "money": { "format": "$1.890,00", "thousands": ".", "decimals": ",", "helper": "money(value, showSign)" },
+    "glossary": {
+      "Saldo consumido": "Deuda total consumida de la tarjeta (cara de la tarjeta en Home)",
+      "Total a pagar": "Monto del corte a pagar",
+      "Pagar hasta": "Fecha límite — va fuera del arte de la tarjeta",
+      "Cupo disponible": "Cupo restante de la tarjeta",
+      "Capital otorgado / Capital pagado / Saldo del capital": "Campos de detalle de crédito",
+      "Tasa nominal / Tasa efectiva": "Tasas del crédito",
+      "Fecha de finalización": "Vencimiento de inversión o crédito (nunca 'vence')",
+      "Ventas": "Nombre del módulo de establecimientos (antes 'Caja')",
+      "Para ti": "Catálogo de productos ofertados (antes 'Contratar')",
+      "Pendiente de autorizar": "Estado de una operación que requiere aprobador"
+    },
+    "rules": [
+      "Los errores explican causa + cómo resolver, nunca solo 'Dato inválido'.",
+      "Los títulos de sección son conversacionales; los de tabla y campo son descriptivos.",
+      "Un estado de producto siempre se nombra ('En mora', 'Al día', 'Vigente'), no solo se colorea."
+    ]
+  },
+
+  "accessibility": {
+    "target": "WCAG 2.2 AA",
+    "requirements": {
+      "contrast": "4.5:1 texto normal, 3:1 texto grande. Verificar en light Y dark por separado; los tokens dark son variantes tonales, no inversiones.",
+      "focus": ":focus-visible → box-shadow var(--ring). Nunca `outline:none` sin reemplazo.",
+      "touchTarget": "Mínimo 44x44px con 8px de separación entre objetivos.",
+      "labels": "aria-label en todo control solo-icono; <label for> en todo input.",
+      "headings": "Jerarquía secuencial h1→h4, sin saltos.",
+      "colorNotOnly": "Todo estado comunicado por color lleva además texto o icono.",
+      "reducedMotion": "Cubierto globalmente por @media (prefers-reduced-motion: reduce).",
+      "skipLink": ".skip-link visible al enfocar, salta al contenido principal.",
+      "srOnly": ".sr-only para texto solo de lector de pantalla."
+    },
+    "checklist": [
+      "¿El nuevo control es alcanzable por teclado y el orden de tab sigue el orden visual?",
+      "¿El foco es visible en los 3 skins?",
+      "¿Los iconos sin texto tienen aria-label?",
+      "¿El error del formulario está junto al campo y anunciado?",
+      "¿El modal permite cerrarse con una acción visible?"
+    ]
+  },
+
+  "rules": {
+    "do": [
+      "Reutilizar clases y helpers existentes antes de escribir nuevos.",
+      "Usar siempre var(--token) para color, radio, sombra, espaciado y duración.",
+      "Aplicar .num a todo importe y dato numérico tabular.",
+      "Registrar cada pantalla nueva en Screens y navegar con data-nav.",
+      "Declarar todo token nuevo en light y dark.",
+      "Subir ?v=N tras tocar css/ o js/.",
+      "Verificar en navegador (light, dark y 375px) antes de dar por hecho un cambio."
+    ],
+    "dont": [
+      "No agregar dependencias, frameworks ni build step.",
+      "No usar emojis como iconos.",
+      "No poner gradiente en botones — el primario es navy sólido.",
+      "No animar width/height/top/left.",
+      "No usar el placeholder como label.",
+      "No provocar scroll horizontal en la página: las tablas y strips scrollean en su propio contenedor.",
+      "No inventar tonos de marca fuera de la escala blu-*.",
+      "No comunicar un estado únicamente con color.",
+      "No mostrar acciones que no aplican (ej. 'Pagar cuota' en un crédito al día)."
+    ]
+  },
+
+  "fileMap": {
+    "index.html": "Entrada de la app; carga los scripts con ?v=N",
+    "design-system.html": "Showcase navegable del DS — actualizar al agregar un componente",
+    "presentacion.html": "Presentación del rediseño",
+    "css/design-system.css": "Tokens + componentes primitivos (fuente de verdad de este JSON)",
+    "css/app.css": "Capa de aplicación: shell, layouts y componentes de negocio",
+    "css/legacy.css": "Skin de la app actual para comparativas",
+    "js/app.js": "Helpers, shell, router, Home",
+    "js/data.js": "DB mock: accounts, cards, credits, investments, contacts",
+    "js/icons.js": "Set de 58 iconos SVG"
+  }
+}
