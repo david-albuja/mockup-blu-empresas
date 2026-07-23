@@ -17,6 +17,12 @@ Reglas no negociables (el detalle está en el JSON):
 - Todo token nuevo se declara en light **y** dark.
 - Textos en español de Ecuador.
 
+### Especificaciones por pantalla
+
+Extienden el DS con la anatomía, CSS y datos de una pantalla concreta. Léelas antes de tocar esa pantalla.
+
+- Inicio → [`specs/home.json`](specs/home.json)
+
 ## Estructura
 
 | Ruta | Contenido |
