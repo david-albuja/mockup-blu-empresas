@@ -1,0 +1,279 @@
+{
+  "meta": {
+    "name": "Carrusel de productos — diseño de card, bordes, tamaño y resize del arte de TC",
+    "scope": ".prod-strip y sus .prod-xl en el Home (Inicio)",
+    "extends": ["design-system.json", "specs/home.json"],
+    "files": {
+      "css": "css/app.css:514-604 (.prod-strip, .prod-xl, .acct-card-plain), css/app.css:118-142 (.bank-card)",
+      "js": "js/app.js:252-329 (homeCardFace, homeTarjetaCard, homeAcctRow, homeCreditRow, homeInvestRow)"
+    },
+    "version": "1.0.0",
+    "updated": "2026-07-23",
+    "status": "propuesta — medida contra el build actual, no implementada",
+    "measurementMethod": "getBoundingClientRect + getComputedStyle sobre el prototipo corriendo en localhost:4599, en 375px / 1280px / 1440px"
+  },
+
+  "objetivo": "Que el arte de la tarjeta de crédito se redimensione de forma proporcional y homogénea en todo el carrusel, y que las cuatro categorías (tarjeta, cuenta, crédito, inversión) mantengan exactamente el mismo alto y los mismos bordes en cualquier ancho.",
+
+  "estadoActual": {
+    "medicionesVerificadas": {
+      "nota": "Valores reales del build actual. El ancho de .prod-xl lo fija flex-basis; el alto lo fija min-height salvo cuando el arte lo excede.",
+      "375px": { "prodXl": "230 × 219", "media": "216 × 130", "bankCard": "188 × 116", "chip": "21 × 26", "body": "216 × 85" },
+      "1280px": { "prodXl": "288.7 × 219", "media": "274.7 × 166.3", "bankCard": "246.7 × 152.3", "body": "274.7 × 48.8" },
+      "1440px": { "prodXl": "300 × 223.3", "media": "286 × 173.3", "bankCard": "258 × 159.3", "chip": "31.8 × 26", "body": "286 × 46" }
+    },
+    "reglasVigentes": {
+      ".prod-strip": "display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:6px 2px 14px; scrollbar oculta",
+      ".prod-xl": "flex: 0 0 clamp(230px, 68%, 280px); border:1px solid var(--line); border-radius:var(--r-lg)=20px; box-shadow:var(--e-1); overflow:hidden",
+      "@media(min-width:720px) .prod-xl": "flex-basis: clamp(240px, calc(33.333% - var(--s-4)*2/3), 300px) — 3 productos por vista",
+      ".prod-strip .prod-xl": "min-height: 219px",
+      ".prod-xl__media": "padding: 14px 14px 0",
+      ".bank-card": "aspect-ratio:1.62; border-radius:var(--r-md)=16px; padding:var(--s-5)=20px; box-shadow:var(--e-2)"
+    }
+  },
+
+  "defectosDetectados": [
+    {
+      "id": "D1",
+      "titulo": "El chip se deforma: nunca alcanza su tamaño nominal",
+      "severidad": "alta",
+      "evidencia": "Nominal 34×26. Medido 21×26 a 375px y 31.8×26 a 1440px. La relación de aspecto pasa de 1.31 (nominal) a 0.81 en móvil.",
+      "causa": ".bank-card__chip está dentro de un contenedor flex (.row.between) y no declara `flex: none`, por lo que el algoritmo de flex lo encoge para acomodar el bloque de texto hermano.",
+      "impacto": "El elemento más reconocible del arte de una tarjeta se ve aplastado justo en el ancho donde más se usa el prototipo (móvil)."
+    },
+    {
+      "id": "D2",
+      "titulo": "El arte escala pero su contenido no: la densidad cambia 37%",
+      "severidad": "alta",
+      "evidencia": "El arte va de 188×116 a 258×159 (+37% de ancho), pero padding (20px), tipografías (16/14/10/9px) y chip quedan fijos en px.",
+      "impacto": "A 188px el padding de 20px ocupa el 10,6% del ancho y el arte se ve saturado; a 258px ocupa el 7,8% y se ve vacío. No es el mismo diseño a distintos anchos, es el mismo diseño estirado."
+    },
+    {
+      "id": "D3",
+      "titulo": "La homologación de alto se rompe por encima de ~1300px",
+      "severidad": "media",
+      "evidencia": "A 1440px: card de tarjeta 223.3px vs. card de cuenta 219.3px. Divergencia de 4px.",
+      "causa": "El alto de la card de tarjeta lo dicta `aspect-ratio:1.62` del arte, que crece con el ancho; las cards planas quedan clavadas en `min-height:219px`. Al superar los 219px, la tarjeta manda y las categorías dejan de coincidir.",
+      "impacto": "El objetivo de la tarea #44 (igualar altos) deja de cumplirse en pantallas anchas."
+    },
+    {
+      "id": "D4",
+      "titulo": "Padding fantasma del user-agent sobre .prod-xl",
+      "severidad": "media",
+      "evidencia": "getComputedStyle(.prod-xl).padding = '1px 6px' — no existe esa regla en el CSS del proyecto.",
+      "causa": ".prod-xl es un <button> y hereda el padding por defecto del user-agent. El reset del proyecto normaliza `font` y `color` de button, pero no el padding.",
+      "impacto": "Roba 12px de ancho útil e introduce una asimetría real: el contenido queda insertado 20px a los lados (6+14) pero solo 15px arriba (1+14). Además el valor difiere entre navegadores."
+    }
+  ],
+
+  "especificacion": {
+    "1_contenedor": {
+      "selector": ".prod-strip",
+      "display": "flex",
+      "gap": "var(--s-4) = 16px",
+      "padding": "6px 2px 14px",
+      "overflowX": "auto",
+      "scrollSnapType": "x mandatory",
+      "scrollbar": "oculta — scrollbar-width:none + ::-webkit-scrollbar{display:none}",
+      "sinCambios": true,
+      "nota": "El desbordamiento vive aquí; la página nunca hace scroll horizontal."
+    },
+
+    "2_card": {
+      "selector": ".prod-xl",
+      "elemento": "<button>",
+      "ancho": {
+        "movil": "flex: 0 0 clamp(230px, 68%, 280px)",
+        "≥720px": "flex-basis: clamp(240px, calc(33.333% - var(--s-4) * 2 / 3), 300px)",
+        "rango": "230px → 300px",
+        "intencion": "En móvil se ve ~1 card más el borde de la siguiente (invita al swipe); en desktop entran 3 exactas."
+      },
+      "alto": {
+        "regla": ".prod-strip .prod-xl { min-height: 219px }",
+        "obligatorio": "219px EXACTOS para las cuatro categorías, en todo el rango de ancho",
+        "comoSeGarantiza": "Topando el arte (ver bloque 4) para que la card de tarjeta nunca supere los 219px de alto natural. Así el min-height gobierna siempre y ninguna categoría se desalinea."
+      },
+      "borde": {
+        "width": "1px",
+        "style": "solid",
+        "color": "var(--line)",
+        "light": "#CBCBCB",
+        "dark": "#262C40",
+        "legacy": "rgba(109,114,120,.28)",
+        "radius": "var(--r-lg) = 20px (legacy: 10px)",
+        "nota": "Es el ÚNICO borde de la card. El arte interior no lleva borde, se separa por color y sombra."
+      },
+      "superficie": {
+        "background": "var(--surface)",
+        "boxShadow": "var(--e-1)",
+        "overflow": "hidden — recorta el arte al radio de 20px"
+      },
+      "padding": {
+        "valor": "0",
+        "correccion": "D4 — declarar `padding: 0` explícito para anular el 1px 6px del user-agent",
+        "efecto": "Recupera 12px de ancho útil y elimina la asimetría vertical/horizontal"
+      },
+      "estados": {
+        "hover": "transform: translateY(-4px); box-shadow: var(--e-3)",
+        "focusVisible": "outline: 2px solid var(--primary); outline-offset: 2px",
+        "transition": "transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease)"
+      },
+      "scrollSnapAlign": "start"
+    },
+
+    "3_zonasInternas": {
+      "media": {
+        "selector": ".prod-xl__media",
+        "presenteEn": "solo categoría tarjeta",
+        "padding": "14px 14px 0 — gutter fijo, no escala",
+        "razon": "El gutter separa el arte del borde de la card; a 14px funciona en todo el rango y mantenerlo fijo evita una dependencia circular con el contenedor de consulta."
+      },
+      "body": {
+        "selector": ".prod-xl__body",
+        "padding": "12px 14px 14px",
+        "display": "flex; flex-direction: column; flex: 1",
+        "contenidoTarjeta": "fila .row.between con 'Pagar hasta {fecha}' a la izquierda y badge de estado a la derecha",
+        "contenidoPlanas": "ver .acct-card-plain en specs/home.json"
+      }
+    },
+
+    "4_resizeDelArteTC": {
+      "principio": "El arte de la tarjeta se comporta como una pieza gráfica: TODO lo que lo compone escala en proporción a su propio ancho, con pisos de legibilidad para el texto. No se estira: se redimensiona.",
+
+      "mecanismo": {
+        "tecnica": "Container queries — `container-type: inline-size` sobre .prod-xl__media, y unidades `cqw` para todo lo que hay dentro del arte.",
+        "porQue": "El ancho del arte depende del contenedor, no del viewport. Usar `vw` daría un tamaño equivocado dentro del sidebar o en un modal; `cqw` sigue al contenedor real.",
+        "soporte": "Verificado en el navegador del prototipo: CSS.supports('container-type:inline-size') === true.",
+        "fallback": "Los valores nominales en px quedan como declaración previa; un navegador sin soporte ignora la línea cqw y conserva el diseño actual."
+      },
+
+      "tope": {
+        "regla": ".prod-strip .prod-xl__media { max-width: 274px; margin-inline: auto; }",
+        "resultado": "El arte crece hasta 246×152 y a partir de ahí se centra en lugar de seguir creciendo.",
+        "porQue": [
+          "Resuelve D3: con el tope, el alto natural de la card de tarjeta es 14 + 152 + 46 = 212px en todo el rango superior, siempre por debajo del min-height de 219px. El min-height gobierna y las cuatro categorías miden exactamente lo mismo a cualquier ancho.",
+          "Evita que el arte se vuelva desproporcionadamente grande respecto al cuerpo de la card en monitores anchos."
+        ],
+        "verificacion": { "375px": "arte 188×116 → card 215 → min-height 219 ✓", "1280px": "arte 246×152 → card 212 → min-height 219 ✓", "1440px": "arte 246×152 (topado) → card 212 → min-height 219 ✓" }
+      },
+
+      "escala": {
+        "referencia": "container inline-size = 274px (el tope). Los cqw se calculan contra ese ancho.",
+        "formula": "valor_cqw = valor_nominal_px / 274 * 100",
+        "tabla": [
+          { "elemento": ".bank-card", "propiedad": "padding", "nominal": "20px", "cqw": "7.3cqw", "a274": "20.0px", "a216": "15.8px", "tipo": "proporcional" },
+          { "elemento": ".bank-card", "propiedad": "border-radius", "nominal": "16px", "cqw": "clamp(12px, 5.8cqw, 16px)", "a274": "16px", "a216": "12.5px", "tipo": "proporcional con piso" },
+          { "elemento": ".bank-card__chip", "propiedad": "width", "nominal": "34px", "cqw": "12.4cqw", "a274": "34.0px", "a216": "26.8px", "tipo": "proporcional" },
+          { "elemento": ".bank-card__chip", "propiedad": "height", "nominal": "26px", "cqw": "9.5cqw", "a274": "26.0px", "a216": "20.5px", "tipo": "proporcional" },
+          { "elemento": ".bank-card__brand", "propiedad": "font-size", "nominal": "16px", "cqw": "clamp(13px, 5.84cqw, 16px)", "a274": "16px", "a216": "13px", "tipo": "proporcional con piso" },
+          { "elemento": ".bank-card__type", "propiedad": "font-size", "nominal": "10px", "cqw": "clamp(9px, 3.65cqw, 10px)", "a274": "10px", "a216": "9px", "tipo": "proporcional con piso" },
+          { "elemento": ".bank-card__number", "propiedad": "font-size", "nominal": "16px", "cqw": "clamp(13px, 5.84cqw, 16px)", "a274": "16px", "a216": "13px", "tipo": "proporcional con piso" },
+          { "elemento": ".bank-card__foot strong", "propiedad": "font-size", "nominal": "14px", "cqw": "clamp(12px, 5.11cqw, 14px)", "a274": "14px", "a216": "12px", "tipo": "proporcional con piso" },
+          { "elemento": ".bank-card__foot small", "propiedad": "font-size", "nominal": "9px", "cqw": "9px", "a274": "9px", "a216": "9px", "tipo": "FIJO — piso de legibilidad" },
+          { "elemento": ".bank-card__kind", "propiedad": "font-size", "nominal": "9px", "cqw": "9px", "a274": "9px", "a216": "9px", "tipo": "FIJO — piso de legibilidad" },
+          { "elemento": ".bank-card__kind", "propiedad": "padding", "nominal": "2px 9px", "cqw": "0.73cqw 3.28cqw", "a274": "2px 9px", "a216": "1.6px 7.1px", "tipo": "proporcional" },
+          { "elemento": ".bank-card::before", "propiedad": "width/height", "nominal": "220px", "cqw": "80.3cqw", "a274": "220px", "a216": "173px", "tipo": "proporcional (decorativo)" },
+          { "elemento": ".bank-card::after", "propiedad": "width/height", "nominal": "160px", "cqw": "58.4cqw", "a274": "160px", "a216": "126px", "tipo": "proporcional (decorativo)" }
+        ],
+        "reglaDeDecision": "Decorativo (chip, círculos, paddings, radios) → cqw puro. Texto informativo → cqw con piso en px. Texto ya en el mínimo legible (9px) → fijo, nunca escala hacia abajo.",
+        "pisoDeLegibilidad": "Ningún texto del arte baja de 9px. Los labels del pie ('SALDO CONSUMIDO', 'TOTAL A PAGAR') y el pill Principal/Adicional ya están en ese mínimo y por eso se declaran fijos."
+      },
+
+      "relacionDeAspecto": {
+        "valor": "1.62",
+        "estado": "se mantiene sin cambios en todo el rango",
+        "verificado": "1.620 medido a 375px, 1280px y 1440px",
+        "razon": "Es la proporción de una tarjeta física (85.6 × 53.98 mm ≈ 1.586); 1.62 es la aproximación adoptada por el prototipo. No debe alterarse: es lo que hace que la pieza se lea como tarjeta."
+      },
+
+      "chip": {
+        "correccion": "D1 — agregar `flex: none` a .bank-card__chip",
+        "efecto": "El chip deja de encogerse y conserva su proporción 1.31 en todo el rango",
+        "verificacionEsperada": "34×26 a 274px de contenedor; 26.8×20.5 a 216px — misma relación de aspecto en ambos"
+      }
+    },
+
+    "5_cardsPlanas": {
+      "selector": ".prod-xl.acct-card-plain",
+      "aplicaA": ["cuenta", "crédito", "inversión"],
+      "borde": "idéntico a la card de tarjeta — 1px solid var(--line), radius 20px",
+      "alto": "mismo min-height 219px",
+      "sinArte": "no llevan .prod-xl__media; el contenido arranca directo en .prod-xl__body",
+      "overridesDeCarrusel": {
+        ".prod-xl__body": "padding: 14px arriba/abajo; justify-content: center",
+        ".prod__ic": "42×42px; radius 12px; margin-bottom 4px (icono 21px)",
+        ".prod-xl__name": "15px",
+        ".prod-xl__id": "12px; margin-top 2px",
+        ".prod-xl__amt": "22px; margin-top 8px",
+        ".prod-xl__sub": "12px; margin-top 3px; nowrap + ellipsis",
+        ".acct-interes": "margin-top 8px; font-size 12px; padding 4px 10px"
+      },
+      "nota": "Estas cards NO necesitan container queries: su contenido ya está dimensionado para el rango 230–300px y no contiene una pieza gráfica con proporción fija."
+    }
+  },
+
+  "cssPropuesto": {
+    "descripcion": "Bloque a agregar al final de la sección de carrusel en css/app.css. No reemplaza reglas existentes salvo donde se indica.",
+    "codigo": [
+      "/* ---------- Carrusel: corrección de caja y resize proporcional del arte ---------- */",
+      "",
+      "/* D4 — anula el padding 1px 6px que el user-agent aplica a <button> */",
+      ".prod-xl { padding: 0; }",
+      "",
+      "/* Tope del arte: crece hasta 246px y luego se centra.",
+      "   Garantiza que la card de tarjeta nunca supere el min-height de 219px",
+      "   y que las cuatro categorías midan exactamente lo mismo (D3). */",
+      ".prod-strip .prod-xl__media {",
+      "  container-type: inline-size;",
+      "  max-width: 274px;",
+      "  margin-inline: auto;",
+      "}",
+      "",
+      "/* Resize proporcional del arte de TC — referencia: contenedor de 274px */",
+      "@container (min-width: 0px) {",
+      "  .prod-strip .bank-card { padding: 7.3cqw; border-radius: clamp(12px, 5.8cqw, 16px); }",
+      "  .prod-strip .bank-card::before { width: 80.3cqw; height: 80.3cqw; }",
+      "  .prod-strip .bank-card::after  { width: 58.4cqw; height: 58.4cqw; }",
+      "  .prod-strip .bank-card__brand  { font-size: clamp(13px, 5.84cqw, 16px); }",
+      "  .prod-strip .bank-card__type   { font-size: clamp(9px, 3.65cqw, 10px); }",
+      "  .prod-strip .bank-card__number { font-size: clamp(13px, 5.84cqw, 16px); }",
+      "  .prod-strip .bank-card__kind   { padding: 0.73cqw 3.28cqw; }",
+      "  .prod-strip .bank-card__foot strong { font-size: clamp(12px, 5.11cqw, 14px); }",
+      "  .prod-strip .bank-card__chip {",
+      "    width: 12.4cqw; height: 9.5cqw;",
+      "    border-radius: 2.2cqw;",
+      "  }",
+      "}",
+      "",
+      "/* D1 — el chip deja de encogerse dentro del flex del encabezado */",
+      ".bank-card__chip { flex: none; }"
+    ],
+    "notaSobreLosPisos": "Los `small` del pie y el pill `__kind` conservan sus 9px declarados en la regla base — no se listan aquí porque no cambian.",
+    "notaSobreElContainer": "El `@container (min-width: 0px)` es una consulta siempre verdadera: sirve de guarda para que los navegadores sin soporte descarten el bloque completo y conserven los valores nominales en px."
+  },
+
+  "criteriosDeAceptacion": [
+    { "id": "A1", "criterio": "El chip mide 34×26 con el contenedor en su tope y conserva la relación 1.31 en todo el rango. Nunca vuelve a medir 21×26.", "verificacion": "getBoundingClientRect del chip a 375px y 1440px; ancho/alto ≈ 1.31 en ambos" },
+    { "id": "A2", "criterio": "Las cuatro categorías (tarjeta, cuenta, crédito, inversión) miden 219px de alto exactos a 375px, 1280px y 1440px.", "verificacion": "Recorrer las 4 pestañas midiendo .prod-strip .prod-xl en los 3 anchos; 12 mediciones, todas 219" },
+    { "id": "A3", "criterio": "La relación de aspecto del arte se mantiene en 1.62 ± 0.01 en todo el rango.", "verificacion": "width/height de .bank-card en los 3 anchos" },
+    { "id": "A4", "criterio": "getComputedStyle(.prod-xl).padding === '0px'.", "verificacion": "consulta directa" },
+    { "id": "A5", "criterio": "Ningún texto del arte baja de 9px computados.", "verificacion": "font-size computado de brand, type, number, kind, foot small y foot strong a 375px" },
+    { "id": "A6", "criterio": "El arte no supera 246px de ancho por más ancha que sea la pantalla.", "verificacion": "medir .bank-card a 1920px" },
+    { "id": "A7", "criterio": "El borde de las cuatro categorías es idéntico: 1px solid var(--line), radius 20px.", "verificacion": "border y borderRadius computados por categoría" },
+    { "id": "A8", "criterio": "Sin scroll horizontal en la página; el desbordamiento sigue confinado a .prod-strip.", "verificacion": "document.documentElement.scrollWidth <= clientWidth" }
+  ],
+
+  "impactoEnOtrasPantallas": {
+    "alcance": "Todas las reglas nuevas están calificadas con `.prod-strip`, salvo dos:",
+    "globales": [
+      { "regla": ".prod-xl { padding: 0 }", "afecta": "Cualquier .prod-xl fuera del carrusel. Revisar el catálogo de productos y la pantalla de tarjetas, donde también se usa el shell.", "riesgo": "bajo — hoy ese padding es un artefacto del user-agent, no un valor de diseño" },
+      { "regla": ".bank-card__chip { flex: none }", "afecta": "Todo arte de tarjeta: detalle de producto, listados, wizard de solicitud, bank-card--mini", "riesgo": "bajo — corrige una deformación en todos los contextos, no solo el carrusel" }
+    ],
+    "pendienteDeRevisar": "El detalle de producto usa .bank-card fuera de .prod-strip y por lo tanto NO recibe el resize proporcional. Si se quiere el mismo comportamiento allí, conviene extraer el bloque @container a una clase reutilizable (p. ej. .bank-card--fluid) en lugar de calificarlo por .prod-strip."
+  },
+
+  "cambiosDeVersion": {
+    "cacheBusting": "Subir ?v=57 → ?v=58 en index.html y design-system.html",
+    "documentacion": "Actualizar specs/home.json (bloque productCards) con los valores finales una vez implementado"
+  }
+}
