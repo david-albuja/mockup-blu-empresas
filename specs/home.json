@@ -1,0 +1,502 @@
+{
+  "meta": {
+    "screen": "Inicio / Home",
+    "route": "#/inicio",
+    "registry": "Screens.inicio",
+    "file": "js/app.js:332-443",
+    "css": ["css/design-system.css (tokens y primitivos)", "css/app.css:393-604, 689-713 (bloques propios del Home)"],
+    "version": "1.0.0",
+    "updated": "2026-07-23",
+    "extends": "design-system.json",
+    "description": "Especificación completa de estructura, CSS, estilo, estados, datos y responsive de la pantalla de Inicio del prototipo BLU Empresas."
+  },
+
+  "principles": [
+    "El Home responde a tres preguntas en orden: quién soy (empresa), cuánto vendí (adquirencia), qué tengo con el banco (productos).",
+    "La posición consolidada fue reemplazada por 'Tus ventas' — para un comercio, la venta es el dato de portada.",
+    "Cada sección de producto solo se renderiza si el usuario efectivamente tiene ese producto (no hay tabs vacíos).",
+    "Todos los productos —tarjeta, cuenta, crédito, inversión— comparten el mismo shell `.prod-xl` y el mismo alto, dentro de un carrusel horizontal.",
+    "Los importes obedecen al modo privacidad global (`State.masked`): se enmascaran con `••••••`."
+  ],
+
+  "anatomy": {
+    "order": ["pageHead", "tusVentas", "tusProductos"],
+    "container": {
+      "selector": ".content",
+      "padding": "var(--s-7) — 32px",
+      "maxWidth": "calc(var(--content-max) + var(--s-7)*2) → sin límite en ≥1280px",
+      "note": "Cada bloque se envuelve en `.section`, que aplica la animación de entrada `riseIn` (320ms, --ease-out)."
+    },
+    "loading": {
+      "helper": "withSkeleton(view, sk, build)",
+      "skeleton": "<div class=\"grid\" style=\"gap:20px\">UI.skeletonCard() × 2</div>",
+      "delay": "650ms",
+      "rule": "Nunca spinner de pantalla completa; el Home siempre entra por skeleton."
+    }
+  },
+
+  "blocks": {
+    "1_pageHead": {
+      "selector": ".page-head.section",
+      "purpose": "Identidad de la empresa activa, saludo y accesos rápidos.",
+      "layout": {
+        "wrapper": ".row.between.wrap",
+        "gap": "12px",
+        "columns": ["izquierda: nombre empresa + chip Cambiar + saludo", "derecha: 3 icon-btn + botón ClubMiles"]
+      },
+      "elements": {
+        "h1": {
+          "content": "DB.empresa.name",
+          "css": { "fontSize": "var(--fs-24) / 24px", "fontWeight": 700, "letterSpacing": "-.01em", "lineHeight": "1.1 (override inline)" },
+          "source": ".page-head h1"
+        },
+        "chipCambiarEmpresa": {
+          "class": "chip",
+          "content": "icon('building') + 'Cambiar' + icon('chevronDown')",
+          "css": { "padding": "8px 14px", "radius": "var(--r-full)", "border": "1px solid var(--line)", "bg": "var(--surface)", "fontSize": "var(--fs-13)", "fontWeight": 500, "color": "var(--slate)" },
+          "hover": "border-color var(--blu-300); color var(--ink)",
+          "action": "toast({title:'Cambiar empresa', msg: empresas, type:'info'})",
+          "a11y": "aria-label=\"Cambiar de empresa\""
+        },
+        "saludo": {
+          "class": "text-muted",
+          "content": "Hola, ${DB.user.first}",
+          "css": { "color": "var(--muted)", "marginTop": "4px", "fontSize": "var(--fs-14)" }
+        },
+        "accionesRapidas": {
+          "class": "icon-btn tip",
+          "count": 3,
+          "items": [
+            { "icon": "send", "tip": "Transferir", "nav": "transferencias" },
+            { "icon": "upload", "tip": "Pago masivo", "nav": "carga-archivo" },
+            { "icon": "approve", "tip": "Aprobaciones", "nav": "aprobaciones", "badge": { "class": "badge badge--error", "value": 3, "css": "position:absolute; top:-3px; right:-3px; padding:1px 6px; font-size:10px" } }
+          ],
+          "css": { "size": "44x44px", "radius": "var(--r-full)", "bg": "transparent", "color": "var(--slate)", "iconSize": "22px" },
+          "hover": "background var(--bg-2); color var(--ink)",
+          "tooltip": ".tip con data-tip — aparece debajo, centrado (translateX(-50%))",
+          "a11y": "aria-label obligatorio en cada uno (hover no existe en táctil)"
+        },
+        "clubMiles": {
+          "class": "btn btn--secondary btn--sm",
+          "content": "icon('gift') + '48.250 ClubMiles'",
+          "nav": "recompensas",
+          "css": { "minHeight": "38px", "padding": "0 var(--s-4)", "fontSize": "var(--fs-13)", "bg": "var(--surface)", "color": "#04195d", "border": "1px solid #031242" }
+        }
+      }
+    },
+
+    "2_tusVentas": {
+      "selector": ".section.mb-6",
+      "purpose": "Resumen de adquirencia. Encabeza el Home en lugar de la posición consolidada.",
+      "header": {
+        "layout": ".row.between.wrap.mb-4 (gap 10px)",
+        "title": { "class": "h3", "text": "Tus ventas", "css": { "fontSize": "var(--fs-20)", "fontWeight": 600, "lineHeight": "var(--lh-tight)" } },
+        "link": { "text": "Mira el detalle", "icon": "chevron", "nav": "caja", "css": "font-size:13px; font-weight:600; color:var(--primary); cursor:pointer; gap:6px" }
+      },
+      "grid": {
+        "class": "sales-summary",
+        "css": { "display": "grid", "gridTemplateColumns": "repeat(3, 1fr)", "gap": "16px" },
+        "responsive": { "≤760px": "grid-template-columns: 1fr" }
+      },
+      "card": {
+        "class": "sales-card",
+        "element": "button (navega a #/caja)",
+        "css": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "6px",
+          "textAlign": "center",
+          "background": "var(--surface)",
+          "border": "1px solid var(--line)",
+          "borderRadius": "var(--r-md) / 16px",
+          "padding": "22px 20px",
+          "width": "100%",
+          "cursor": "pointer",
+          "transition": "box-shadow var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease), transform var(--dur-1) var(--ease)"
+        },
+        "states": {
+          "hover": "box-shadow var(--e-2); border-color var(--blu-200)",
+          "active": "transform translateY(1px)",
+          "focus-visible": "box-shadow var(--ring); outline none"
+        },
+        "parts": {
+          ".sales-card__label": { "fontSize": "13px", "color": "var(--muted)", "fontWeight": 500 },
+          ".sales-card__amt": { "fontSize": "30px", "fontWeight": 800, "color": "var(--ink)", "lineHeight": 1.1, "class": "num" },
+          ".sales-card__amt .cents": { "fontSize": ".58em", "fontWeight": 700, "color": "var(--muted)", "note": "los centavos van en menor jerarquía vía bigMoney()" },
+          ".sales-card__cap": { "fontSize": "12px", "color": "var(--muted)" }
+        },
+        "responsive": { "≤760px": "text-align: left" }
+      },
+      "cardDestacada": {
+        "class": "sales-card sales-card--hl",
+        "position": "primera (Ventas del mes)",
+        "css": {
+          "borderColor": "var(--blu-200)",
+          "background": "linear-gradient(180deg, var(--blu-50) 0%, var(--surface) 60%)",
+          "textAlign": "left"
+        },
+        "amount": { "color": "var(--primary-strong)" },
+        "growth": {
+          "class": "sales-card__grow",
+          "content": "icon('arrowUp') + '+X,X%'",
+          "css": { "background": "var(--success-bg)", "color": "var(--success)", "fontSize": "14px", "fontWeight": 800, "padding": "4px 10px", "borderRadius": "var(--r-full)", "iconSize": "15px" }
+        }
+      },
+      "data": {
+        "source": "DB.ventasResumen (VR)",
+        "fields": {
+          "VR.ventasMes": "Ventas del mes → card destacada",
+          "VR.crecimiento": "% vs. mes anterior → sales-card__grow",
+          "VR.pagosRecibidos": "Pagos recibidos → card 2",
+          "VR.porCobrar": "Total por cobrar → card 3",
+          "VR.periodo": "caption de cards 1 y 2",
+          "VR.fechaCobro": "caption de card 3"
+        },
+        "formatter": "bigMoney(n) → `${int}<span class=\"cents\">,${dec}</span>` usando moneyParts()"
+      }
+    },
+
+    "3_tusProductos": {
+      "selector": ".section.mb-6",
+      "purpose": "Productos que el usuario tiene con el banco, homologados y filtrables por tipo.",
+      "header": { "title": { "class": "h3", "text": "Tus Productos" } },
+      "shell": {
+        "class": "card card--pad",
+        "css": { "background": "var(--surface)", "border": "1px solid var(--line-2)", "radius": "var(--r-md)", "shadow": "var(--e-1)", "padding": "var(--s-6)" },
+        "children": ["#prodTabs (tabs)", "#prodXlHost (carrusel)", "#prodXlExtra (resumen + CTAs)"]
+      },
+      "tabs": {
+        "id": "prodTabs",
+        "class": "prod-tabs prod-tabs--inline",
+        "wrapper": ".scroll-x (scroll horizontal sin scrollbar visible)",
+        "css": {
+          "container": { "display": "inline-flex", "width": "max-content", "gap": "6px", "padding": "5px", "background": "var(--line-2)", "borderRadius": "var(--r-full)" },
+          "button": { "flex": "0 0 auto", "minHeight": "38px", "padding": "8px 16px", "borderRadius": "var(--r-full)", "fontWeight": 600, "fontSize": "var(--fs-13)", "color": "var(--muted)", "whiteSpace": "nowrap", "transition": "background var(--dur-2) var(--ease), color var(--dur-2) var(--ease)" }
+        },
+        "states": {
+          "hover": "color var(--ink)",
+          "is-active": "background var(--blu-900) (#020b27); color #fff; box-shadow var(--e-1)"
+        },
+        "items": [
+          { "key": "tarjeta", "label": "Tarjetas", "data": "DB.cards" },
+          { "key": "cuenta", "label": "Cuentas", "data": "DB.accounts" },
+          { "key": "credito", "label": "Créditos", "data": "DB.credits" },
+          { "key": "inversion", "label": "Inversiones", "data": "DB.investments" }
+        ],
+        "rule": "prodTabsAll se filtra a prodTabs: solo entran las categorías con length > 0. El primer tab queda activo.",
+        "a11y": "role=\"tablist\" en el contenedor, role=\"tab\" + aria-selected en cada botón (se actualiza al cambiar)."
+      },
+      "carousel": {
+        "id": "prodXlHost",
+        "class": "prod-strip",
+        "css": {
+          "display": "flex",
+          "gap": "var(--s-4) / 16px",
+          "overflowX": "auto",
+          "scrollSnapType": "x mandatory",
+          "padding": "6px 2px 14px",
+          "scrollbar": "oculta (scrollbar-width:none + ::-webkit-scrollbar{display:none})"
+        },
+        "itemHeight": ".prod-strip .prod-xl { min-height: 219px } — homologa el alto de TODAS las categorías al de la tarjeta",
+        "builders": {
+          "tarjeta": "homeTarjetaCard(c)",
+          "cuenta": "homeAcctRow(a)",
+          "credito": "homeCreditRow(c)",
+          "inversion": "homeInvestRow(iv)"
+        }
+      },
+      "extra": {
+        "id": "prodXlExtra",
+        "class": "mt-4",
+        "description": "Card de resumen monetario de la categoría activa + fila de CTAs.",
+        "css": "card card--pad section",
+        "byCategory": {
+          "tarjeta": { "label": "Tus tarjetas con nosotros / Cupo disponible", "value": "N.cupoGlobalDisp", "caption": "de {N.cupoGlobal} de cupo total · compartido entre todas tus tarjetas" },
+          "cuenta": { "label": "Tu saldo total en cuentas con nosotros", "value": "suma de DB.accounts con estado ≠ 'cancelada'" },
+          "credito": { "label": "Total de tus créditos con nosotros", "value": "suma de DB.credits[].saldo", "masked": false },
+          "inversion": { "label": "Total de tus inversiones", "value": "suma de DB.investments[].monto" }
+        },
+        "valueStyle": { "class": "kpi__value num", "fontSize": "22px", "fontWeight": 700, "letterSpacing": "-.02em", "animation": "countUp" },
+        "labelStyle": { "class": "text-muted", "fontSize": "13px (12px en sublabels)" },
+        "ctaRow": {
+          "layout": ".row.wrap.mt-4 (gap 8px)",
+          "buttons": [
+            { "class": "btn btn--secondary btn--sm", "icon": "plus", "label": "por categoría (ver solicitarLabel)" },
+            { "class": "btn btn--ghost btn--sm", "label": "Ver todo", "icon": "chevron" }
+          ],
+          "solicitarLabel": {
+            "tarjeta": "Solicitar tarjeta adicional",
+            "prepago": "Solicitar prepago",
+            "cuenta": "Abrir cuenta",
+            "credito": "Solicitar crédito",
+            "inversion": "Invertir ahora"
+          },
+          "solicitarRoute": {
+            "tarjeta": "onboarding-signature",
+            "prepago": "ofertas",
+            "cuenta": "onboarding-blu-plus",
+            "credito": "sim-credito",
+            "inversion": "ofertas"
+          },
+          "seeAllNav": {
+            "tarjeta": "tarjetas",
+            "prepago": "tarjetas",
+            "cuenta": "cuentas?cat=cuenta",
+            "credito": "cuentas?cat=credito",
+            "inversion": "cuentas?cat=inversion"
+          },
+          "rule": "El botón de solicitud nunca es genérico: siempre nombra el producto de la categoría activa."
+        }
+      }
+    }
+  },
+
+  "productCards": {
+    "shell": {
+      "class": "prod-xl",
+      "element": "button",
+      "css": {
+        "flex": "0 0 clamp(230px, 68%, 280px)",
+        "scrollSnapAlign": "start",
+        "display": "flex",
+        "flexDirection": "column",
+        "textAlign": "left",
+        "background": "var(--surface)",
+        "border": "1px solid var(--line)",
+        "borderRadius": "var(--r-lg) / 20px",
+        "overflow": "hidden",
+        "boxShadow": "var(--e-1)",
+        "cursor": "pointer",
+        "transition": "transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease)"
+      },
+      "states": {
+        "hover": "transform translateY(-4px); box-shadow var(--e-3)",
+        "focus-visible": "outline 2px solid var(--primary); outline-offset 2px"
+      },
+      "parts": {
+        ".prod-xl__media": "padding 14px 14px 0 — solo tarjetas (contiene el arte)",
+        ".prod-xl__body": "padding 12px 14px 14px; flex 1; column",
+        ".prod-xl__name": "weight 700; var(--fs-14); color var(--ink)",
+        ".prod-xl__id": "11px; var(--muted); letter-spacing .06em; margin-top 2px",
+        ".prod-xl__amt": "21px; weight 800; letter-spacing -.02em; margin-top 8px",
+        ".prod-xl__sub": "11px; var(--muted); margin-top 3px"
+      },
+      "a11y": "aria-label=\"Abrir {nombre del producto}\" en cada botón"
+    },
+
+    "tarjeta": {
+      "builder": "homeTarjetaCard(c)",
+      "structure": ".prod-xl > .prod-xl__media (bank-card) + .prod-xl__body (Pagar hasta + badge)",
+      "art": {
+        "class": "bank-card",
+        "css": {
+          "aspectRatio": 1.62,
+          "borderRadius": "var(--r-md)",
+          "padding": "var(--s-5) / 20px",
+          "background": "var(--grad-card)",
+          "color": "#fff",
+          "boxShadow": "var(--e-2)",
+          "layout": "flex column, justify-content: space-between"
+        },
+        "decoration": {
+          "::before": "círculo 220px, radial rgba(255,255,255,.22), top -70px right -50px",
+          "::after": "círculo 160px, radial rgba(50,197,255,.35), bottom -60px left -30px"
+        },
+        "hover": "translateY(-4px) rotate(-.4deg) + var(--e-4)",
+        "variants": { "bank-card--black": "grafito", "bank-card--indigo": "índigo", "bank-card--teal": "teal", "default": "--grad-card navy" },
+        "content": {
+          ".bank-card__brand": { "text": "blu", "css": "weight 800; var(--fs-16); letter-spacing -.02em" },
+          ".bank-card__type": { "text": "{c.name} · {c.type}", "css": "10px; uppercase; letter-spacing .12em; opacity .82" },
+          ".bank-card__kind": { "text": "Principal | Adicional", "css": "9px; weight 800; uppercase; letter-spacing .1em; bg rgba(255,255,255,.18); border 1px solid rgba(255,255,255,.32); padding 2px 9px; radius 999px; margin-top 8px" },
+          ".bank-card__chip": { "css": "34x26px; radius 6px; linear-gradient(135deg,#f5d98b,#c9a24b); inset ring rgba(255,255,255,.4)" },
+          ".bank-card__number": { "text": "•••• {last4}", "css": "var(--fs-16); letter-spacing .12em; weight 500; class num" },
+          ".bank-card__foot": {
+            "css": "flex; justify-content space-between; align-items flex-end",
+            "small": "9px; uppercase; letter-spacing .1em; opacity .7",
+            "left": { "label": "Saldo consumido", "value": "money(c.deudaTotal)" },
+            "right": { "label": "Total a pagar", "value": "money(c.pagoTotal) o 'Al día'", "align": "right" }
+          }
+        },
+        "rule": "'Pagar hasta {fecha}' NUNCA va sobre el arte: se muestra en el body, debajo."
+      },
+      "body": {
+        "layout": ".row.between (gap 8px)",
+        "left": { "class": "prod-xl__sub", "text": "Pagar hasta {c.pago} (vacío si está al día)", "css": "margin:0" },
+        "right": {
+          "badge": {
+            "pagoTotal > 0": "badge badge--warning con <span class=\"dot\"></span> + 'Por pagar'",
+            "pagoTotal = 0": "badge badge--success + 'Al día'"
+          }
+        }
+      },
+      "a11y": "aria-label del arte: role=\"group\" + \"Tarjeta {name} {kind} terminación {last4}\"; tabindex=\"0\""
+    },
+
+    "cuentaCreditoInversion": {
+      "builders": ["homeAcctRow(a)", "homeCreditRow(c)", "homeInvestRow(iv)"],
+      "variant": "prod-xl acct-card-plain",
+      "description": "Card plana, sin arte de tarjeta, contenido centrado. Homologa los tres productos.",
+      "baseCss": {
+        ".acct-card-plain .prod-xl__body": "align-items center; text-align center; padding 24px top / 20px bottom",
+        ".acct-card-plain .prod__ic": "64x64px; radius 16px (icono 28px)",
+        ".acct-card-plain .prod-xl__name": "17px; margin-top 2px",
+        ".acct-card-plain .prod-xl__id": "13px; margin-top 4px",
+        ".acct-card-plain .prod-xl__sub": "13px; margin-top 6px; line-height 1.4"
+      },
+      "carouselOverrides": {
+        "context": ".prod-strip .acct-card-plain — compacta la card para igualar el alto de la tarjeta (219px)",
+        "rules": {
+          ".prod-xl__body": "padding 14px arriba/abajo; justify-content center",
+          ".prod__ic": "42x42px; radius 12px; margin-bottom 4px !important (icono 21px)",
+          ".prod-xl__name": "15px",
+          ".prod-xl__id": "12px; margin-top 2px",
+          ".prod-xl__amt": "margin-top 8px !important (tamaño 22px por estilo inline)",
+          ".prod-xl__sub": "12px; margin-top 3px; nowrap + ellipsis",
+          ".acct-interes": "margin-top 8px !important; font-size 12px; padding 4px 10px"
+        }
+      },
+      "icon": {
+        "class": "prod__ic prod__ic--{acct|credit|invest}",
+        "inline": "margin: 0 auto 8px",
+        "tints": {
+          "acct": { "bg": "rgba(42,63,110,.12)", "fg": "#2E4A82", "icon": "wallet", "label": "navy corporativo" },
+          "credit": { "bg": "rgba(84,91,108,.15)", "fg": "#4A5262", "icon": "coins", "label": "grafito" },
+          "invest": { "bg": "rgba(70,63,156,.14)", "fg": "#453FA0", "icon": "chart", "label": "índigo" }
+        }
+      },
+      "pill": {
+        "class": "acct-interes",
+        "purpose": "Dato destacado de la card: interés del mes o estado del crédito.",
+        "css": {
+          "display": "inline-flex",
+          "alignSelf": "center",
+          "gap": "5px",
+          "marginTop": "16px",
+          "background": "var(--success-bg)",
+          "color": "var(--success)",
+          "fontSize": "13px",
+          "fontWeight": 800,
+          "padding": "6px 13px",
+          "borderRadius": "var(--r-full)",
+          "boxShadow": "0 2px 8px rgba(11,127,69,.18)",
+          "border": "1px solid color-mix(in srgb, var(--success) 25%, transparent)",
+          "iconSize": "15px",
+          "strong": "font-weight 900"
+        },
+        "variants": {
+          "acct-interes--warn": { "bg": "var(--warn-bg)", "color": "var(--warn)", "shadow": "0 2px 8px rgba(183,121,31,.18)" },
+          "acct-interes--danger": { "bg": "var(--error-bg)", "color": "var(--error)", "shadow": "0 2px 8px rgba(220,38,38,.18)" }
+        }
+      },
+      "perProduct": {
+        "cuenta": {
+          "name": "a.name",
+          "id": "{a.type} · {a.num} (+ ' · Cancelada' si aplica)",
+          "amount": "money(a.saldo) — enmascarable",
+          "sub": "'Saldo disponible' | 'Saldo por retirar · cuenta cerrada' si cancelada",
+          "pill": "a.interesMes → '+{monto} este mes' (verde) | si cancelada → acct-interes--warn 'Retira tu saldo' con icono alert"
+        },
+        "credito": {
+          "name": "c.name",
+          "id": "c.num",
+          "amount": "money(c.saldo) | 'Consultar' si consultarDiners",
+          "sub": "'Consulta el total con Diners' | 'Pago inmediato' si mora | 'Vence {c.prox}'",
+          "pill": "creditEstado(c.estado) → verde (check) / warn / danger (alert) con e.label",
+          "note": "El importe del crédito NO se enmascara (no depende de State.masked)."
+        },
+        "inversion": {
+          "name": "iv.tipo || iv.name",
+          "id": "···{iv.last4} · {iv.tasa}",
+          "amount": "money(iv.monto) — enmascarable",
+          "sub": "'Sin plazo fijo' | 'Fecha de finalización: {iv.vence}'",
+          "pill": "'+{iv.interesMes} este mes' (verde, icono arrowUp) — enmascarable a '••••'"
+        }
+      }
+    }
+  },
+
+  "state": {
+    "masked": {
+      "flag": "State.masked",
+      "toggle": "toggleMask() → re-render completo",
+      "placeholder": { "importes": "••••••", "conSímbolo": "$ ••••••", "pill": "••••" },
+      "aplica": ["bank-card__foot (ambos valores)", "saldo de cuenta", "monto de inversión", "interés de inversión", "resumen de cupo/saldo/inversiones en prodXlExtra"],
+      "noAplica": ["saldo de crédito", "total de créditos", "cifras de ventas"]
+    },
+    "theme": {
+      "flag": "State.theme",
+      "toggle": "toggleTheme() — persiste en localStorage['blu-theme']",
+      "impacto": "Todos los bloques usan tokens semánticos, así que el Home se adapta sin reglas propias. Única salvedad: `.prod-tabs button.is-active` usa var(--blu-900), que en dark se resuelve al valor oscuro del skin."
+    },
+    "tabActiva": {
+      "storage": "no persiste — al re-render vuelve a prodTabs[0]",
+      "handler": "onclick sobre #prodTabs [data-c] → limpia .is-active y aria-selected, activa el clickeado, llama renderProducts(kind)"
+    }
+  },
+
+  "responsive": {
+    "≥1280px": ".content sin max-width — el Home usa todo el ancho junto al menú",
+    "1080px": ".grid-4 pasa a 2 columnas (no afecta bloques propios del Home)",
+    "860px": "sidebar → bottom-nav; --topbar-h baja a 60px",
+    "760px": ".sales-summary pasa a 1 columna y .sales-card cambia a text-align:left",
+    "640px": ".prod-summary a 1 columna",
+    "carrusel": "El .prod-strip nunca cambia de layout: en móvil el clamp(230px, 68%, 280px) hace que se vea ~1 card + el borde de la siguiente, invitando al swipe.",
+    "regla": "La página nunca hace scroll horizontal: el desbordamiento vive dentro de .prod-strip y .scroll-x."
+  },
+
+  "accessibility": {
+    "landmarks": "El Home se monta dentro de .content del shell; los bloques usan h1 → h2(.h3) sin saltos de nivel.",
+    "checklist": [
+      "h1 = nombre de la empresa; los títulos de sección son h2 con clase .h3 (tamaño visual, no nivel semántico).",
+      "Los 3 icon-btn del encabezado tienen aria-label; el tooltip .tip es refuerzo visual, no la única fuente.",
+      "El chip de cambio de empresa lleva aria-label=\"Cambiar de empresa\".",
+      "Tabs de producto: role=\"tablist\" / role=\"tab\" / aria-selected actualizado en cada cambio.",
+      "Cada .prod-xl es un <button> con aria-label descriptivo — navegable por teclado por defecto.",
+      "El arte de tarjeta lleva role=\"group\", tabindex=\"0\" y aria-label con nombre, tipo y terminación.",
+      "Los estados ('Por pagar', 'Al día', 'En mora') siempre llevan texto además del color.",
+      "focus-visible: .sales-card y .prod-xl declaran su propio anillo; no eliminar."
+    ],
+    "pendiente": "El badge numérico '3' de Aprobaciones es decorativo respecto al aria-label del botón; si se vuelve accionable conviene incluir el conteo en el propio aria-label."
+  },
+
+  "data": {
+    "DB.empresa": ["name", "otras[]"],
+    "DB.user": ["first"],
+    "DB.net": ["activo", "cupoGlobal", "cupoGlobalDisp"],
+    "DB.ventasResumen": ["ventasMes", "crecimiento", "pagosRecibidos", "porCobrar", "periodo", "fechaCobro"],
+    "DB.cards": ["id", "name", "type", "last4", "variant", "pagoTotal", "deudaTotal", "pago", "kind|principal"],
+    "DB.accounts": ["id", "name", "type", "num", "saldo", "interesMes", "estado"],
+    "DB.credits": ["id", "name", "num", "saldo", "estado", "prox"],
+    "DB.investments": ["id", "name", "tipo", "last4", "tasa", "monto", "vence", "interesMes"],
+    "formatters": {
+      "money(n, sign)": "$1.890,00 — `sign` antepone +/−",
+      "moneyParts(n)": "{ int, dec } para separar centavos",
+      "bigMoney(n)": "entero grande + centavos en .cents (solo en sales-card)",
+      "creditEstado(estado)": "{ label, cls, consultarDiners } para pill y badge"
+    }
+  },
+
+  "doNot": [
+    "No devolver la 'posición consolidada' a la portada: el dato de portada es la venta.",
+    "No mostrar un tab de categoría sin productos — prodTabs ya filtra por length.",
+    "No poner 'Pagar hasta' ni el cupo sobre el arte de la tarjeta.",
+    "No romper el alto homologado: cualquier card nueva en .prod-strip respeta min-height 219px.",
+    "No usar un botón 'Solicitar' genérico — siempre nombra el producto de la categoría activa.",
+    "No escribir colores/tamaños literales: todo lo nuevo sale de los tokens de design-system.json.",
+    "No agregar un segundo botón primario al Home: la jerarquía de acción es secundaria + ghost."
+  ],
+
+  "extensionGuide": {
+    "agregarCategoriaDeProducto": [
+      "1. Añadir la fuente de datos en `prodData` y la entrada en `prodTabsAll`.",
+      "2. Escribir el builder `homeXxxRow(item)` reutilizando `prod-xl acct-card-plain`.",
+      "3. Registrarlo en `cardBuilder`.",
+      "4. Agregar la rama en `prodExtra(kind)` con su total y CTAs.",
+      "5. Añadir entradas en `seeAllNav`, `solicitarRoute` y `solicitarLabel`.",
+      "6. Definir el tinte del icono en `.prod__ic--*` si es un tipo nuevo."
+    ],
+    "agregarKpiDeVentas": [
+      "Añadir un cuarto <button class=\"sales-card\"> — la grilla es repeat(3, 1fr): actualizar a repeat(4, 1fr) y revisar el breakpoint de 760px."
+    ]
+  }
+}

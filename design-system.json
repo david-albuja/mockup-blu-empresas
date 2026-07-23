@@ -720,7 +720,13 @@
     ]
   },
 
+  "screenSpecs": {
+    "description": "Especificaciones por pantalla que extienden este documento. Leer la spec de la pantalla antes de modificarla.",
+    "inicio": "specs/home.json"
+  },
+
   "fileMap": {
+    "specs/home.json": "Especificación completa de la pantalla de Inicio",
     "index.html": "Entrada de la app; carga los scripts con ?v=N",
     "design-system.html": "Showcase navegable del DS — actualizar al agregar un componente",
     "presentacion.html": "Presentación del rediseño",
