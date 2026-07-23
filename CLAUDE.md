@@ -22,6 +22,7 @@ Reglas no negociables (el detalle está en el JSON):
 Extienden el DS con la anatomía, CSS y datos de una pantalla concreta. Léelas antes de tocar esa pantalla.
 
 - Inicio → [`specs/home.json`](specs/home.json)
+- Carrusel de productos (caja, bordes, resize del arte de TC) → [`specs/card-carousel.json`](specs/card-carousel.json)
 
 ## Estructura
 
