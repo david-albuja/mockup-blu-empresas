@@ -1,0 +1,709 @@
+{
+  "meta": {
+    "name": "BLU Empresas — Historias de Usuario del mockup",
+    "descripcion": "Historias de Usuario (HU) de todas las pantallas del prototipo web BLU Empresas, redactadas en el formato aceptado por el equipo Diners Blu 2.0.",
+    "formatoBasadoEn": {
+      "workItem": 11263,
+      "titulo": "2.6 Aviso de cambio de contraseña (necesario) | Majo",
+      "url": "https://dev.azure.com/devopsdc-1/Diners%20Blu%202.0/_workitems/edit/11263",
+      "estructuraAceptada": [
+        "Título con numeración jerárquica (módulo.secuencia) + nombre + (calificador) + responsable",
+        "Descripción en formato Como / Quiero / Para",
+        "Criterios de aceptación en Gherkin español (Dado que… entonces…), numerados, con los textos literales de la interfaz y referencia al prototipo",
+        "Definition of Ready (dependencias listas)",
+        "Definition of Done (Cumplimiento de los criterios de aceptación)",
+        "Services (impacto en servicios core / backend)",
+        "Tags (Canal + tema)",
+        "Story Points (Fibonacci) · Value Area: Business"
+      ]
+    },
+    "workItemType": "User Story",
+    "valueArea": "Business",
+    "prototipo": "https://david-albuja.github.io/mockup-blu-empresas/",
+    "definitionOfDoneGlobal": "Cumplimiento de los criterios de aceptación.",
+    "version": "1.0.0",
+    "updated": "2026-07-27",
+    "totalHU": 37
+  },
+
+  "canales": [
+    {
+      "id": "C1",
+      "nombre": "Accesos y Seguridad",
+      "tag": "C1: Accesos y Seguridades",
+      "hus": [
+        {
+          "id": "1.1",
+          "titulo": "1.1 Ingreso a la banca empresas con usuario y contraseña",
+          "ruta": "#/login",
+          "storyPoints": 8,
+          "tags": ["C1: Accesos y Seguridades", "login"],
+          "descripcion": { "como": "usuario registrado de la empresa", "quiero": "ingresar a la banca web con mi usuario y contraseña", "para": "acceder de forma segura a los productos y operaciones de mi empresa" },
+          "criterios": [
+            "Dado que estoy en la pantalla de ingreso, cuando ingreso un usuario y una contraseña válidos y presiono «Ingresar», entonces el sistema me autentica y me presenta el Inicio.",
+            "Dado que dejo el usuario o la contraseña vacíos, cuando presiono «Ingresar», entonces el sistema marca el campo faltante en estado de error y no envía el formulario.",
+            "Dado que las credenciales son incorrectas, cuando presiono «Ingresar», entonces el sistema muestra un mensaje de error claro sin revelar cuál de los dos datos es inválido.",
+            "Dado que no tengo usuario, cuando visualizo la pantalla, entonces veo el enlace «Crea tu usuario aquí» que me lleva a la creación de usuario.",
+            "El botón «Ingresar» muestra estado de carga mientras se valida y se deshabilita para evitar doble envío."
+          ],
+          "definitionOfReady": "Diseño de la pantalla de ingreso aprobado; servicio de autenticación disponible.",
+          "services": "Consume el servicio core de autenticación de usuario empresas."
+        },
+        {
+          "id": "1.2",
+          "titulo": "1.2 Registro de nuevo usuario",
+          "ruta": "#/registro",
+          "storyPoints": 5,
+          "tags": ["C1: Accesos y Seguridades", "registro"],
+          "descripcion": { "como": "representante de una empresa cliente", "quiero": "registrar un nuevo usuario para la banca web", "para": "habilitar el acceso de mi empresa al canal" },
+          "criterios": [
+            "Dado que estoy en el registro, cuando completo los datos requeridos y continúo, entonces el sistema valida la información y avanza al siguiente paso.",
+            "Dado que un dato obligatorio está vacío o mal formado, cuando intento continuar, entonces el sistema lo marca en error y no avanza.",
+            "Al finalizar el registro, el sistema confirma el alta y guía al usuario hacia la creación de su clave."
+          ],
+          "definitionOfReady": "Reglas de validación de identidad definidas.",
+          "services": "Consume servicio de alta/registro de usuario empresas."
+        },
+        {
+          "id": "1.3",
+          "titulo": "1.3 Creación de usuario y clave de acceso",
+          "ruta": "#/crear-usuario",
+          "storyPoints": 5,
+          "tags": ["C1: Accesos y Seguridades", "clave"],
+          "descripcion": { "como": "usuario invitado", "quiero": "crear mi usuario y mi clave de acceso", "para": "activar mi ingreso a la banca web" },
+          "criterios": [
+            "Dado que recibí la invitación, cuando defino una clave que cumple la política de seguridad, entonces el sistema la acepta y activa mi acceso.",
+            "Dado que la clave no cumple la política (longitud, complejidad), cuando intento guardarla, entonces el sistema muestra los requisitos incumplidos.",
+            "Dado que la confirmación de clave no coincide, cuando intento guardar, entonces el sistema lo indica y no permite continuar."
+          ],
+          "definitionOfReady": "Política de contraseñas parametrizada.",
+          "services": "Consume servicio de creación de credenciales."
+        },
+        {
+          "id": "1.4",
+          "titulo": "1.4 Recuperar contraseña",
+          "ruta": "#/recuperar",
+          "storyPoints": 5,
+          "tags": ["C1: Accesos y Seguridades", "recuperación"],
+          "descripcion": { "como": "usuario que olvidó su contraseña", "quiero": "recuperar el acceso a la banca web", "para": "volver a ingresar sin perder la continuidad de mi operación" },
+          "criterios": [
+            "Dado que no recuerdo mi contraseña, cuando selecciono «Recuperar contraseña», entonces el sistema me guía por el flujo de recuperación.",
+            "Dado que completo la verificación de identidad, cuando continúo, entonces el sistema me permite definir una nueva contraseña.",
+            "El flujo redirige o instruye el canal correcto (app) según la política vigente."
+          ],
+          "definitionOfReady": "Flujo de recuperación y canal definidos.",
+          "services": "Consume servicio de recuperación de credenciales."
+        },
+        {
+          "id": "1.5",
+          "titulo": "1.5 Recuperar datos de acceso",
+          "ruta": "#/recuperar-datos",
+          "storyPoints": 3,
+          "tags": ["C1: Accesos y Seguridades", "recuperación"],
+          "descripcion": { "como": "usuario que olvidó su usuario", "quiero": "recuperar mis datos de acceso", "para": "poder iniciar sesión nuevamente" },
+          "criterios": [
+            "Dado que olvidé mi usuario, cuando ingreso los datos de verificación, entonces el sistema me ayuda a recuperar mi identificador de acceso.",
+            "Dado que la verificación falla, cuando continúo, entonces el sistema muestra un mensaje con la vía de contacto o reintento."
+          ],
+          "definitionOfReady": "Datos de verificación de identidad definidos.",
+          "services": "Consume servicio de consulta de usuario por identidad."
+        },
+        {
+          "id": "1.6",
+          "titulo": "1.6 Cambiar contraseña",
+          "ruta": "#/cambiar-clave",
+          "storyPoints": 3,
+          "tags": ["C1: Accesos y Seguridades", "clave"],
+          "descripcion": { "como": "usuario autenticado", "quiero": "cambiar mi contraseña", "para": "cumplir con las políticas de seguridad y proteger mi cuenta" },
+          "criterios": [
+            "Dado que estoy autenticado, cuando ingreso mi contraseña actual y una nueva válida, entonces el sistema actualiza la contraseña y confirma el cambio.",
+            "Dado que la contraseña actual es incorrecta, cuando intento guardar, entonces el sistema lo indica y no realiza el cambio.",
+            "Dado que la nueva contraseña no cumple la política, cuando intento guardar, entonces el sistema muestra los requisitos incumplidos."
+          ],
+          "definitionOfReady": "Política de contraseñas parametrizada.",
+          "services": "Consume servicio de actualización de credenciales."
+        },
+        {
+          "id": "1.7",
+          "titulo": "1.7 Cierre de sesión",
+          "ruta": "#/logout",
+          "storyPoints": 2,
+          "tags": ["C1: Accesos y Seguridades", "logout"],
+          "descripcion": { "como": "usuario autenticado", "quiero": "cerrar mi sesión", "para": "proteger mi información al terminar de usar la banca" },
+          "criterios": [
+            "Dado que estoy operando, cuando selecciono «Cerrar sesión», entonces el sistema finaliza la sesión y me lleva a la pantalla de ingreso.",
+            "Tras cerrar sesión, el sistema no permite regresar a pantallas privadas con el botón «atrás» del navegador."
+          ],
+          "definitionOfReady": "Manejo de sesión definido.",
+          "services": "Invalida el token de sesión."
+        }
+      ]
+    },
+
+    {
+      "id": "C2",
+      "nombre": "Inicio",
+      "tag": "C2: Inicio",
+      "hus": [
+        {
+          "id": "2.1",
+          "titulo": "2.1 Encabezado de empresa y accesos rápidos en el Inicio",
+          "ruta": "#/inicio",
+          "storyPoints": 5,
+          "tags": ["C2: Inicio", "home"],
+          "descripcion": { "como": "usuario de una empresa con varias razones sociales", "quiero": "ver la empresa activa y tener accesos rápidos a las operaciones frecuentes", "para": "identificar sobre qué empresa opero y actuar sin navegar de más" },
+          "criterios": [
+            "Dado que ingreso al Inicio, entonces veo el nombre de la empresa activa como título y el saludo «Hola, {nombre}».",
+            "Dado que tengo más de una empresa, cuando selecciono «Cambiar», entonces el sistema me permite elegir otra razón social.",
+            "En el encabezado veo accesos rápidos a Transferir, Pago masivo y Aprobaciones; Aprobaciones muestra un contador de pendientes.",
+            "Veo el acceso a ClubMiles con el saldo disponible."
+          ],
+          "definitionOfReady": "Diseño del Inicio aprobado (specs/home.json).",
+          "services": "Consume datos de empresa, usuario y contadores de pendientes."
+        },
+        {
+          "id": "2.2",
+          "titulo": "2.2 Resumen de ventas (adquirencia) en el Inicio",
+          "ruta": "#/inicio",
+          "storyPoints": 5,
+          "tags": ["C2: Inicio", "ventas"],
+          "descripcion": { "como": "comercio afiliado", "quiero": "ver un resumen de mis ventas en la portada", "para": "conocer de un vistazo el desempeño de mi adquirencia" },
+          "criterios": [
+            "Dado que ingreso al Inicio, entonces veo tres tarjetas: «Ventas del mes» (destacada, con % de crecimiento), «Pagos recibidos» y «Total por cobrar».",
+            "Cada tarjeta muestra el importe con separador de miles y centavos en menor jerarquía, y su periodo.",
+            "Dado que selecciono «Mira el detalle» o cualquier tarjeta, entonces el sistema me lleva al detalle de Ventas."
+          ],
+          "definitionOfReady": "Definición de indicadores de venta con negocio.",
+          "services": "Consume servicio de resumen de adquirencia/ventas."
+        },
+        {
+          "id": "2.3",
+          "titulo": "2.3 Tus productos: carrusel por categoría con Solicitar y Ver todo",
+          "ruta": "#/inicio",
+          "storyPoints": 8,
+          "tags": ["C2: Inicio", "productos"],
+          "descripcion": { "como": "usuario con productos contratados", "quiero": "ver mis productos agrupados por categoría en el Inicio", "para": "acceder rápido a cada producto y solicitar nuevos" },
+          "criterios": [
+            "Dado que tengo productos, entonces veo pestañas por categoría (Tarjetas, Cuentas, Créditos, Inversiones) y solo aparecen las categorías que efectivamente tengo.",
+            "Dado que selecciono una categoría, entonces veo mis productos en un carrusel horizontal donde todas las tarjetas mantienen el mismo alto.",
+            "Cada categoría muestra un resumen (total/cupo) y los botones «Solicitar {producto}» y «Ver todo»; el botón de solicitud nombra el producto de la categoría activa.",
+            "Dado que selecciono un producto, entonces el sistema abre su detalle."
+          ],
+          "definitionOfReady": "Homologación de cards de producto aprobada (specs/card-carousel.json).",
+          "services": "Consume el consolidado de productos del cliente."
+        }
+      ]
+    },
+
+    {
+      "id": "C3",
+      "nombre": "Productos",
+      "tag": "C3: Productos",
+      "hus": [
+        {
+          "id": "3.1",
+          "titulo": "3.1 Listado de tarjetas propias y adicionales",
+          "ruta": "#/tarjetas",
+          "storyPoints": 5,
+          "tags": ["C3: Productos", "tarjetas"],
+          "descripcion": { "como": "titular de tarjetas", "quiero": "ver mis tarjetas separadas entre propias y adicionales", "para": "identificar cada tarjeta y entrar a su detalle" },
+          "criterios": [
+            "Dado que ingreso a Tarjetas, entonces veo los grupos «Tus tarjetas» y «Tus adicionales» con badge de estado por tarjeta.",
+            "Dado que selecciono una tarjeta, entonces el sistema abre su detalle.",
+            "Las tarjetas adicionales muestran el titular."
+          ],
+          "definitionOfReady": "Modelo de tarjetas propio/adicional definido.",
+          "services": "Consume el listado de tarjetas del cliente."
+        },
+        {
+          "id": "3.2",
+          "titulo": "3.2 Detalle de tarjeta de crédito",
+          "ruta": "#/detalle-producto?id=diners",
+          "storyPoints": 8,
+          "tags": ["C3: Productos", "tarjetas"],
+          "descripcion": { "como": "titular de una tarjeta de crédito", "quiero": "ver el detalle de mi tarjeta con sus atajos", "para": "consultar cupo, saldo y realizar acciones sobre la tarjeta" },
+          "criterios": [
+            "Dado que abro el detalle, entonces veo el arte de la tarjeta con «Saldo consumido» y «Total a pagar», y «Pagar hasta {fecha}» fuera del arte.",
+            "Veo el cupo disponible de la tarjeta.",
+            "Veo la barra de atajos: Diferir, Configurar, Bloquear, Beneficios, Spend Analyzer, Certificado y Solicitar adicional.",
+            "Dado que selecciono un atajo, entonces el sistema me lleva a la operación correspondiente."
+          ],
+          "definitionOfReady": "Diseño de detalle de tarjeta aprobado.",
+          "services": "Consume detalle, cupo y movimientos de la tarjeta."
+        },
+        {
+          "id": "3.3",
+          "titulo": "3.3 Configurar tarjeta: canales, límite y alertas",
+          "ruta": "#/config-tarjeta",
+          "storyPoints": 8,
+          "tags": ["C3: Productos", "tarjetas"],
+          "descripcion": { "como": "titular de una tarjeta", "quiero": "configurar los canales de uso, el límite diario y las alertas", "para": "controlar cómo y dónde se usa mi tarjeta" },
+          "criterios": [
+            "Dado que abro Configurar, entonces veo secciones «Uso en Ecuador», «Uso fuera de Ecuador», «Límite de consumo diario» y «Alertas».",
+            "Dado que un control es obligatorio, entonces se muestra marcado, deshabilitado y con la leyenda «· Obligatorio».",
+            "Dado que cambio el límite de consumo diario, cuando guardo, entonces el sistema confirma la actualización.",
+            "Cada cambio de canal o alerta muestra confirmación de la preferencia actualizada."
+          ],
+          "definitionOfReady": "Reglas de canales y límites definidas.",
+          "services": "Consume servicios de configuración de canales, límites y alertas."
+        },
+        {
+          "id": "3.4",
+          "titulo": "3.4 Tarjetas adicionales",
+          "ruta": "#/tarjetas-adicionales",
+          "storyPoints": 3,
+          "tags": ["C3: Productos", "tarjetas"],
+          "descripcion": { "como": "titular principal", "quiero": "ver y gestionar las tarjetas adicionales", "para": "administrar los accesos de mis adicionales" },
+          "criterios": [
+            "Dado que abro Adicionales, entonces veo el listado con el titular de cada tarjeta adicional.",
+            "Dado que selecciono «Nueva adicional», entonces el sistema inicia la solicitud de tarjeta adicional."
+          ],
+          "definitionOfReady": "Modelo de adicionales definido.",
+          "services": "Consume el listado de adicionales."
+        },
+        {
+          "id": "3.5",
+          "titulo": "3.5 Solicitar tarjeta (flujo preaprobado)",
+          "ruta": "#/onboarding-signature",
+          "storyPoints": 8,
+          "tags": ["C3: Productos", "contratación"],
+          "descripcion": { "como": "cliente con oferta preaprobada", "quiero": "solicitar una tarjeta en pocos pasos", "para": "obtener el producto sin trámites extensos" },
+          "criterios": [
+            "Dado que tengo oferta preaprobada, cuando inicio la solicitud, entonces veo el bloque de preaprobado y un wizard corto (3 pasos).",
+            "Dado que completo Celular, Correo y el cupo solicitado, cuando el dato es obligatorio y está vacío, entonces el sistema lo marca en error.",
+            "Al finalizar, el sistema confirma la solicitud con un modal de éxito."
+          ],
+          "definitionOfReady": "Motor de preaprobados disponible.",
+          "services": "Consume oferta preaprobada y servicio de solicitud de producto."
+        },
+        {
+          "id": "3.6",
+          "titulo": "3.6 Prepago: listado y búsqueda",
+          "ruta": "#/prepago",
+          "storyPoints": 3,
+          "tags": ["C3: Productos", "prepago"],
+          "descripcion": { "como": "administrador de tarjetas prepago", "quiero": "buscar y ver mis tarjetas prepago", "para": "ubicar rápidamente una tarjeta por titular o número" },
+          "criterios": [
+            "Dado que abro Prepago, entonces veo mis tarjetas prepago con su titular y saldo.",
+            "Dado que escribo en el buscador, cuando coincide el nombre del titular o los últimos 4 dígitos, entonces el listado se filtra.",
+            "Dado que selecciono una tarjeta, entonces veo su detalle."
+          ],
+          "definitionOfReady": "Modelo de prepago con titular definido.",
+          "services": "Consume el listado de prepago del cliente."
+        },
+        {
+          "id": "3.7",
+          "titulo": "3.7 Detalle de cuenta",
+          "ruta": "#/detalle-producto?id=ahorros",
+          "storyPoints": 5,
+          "tags": ["C3: Productos", "cuentas"],
+          "descripcion": { "como": "titular de una cuenta", "quiero": "ver el detalle de mi cuenta con sus atajos", "para": "consultar el saldo y operar sobre la cuenta" },
+          "criterios": [
+            "Dado que abro el detalle de cuenta, entonces veo el saldo disponible y los datos de la cuenta.",
+            "Veo la barra de atajos: Transferir, Pagar, Retirar, Configurar y Certificado.",
+            "Dado que selecciono «Certificado», entonces el sistema me lleva a Certificados bancarios."
+          ],
+          "definitionOfReady": "Diseño de detalle de cuenta aprobado.",
+          "services": "Consume saldo y movimientos de la cuenta."
+        },
+        {
+          "id": "3.8",
+          "titulo": "3.8 Detalle de crédito con tabla de amortización",
+          "ruta": "#/detalle-producto?id=consumo",
+          "storyPoints": 8,
+          "tags": ["C3: Productos", "créditos"],
+          "descripcion": { "como": "titular de un crédito", "quiero": "ver el detalle de mi crédito y su tabla de amortización", "para": "conocer el estado del crédito y mis cuotas" },
+          "criterios": [
+            "Dado que abro el detalle, entonces veo capital otorgado, capital pagado, saldo del capital, tasa nominal y efectiva, fecha de desembolso, fecha de finalización, deuda a la fecha y estado.",
+            "Dado que el crédito está en mora, entonces veo el botón «Pagar cuota»; si está al día, veo el estado «al día» sin botón de pago.",
+            "Veo la tabla de amortización con opción de exportar a Excel."
+          ],
+          "definitionOfReady": "Datos de crédito y amortización disponibles.",
+          "services": "Consume detalle de crédito y tabla de amortización."
+        },
+        {
+          "id": "3.9",
+          "titulo": "3.9 Pago de cuota de crédito",
+          "ruta": "#/pago-credito?id=consumo",
+          "storyPoints": 5,
+          "tags": ["C3: Productos", "créditos"],
+          "descripcion": { "como": "titular de un crédito en mora", "quiero": "pagar la cuota del mes", "para": "regularizar mi crédito" },
+          "criterios": [
+            "Dado que abro el pago, entonces veo la «Cuota del mes» a pagar y la cuenta de origen.",
+            "Dado que confirmo el pago, entonces el sistema registra la operación como «pendiente de autorizar».",
+            "El sistema me lleva a la pantalla de operación pendiente de autorizar."
+          ],
+          "definitionOfReady": "Servicio de pago de crédito disponible.",
+          "services": "Consume servicio de pago de crédito y flujo de autorización."
+        },
+        {
+          "id": "3.10",
+          "titulo": "3.10 Simulador de crédito",
+          "ruta": "#/sim-credito",
+          "storyPoints": 5,
+          "tags": ["C3: Productos", "créditos"],
+          "descripcion": { "como": "cliente interesado en un crédito", "quiero": "simular un crédito", "para": "conocer la cuota estimada antes de solicitarlo" },
+          "criterios": [
+            "Dado que tengo un preaprobado, entonces veo el bloque de monto disponible.",
+            "Dado que ingreso el monto y selecciono el destino, cuando el destino es obligatorio y está vacío, entonces el sistema lo marca en error y no continúa.",
+            "Dado que la simulación es válida, cuando continúo, entonces el sistema muestra el resultado y confirma con un modal."
+          ],
+          "definitionOfReady": "Motor de simulación disponible.",
+          "services": "Consume servicio de simulación de crédito."
+        },
+        {
+          "id": "3.11",
+          "titulo": "3.11 Detalle de inversión",
+          "ruta": "#/detalle-producto?id=dpf",
+          "storyPoints": 5,
+          "tags": ["C3: Productos", "inversiones"],
+          "descripcion": { "como": "titular de una inversión", "quiero": "ver el detalle de mi inversión", "para": "conocer su rendimiento y condiciones" },
+          "criterios": [
+            "Dado que abro el detalle, entonces veo monto final a recibir, total de intereses, retención por rendimiento, plazo en días, fecha de emisión, fecha de finalización, tipo de pago de intereses, beneficiarios, tasa anual y estado.",
+            "Veo los atajos «Certificado» y «Renovar».",
+            "Veo el aviso de que al culminar la inversión la cuenta de la inversión se cierra."
+          ],
+          "definitionOfReady": "Datos de inversión disponibles.",
+          "services": "Consume detalle de inversión y movimientos."
+        },
+        {
+          "id": "3.12",
+          "titulo": "3.12 Para ti: catálogo de productos",
+          "ruta": "#/ofertas",
+          "storyPoints": 3,
+          "tags": ["C3: Productos", "contratación"],
+          "descripcion": { "como": "cliente", "quiero": "ver el catálogo de productos ofertados", "para": "conocer y contratar nuevos productos" },
+          "criterios": [
+            "Dado que abro «Para ti», entonces veo el catálogo de productos disponibles para contratar.",
+            "Dado que selecciono un producto, entonces el sistema inicia su contratación."
+          ],
+          "definitionOfReady": "Catálogo de ofertas definido.",
+          "services": "Consume el catálogo de productos ofertados."
+        },
+        {
+          "id": "3.13",
+          "titulo": "3.13 Abrir cuenta (BLU+)",
+          "ruta": "#/onboarding-blu-plus",
+          "storyPoints": 8,
+          "tags": ["C3: Productos", "contratación"],
+          "descripcion": { "como": "cliente que desea una nueva cuenta", "quiero": "abrir una cuenta desde el catálogo", "para": "contratar el producto en pocos pasos" },
+          "criterios": [
+            "Dado que inicio la apertura, entonces veo el catálogo de cuentas y una tarjeta lateral sin imagen tipo tarjeta.",
+            "Dado que defino el nombre de la cuenta y el monto objetivo, entonces el monto se ingresa como campo editable (sin meta de ahorro ni fecha objetivo).",
+            "El flujo tiene 4 pasos si soy cliente y 3 si no; al finalizar el sistema confirma la apertura."
+          ],
+          "definitionOfReady": "Flujo de apertura BLU+ aprobado.",
+          "services": "Consume servicio de apertura de cuenta."
+        }
+      ]
+    },
+
+    {
+      "id": "C4",
+      "nombre": "Pagos y Transferencias",
+      "tag": "C4: Pagos y Transferencias",
+      "hus": [
+        {
+          "id": "4.1",
+          "titulo": "4.1 Transferir dinero a cuentas propias, terceros u otros bancos",
+          "ruta": "#/transferencias",
+          "storyPoints": 8,
+          "tags": ["C4: Pagos y Transferencias", "transferencias"],
+          "descripcion": { "como": "usuario con permiso de operación", "quiero": "transferir dinero a distintos destinos", "para": "mover fondos de mi empresa de forma ágil" },
+          "criterios": [
+            "Dado que abro Transferir, entonces veo la flecha «Volver» y puedo elegir el origen, el destinatario y el monto.",
+            "Dado que confirmo la transferencia, entonces el sistema registra la operación como «pendiente de autorizar».",
+            "Dado que un dato obligatorio está vacío, cuando intento continuar, entonces el sistema lo marca en error."
+          ],
+          "definitionOfReady": "Servicio de transferencias disponible.",
+          "services": "Consume servicio de transferencias y flujo de autorización."
+        },
+        {
+          "id": "4.2",
+          "titulo": "4.2 Nuevo destinatario por tipo de banco",
+          "ruta": "#/transferencias",
+          "storyPoints": 8,
+          "tags": ["C4: Pagos y Transferencias", "transferencias"],
+          "descripcion": { "como": "usuario que transfiere a un nuevo beneficiario", "quiero": "registrar un destinatario según el tipo de banco", "para": "enviar dinero validando correctamente al beneficiario" },
+          "criterios": [
+            "Dado que elijo un destinatario nuevo, cuando selecciono Diners, entonces solo pido cuenta y verificación de nombre.",
+            "Dado que selecciono Banred, entonces pido cuenta, identificación y verificación de nombre.",
+            "Dado que selecciono SPI (otros bancos), entonces pido cuenta, identificación y nombre, sin verificación en línea.",
+            "Dado que verifico el nombre, entonces el sistema muestra el titular resuelto; puedo guardar el destinatario como favorito."
+          ],
+          "definitionOfReady": "Reglas por tipo de banco definidas.",
+          "services": "Consume servicio de validación de cuenta/beneficiario."
+        },
+        {
+          "id": "4.3",
+          "titulo": "4.3 Pago de tarjeta",
+          "ruta": "#/pago-tarjeta",
+          "storyPoints": 5,
+          "tags": ["C4: Pagos y Transferencias", "pagos"],
+          "descripcion": { "como": "titular de una tarjeta", "quiero": "pagar mi tarjeta ahora", "para": "mantener mi tarjeta al día" },
+          "criterios": [
+            "Dado que abro el pago de tarjeta, entonces selecciono la tarjeta a pagar, el monto y la cuenta de origen.",
+            "Dado que confirmo el pago, entonces el sistema registra la operación y confirma el resultado.",
+            "El flujo contempla únicamente el pago «ahora»."
+          ],
+          "definitionOfReady": "Servicio de pago de tarjeta disponible.",
+          "services": "Consume servicio de pago de tarjeta."
+        },
+        {
+          "id": "4.4",
+          "titulo": "4.4 Pago masivo (carga de archivo)",
+          "ruta": "#/carga-archivo",
+          "storyPoints": 8,
+          "tags": ["C4: Pagos y Transferencias", "pago masivo"],
+          "descripcion": { "como": "operador de pagos de la empresa", "quiero": "ejecutar un pago masivo cargando un archivo", "para": "pagar a múltiples beneficiarios en una sola operación" },
+          "criterios": [
+            "Dado que abro Pago masivo, entonces defino tipo de transferencia (directa/interbancaria), categoría, cuenta de origen, fecha de pago y descripción.",
+            "Veo el bloque «Formato para la carga» con Instructivo y plantilla, y una zona de carga de archivo acorde al tipo elegido.",
+            "Dado que cargo el archivo y presiono «Finalizar», entonces el sistema procesa la carga y me confirma."
+          ],
+          "definitionOfReady": "Formato de archivo y plantillas definidos.",
+          "services": "Consume servicio de carga y procesamiento de pagos masivos."
+        },
+        {
+          "id": "4.5",
+          "titulo": "4.5 Retiro sin tarjeta",
+          "ruta": "#/retiro-atm",
+          "storyPoints": 5,
+          "tags": ["C4: Pagos y Transferencias", "retiros"],
+          "descripcion": { "como": "titular de una cuenta", "quiero": "generar un código de retiro sin tarjeta", "para": "retirar efectivo en cajero sin usar la tarjeta física" },
+          "criterios": [
+            "Dado que abro Retiro sin tarjeta, entonces ingreso el monto y el número de celular.",
+            "Dado que genero el retiro, entonces el sistema abre la verificación por código (OTP) y confirma el envío del código.",
+            "Veo la nota de validez de 4 horas y el aviso de que la operación es exclusiva del titular."
+          ],
+          "definitionOfReady": "Servicio de retiro sin tarjeta disponible.",
+          "services": "Consume servicio de generación de código de retiro y OTP."
+        },
+        {
+          "id": "4.6",
+          "titulo": "4.6 Contactos (administración de beneficiarios)",
+          "ruta": "#/contactos",
+          "storyPoints": 5,
+          "tags": ["C4: Pagos y Transferencias", "contactos"],
+          "descripcion": { "como": "usuario que transfiere con frecuencia", "quiero": "administrar mis contactos", "para": "transferir más rápido y mantener mis beneficiarios ordenados" },
+          "criterios": [
+            "Dado que abro Contactos, entonces veo mis contactos con su badge de producto (Cuentas/Tarjetas) y las acciones editar, eliminar y transferir.",
+            "Dado que selecciono «Nuevo contacto», entonces registro nombre/alias, producto, banco, número y favorito, con validación.",
+            "Dado que elimino un contacto, entonces el sistema pide confirmación antes de quitarlo."
+          ],
+          "definitionOfReady": "Modelo de contactos definido.",
+          "services": "Consume servicio de administración de beneficiarios."
+        },
+        {
+          "id": "4.7",
+          "titulo": "4.7 Operación pendiente de autorizar",
+          "ruta": "#/pendiente-autorizar",
+          "storyPoints": 3,
+          "tags": ["C4: Pagos y Transferencias", "autorización"],
+          "descripcion": { "como": "operador que creó una operación", "quiero": "ver que mi operación quedó pendiente de autorizar", "para": "saber que requiere la firma de un aprobador" },
+          "criterios": [
+            "Dado que confirmé una operación sujeta a doble firma, entonces veo la pantalla «Pendiente de autorizar» con el N° de operación, el estado y el perfil que debe autorizar.",
+            "Veo los accesos «Ir al inicio» y «Ver aprobaciones»."
+          ],
+          "definitionOfReady": "Esquema de doble firma definido.",
+          "services": "Consume el estado de la operación pendiente."
+        }
+      ]
+    },
+
+    {
+      "id": "C5",
+      "nombre": "Empresa",
+      "tag": "C5: Empresa",
+      "hus": [
+        {
+          "id": "5.1",
+          "titulo": "5.1 Ventas / Establecimientos",
+          "ruta": "#/caja",
+          "storyPoints": 8,
+          "tags": ["C5: Empresa", "ventas"],
+          "descripcion": { "como": "comercio afiliado", "quiero": "ver el detalle de mis ventas por canal", "para": "analizar el desempeño de mi adquirencia" },
+          "criterios": [
+            "Dado que abro Ventas, entonces veo los KPIs, el gráfico y la tabla de ventas por canal.",
+            "Dado que aplico filtros (periodo/canal), entonces los indicadores y la tabla se actualizan.",
+            "La liquidación del periodo y los desgloses se presentan con importes tabulares."
+          ],
+          "definitionOfReady": "Definición de indicadores y filtros con negocio.",
+          "services": "Consume servicio de ventas/adquirencia por canal."
+        },
+        {
+          "id": "5.2",
+          "titulo": "5.2 Aprobaciones de operaciones",
+          "ruta": "#/aprobaciones",
+          "storyPoints": 8,
+          "tags": ["C5: Empresa", "aprobaciones"],
+          "descripcion": { "como": "aprobador de la empresa", "quiero": "autorizar o rechazar las operaciones pendientes", "para": "aplicar el esquema de doble firma sobre las operaciones" },
+          "criterios": [
+            "Dado que abro Aprobaciones, entonces veo la lista de operaciones pendientes con la glosa del producto (sin indicador de prioridad).",
+            "Dado que apruebo una operación, cuando confirmo con mi token de seguridad, entonces el sistema la autoriza y la retira de la lista.",
+            "Dado que rechazo una operación, entonces el sistema la marca como rechazada y la retira de la lista.",
+            "Cuando no quedan operaciones, el sistema muestra el estado «Todo aprobado»."
+          ],
+          "definitionOfReady": "Esquema de doble firma y token definidos.",
+          "services": "Consume servicio de aprobación/rechazo de operaciones."
+        },
+        {
+          "id": "5.3",
+          "titulo": "5.3 Administración de usuarios",
+          "ruta": "#/admin-usuarios",
+          "storyPoints": 8,
+          "tags": ["C5: Empresa", "administración de usuarios"],
+          "descripcion": { "como": "administrador de la empresa", "quiero": "administrar los usuarios y sus roles", "para": "controlar los accesos de mi empresa al canal" },
+          "criterios": [
+            "Dado que abro Administración de usuarios, entonces veo la tabla de usuarios con las columnas Usuario, Rol y Estado (sin cupo de aprobación, sin último acceso y sin 2FA).",
+            "La pantalla no presenta los indicadores de usuarios activos, invitaciones pendientes ni roles configurados.",
+            "En la pestaña «Roles y permisos» veo cada rol con su descripción y permisos.",
+            "Dado que busco un usuario, entonces la tabla se filtra por nombre, correo o rol."
+          ],
+          "definitionOfReady": "Modelo de usuarios/roles alineado con Blu1.",
+          "services": "Consume servicio de administración de usuarios y roles."
+        },
+        {
+          "id": "5.4",
+          "titulo": "5.4 Creación de usuario",
+          "ruta": "#/admin-usuarios",
+          "storyPoints": 8,
+          "tags": ["C5: Empresa", "administración de usuarios"],
+          "descripcion": { "como": "administrador de la empresa", "quiero": "crear un nuevo usuario con sus datos y perfiles", "para": "habilitar su acceso a la banca con los permisos correctos" },
+          "criterios": [
+            "Dado que selecciono «Crear usuario», entonces el formulario «Creación de usuario» solicita: Número de identificación; Primer nombre, Segundo nombre (opcional), Primer apellido, Segundo apellido (opcional); Cargo; Correo electrónico; Teléfono celular; Perfil de usuario; y Estado del perfil.",
+            "El teléfono celular se solicita sin pedir la operadora.",
+            "Dado que selecciono el «Perfil de usuario», entonces puedo elegir uno o varios perfiles y consultar «Ver permisos».",
+            "El estado del perfil se define como Activo o Inactivo.",
+            "Dado que faltan datos obligatorios (nombre, apellido, correo o al menos un perfil), cuando presiono «Guardar», entonces el sistema los marca en error y no envía; al guardar correctamente, confirma que se envió la invitación de activación al correo del usuario."
+          ],
+          "definitionOfReady": "Catálogo de perfiles y permisos definido.",
+          "services": "Consume servicio de creación de usuario y envío de invitación."
+        }
+      ]
+    },
+
+    {
+      "id": "C6",
+      "nombre": "Servicios",
+      "tag": "C6: Servicios",
+      "hus": [
+        {
+          "id": "6.1",
+          "titulo": "6.1 Bloqueo y desbloqueo de tarjetas",
+          "ruta": "#/bloqueo",
+          "storyPoints": 8,
+          "tags": ["C6: Servicios", "bloqueo"],
+          "descripcion": { "como": "titular de tarjetas adicionales o prepago", "quiero": "congelar, reactivar o reportar una tarjeta", "para": "controlar la seguridad de mis tarjetas" },
+          "criterios": [
+            "Dado que abro Bloqueo y desbloqueo, entonces solo veo tarjetas adicionales y prepago, agrupadas y con el titular de cada una.",
+            "Dado que busco, cuando escribo el nombre del titular o los últimos 4 dígitos, entonces el listado se filtra.",
+            "Dado que selecciono una tarjeta, entonces el detalle muestra el nombre del titular.",
+            "Dado que congelo o reactivo una tarjeta, entonces el sistema confirma el cambio; puedo reportar robo o pérdida con confirmación previa.",
+            "La pantalla no presenta controles de canal de la tarjeta."
+          ],
+          "definitionOfReady": "Alcance alineado con Blu1 (adicionales y prepago).",
+          "services": "Consume servicio de bloqueo/desbloqueo y reporte de tarjeta."
+        },
+        {
+          "id": "6.2",
+          "titulo": "6.2 Certificados bancarios",
+          "ruta": "#/certificados",
+          "storyPoints": 5,
+          "tags": ["C6: Servicios", "certificados"],
+          "descripcion": { "como": "cliente que requiere un certificado", "quiero": "generar y descargar mis certificados bancarios", "para": "disponer de documentos con validez oficial para mis trámites" },
+          "criterios": [
+            "Dado que abro Certificados bancarios, entonces veo únicamente: Certificado bancario cuenta, Certificado bancario rendimientos financieros, Certificado bancario créditos, Certificado productos (Integral) y Certificado Tarjeta de Crédito.",
+            "Dado que genero un certificado, entonces el sistema lo emite y lo envía en PDF al correo registrado.",
+            "Cada certificado registra en People Soft según su tipo: Cuenta → «Emisión Certificado Cuenta Bancaria»; Rendimientos financieros → «Emisión Certificado Rendimientos Financieros»; Créditos → «Emisión Certificado Crédito»; Productos (Integral) → «Emisión Certificado Bancario»; Tarjeta de Crédito → «Emisión Certificado Tarjeta»."
+          ],
+          "definitionOfReady": "Mapeo de certificados con People Soft confirmado.",
+          "services": "Consume servicio de emisión de certificados; registra en People Soft el evento correspondiente por tipo."
+        },
+        {
+          "id": "6.3",
+          "titulo": "6.3 Documentos tributarios",
+          "ruta": "#/tributarios",
+          "storyPoints": 3,
+          "tags": ["C6: Servicios", "tributarios"],
+          "descripcion": { "como": "cliente", "quiero": "descargar mis documentos tributarios", "para": "cumplir con mis obligaciones ante el SRI" },
+          "criterios": [
+            "Dado que abro Documentos tributarios, entonces veo únicamente: Comprobante de retención, Comprobante de pago y Factura.",
+            "Dado que descargo la Factura, entonces puedo obtenerla en formato XML y en PDF.",
+            "Los demás documentos se descargan en PDF."
+          ],
+          "definitionOfReady": "Alcance de documentos alineado con negocio.",
+          "services": "Consume servicio de documentos tributarios (PDF y XML de factura)."
+        },
+        {
+          "id": "6.4",
+          "titulo": "6.4 Aviso de viaje",
+          "ruta": "#/aviso-viaje",
+          "storyPoints": 3,
+          "tags": ["C6: Servicios", "aviso de viaje"],
+          "descripcion": { "como": "titular de tarjetas", "quiero": "registrar un aviso de viaje", "para": "evitar bloqueos por consumos en el exterior" },
+          "criterios": [
+            "Dado que abro Aviso de viaje, entonces defino destino, fechas desde/hasta y las tarjetas a notificar.",
+            "Dado que un campo obligatorio está vacío, cuando registro, entonces el sistema lo marca en error.",
+            "Dado que registro el aviso, entonces el sistema confirma que mis tarjetas funcionarán en el destino."
+          ],
+          "definitionOfReady": "Servicio de aviso de viaje disponible.",
+          "services": "Consume servicio de registro de aviso de viaje."
+        }
+      ]
+    },
+
+    {
+      "id": "C7",
+      "nombre": "Recompensas y Perfil",
+      "tag": "C7: Recompensas y Perfil",
+      "hus": [
+        {
+          "id": "7.1",
+          "titulo": "7.1 ClubMiles: saldo y acceso al portal",
+          "ruta": "#/recompensas",
+          "storyPoints": 3,
+          "tags": ["C7: Recompensas y Perfil", "clubmiles"],
+          "descripcion": { "como": "cliente del programa ClubMiles", "quiero": "consultar mi saldo de ClubMiles", "para": "conocer mis puntos y canjearlos en el portal de ClubMiles" },
+          "criterios": [
+            "Dado que abro ClubMiles, entonces veo mi saldo de ClubMiles disponibles y mi nivel.",
+            "Dado que selecciono «Ir al portal de ClubMiles», entonces el sistema me deriva al portal de ClubMiles.",
+            "La pantalla no presenta catálogo de canjes, cashback acumulado, «Multiplica tus ClubMiles» ni meta/barra de nivel."
+          ],
+          "definitionOfReady": "URL del portal de ClubMiles confirmada.",
+          "services": "Consume el saldo de ClubMiles; el canje se realiza en el portal externo."
+        },
+        {
+          "id": "7.2",
+          "titulo": "7.2 Mi perfil: datos de contacto y seguridad",
+          "ruta": "#/perfil",
+          "storyPoints": 5,
+          "tags": ["C7: Recompensas y Perfil", "perfil"],
+          "descripcion": { "como": "usuario autenticado", "quiero": "ver y editar mis datos de contacto y preferencias de seguridad", "para": "mantener mi información al día y controlar mi seguridad" },
+          "criterios": [
+            "Dado que abro Mi perfil, entonces veo mis datos de contacto (correo verificado, teléfono) y puedo guardarlos.",
+            "Veo las preferencias de seguridad (biometría, notificaciones de consumo, token dinámico, privacidad de saldos) con sus interruptores.",
+            "Dado que selecciono «Cambiar contraseña», entonces el sistema me lleva al cambio de contraseña."
+          ],
+          "definitionOfReady": "Modelo de perfil y seguridad definido.",
+          "services": "Consume servicios de datos de contacto y preferencias de seguridad."
+        },
+        {
+          "id": "7.3",
+          "titulo": "7.3 Notificaciones",
+          "ruta": "#/inicio",
+          "storyPoints": 3,
+          "tags": ["C7: Recompensas y Perfil", "notificaciones"],
+          "descripcion": { "como": "usuario autenticado", "quiero": "ver mis notificaciones", "para": "enterarme de avisos y pendientes relevantes" },
+          "criterios": [
+            "Dado que tengo notificaciones sin leer, entonces el ícono de notificaciones muestra un indicador.",
+            "Dado que abro el panel de notificaciones, entonces veo la lista de avisos.",
+            "Dado que selecciono una notificación con acción, entonces el sistema me lleva a la pantalla relacionada."
+          ],
+          "definitionOfReady": "Modelo de notificaciones definido.",
+          "services": "Consume servicio de notificaciones del usuario."
+        }
+      ]
+    }
+  ]
+}
