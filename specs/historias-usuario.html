@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLU Empresas — Historias de Usuario del mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#04195D;--navy-2:#031242;--ink:#141414;--slate:#333;--muted:#6b7280;
+    --line:#e5e7eb;--line-2:#f0f1f4;--bg:#f6f7f9;--surface:#fff;--surface-2:#f8f9fc;
+    --sky:#0B56A4;--sky-bg:#E5F1FF;--green:#096B3A;--green-bg:#E8F5E9;
+    --grad:linear-gradient(135deg,#020b27 0%,#04195D 55%,#36477d 120%);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{font-family:'Mulish',system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;font-size:14px}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 22px 90px}
+  a{color:var(--sky);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:.9em}
+
+  .hero{background:var(--grad);color:#fff;border-radius:20px;padding:38px;position:relative;overflow:hidden;margin-bottom:28px}
+  .hero::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;top:-160px;right:-90px;background:radial-gradient(circle,rgba(46,91,255,.4),transparent 65%)}
+  .hero>*{position:relative;z-index:1}
+  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .hero p{color:rgba(255,255,255,.74);margin-top:10px;max-width:70ch;font-size:14.5px}
+  .hero .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .hero .badges span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600}
+
+  .fmt{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:24px}
+  .fmt h2{font-size:16px;font-weight:800;margin-bottom:10px}
+  .fmt ol{margin:0;padding-left:20px}
+  .fmt li{padding:3px 0;color:var(--slate)}
+  .fmt .src{margin-top:12px;font-size:12.5px;color:var(--muted)}
+
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin-bottom:30px}
+  .toc h2{font-size:15px;font-weight:800;margin-bottom:8px}
+  .toc ul{list-style:none;padding:0;margin:0;columns:2;column-gap:28px}
+  .toc li{padding:5px 0;font-weight:600;display:flex;justify-content:space-between;gap:10px;break-inside:avoid}
+  .toc-count{color:var(--muted);font-weight:600;font-size:12px}
+
+  .canal{margin-top:40px;scroll-margin-top:16px}
+  .canal__head{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:18px;flex-wrap:wrap}
+  .canal__id{background:var(--navy);color:#fff;font-weight:800;font-size:13px;padding:4px 12px;border-radius:8px}
+  .canal__head h2{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .canal__tag{margin-left:auto;font-size:12px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);padding:4px 12px;border-radius:999px}
+
+  .hu{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:16px;box-shadow:0 1px 2px rgba(16,22,51,.05)}
+  .hu__head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .hu__type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sky)}
+  .hu__title{font-size:17px;font-weight:800;letter-spacing:-.01em;margin-top:2px}
+  .hu__meta{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:11.5px;font-weight:600;color:var(--slate);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-family:ui-monospace,Menlo,monospace}
+  .chip--sp{background:var(--navy);color:#fff;border-color:var(--navy);font-family:'Mulish',sans-serif}
+
+  .hu__grid{display:grid;grid-template-columns:1fr 1.6fr;gap:20px}
+  .hu__label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+  .hu__block--desc{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:16px}
+  .hu__block--desc p{margin:2px 0}
+  .hu__block--desc strong{color:var(--navy)}
+  .ac{margin:0;padding-left:18px}
+  .ac li{padding:5px 0;color:var(--slate)}
+
+  .hu__foot{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 24px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line-2)}
+  .hu__foot>div{display:flex;flex-direction:column;gap:2px}
+  .hu__k{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .hu__v{font-size:12.5px;color:var(--slate)}
+  .tag{display:inline-block;background:var(--sky-bg);color:var(--sky);font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+
+  @media(max-width:760px){
+    .hu__grid{grid-template-columns:1fr}
+    .hu__foot{grid-template-columns:1fr}
+    .toc ul{columns:1}
+    .hero{padding:26px}.hero h1{font-size:24px}
+  }
+  @media print{
+    body{background:#fff}
+    .hu,.canal{break-inside:avoid}
+    .hero::before{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Historias de Usuario — BLU Empresas</h1>
+    <p>Historias de Usuario (HU) de todas las pantallas del prototipo web BLU Empresas, redactadas en el formato aceptado por el equipo Diners Blu 2.0.</p>
+    <div class="badges">
+      <span>41 Historias de Usuario</span>
+      <span>7 canales</span>
+      <span>User Story · Value Area: Business</span>
+      <span>v1.0.0 · 2026-07-27</span>
+    </div>
+  </header>
+
+  <section class="fmt">
+    <h2>Formato aceptado</h2>
+    <ol>
+      <li>Título con numeración jerárquica (módulo.secuencia) + nombre + (calificador) + responsable</li><li>Descripción en formato Como / Quiero / Para</li><li>Criterios de aceptación en Gherkin español (Dado que… entonces…), numerados, con los textos literales de la interfaz y referencia al prototipo</li><li>Definition of Ready (dependencias listas)</li><li>Definition of Done (Cumplimiento de los criterios de aceptación)</li><li>Services (impacto en servicios core / backend)</li><li>Tags (Canal + tema)</li><li>Story Points (Fibonacci) · Value Area: Business</li>
+    </ol>
+    <div class="src">Basado en el work item de referencia
+      <a href="https://dev.azure.com/devopsdc-1/Diners%20Blu%202.0/_workitems/edit/11263" target="_blank" rel="noopener noreferrer">#11263</a>
+      — «2.6 Aviso de cambio de contraseña (necesario) | Majo». Prototipo: <a href="https://david-albuja.github.io/mockup-blu-empresas/" target="_blank" rel="noopener noreferrer">https://david-albuja.github.io/mockup-blu-empresas/</a></div>
+  </section>
+
+  <nav class="toc">
+    <h2>Índice por canal</h2>
+    <ul><li><a href="#C1">C1 · Accesos y Seguridad</a> <span class="toc-count">7 HU</span></li><li><a href="#C2">C2 · Inicio</a> <span class="toc-count">3 HU</span></li><li><a href="#C3">C3 · Productos</a> <span class="toc-count">13 HU</span></li><li><a href="#C4">C4 · Pagos y Transferencias</a> <span class="toc-count">7 HU</span></li><li><a href="#C5">C5 · Empresa</a> <span class="toc-count">4 HU</span></li><li><a href="#C6">C6 · Servicios</a> <span class="toc-count">4 HU</span></li><li><a href="#C7">C7 · Recompensas y Perfil</a> <span class="toc-count">3 HU</span></li></ul>
+  </nav>
+
+  
+  <section class="canal" id="C1">
+    <div class="canal__head"><span class="canal__id">C1</span><h2>Accesos y Seguridad</h2><span class="canal__tag">C1: Accesos y Seguridades</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.1 Ingreso a la banca empresas con usuario y contraseña</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/login</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario registrado de la empresa,</p>
+            <p><strong>Quiero</strong> ingresar a la banca web con mi usuario y contraseña</p>
+            <p><strong>Para</strong> acceder de forma segura a los productos y operaciones de mi empresa.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que estoy en la pantalla de ingreso, cuando ingreso un usuario y una contraseña válidos y presiono «Ingresar», entonces el sistema me autentica y me presenta el Inicio.</li><li>Dado que dejo el usuario o la contraseña vacíos, cuando presiono «Ingresar», entonces el sistema marca el campo faltante en estado de error y no envía el formulario.</li><li>Dado que las credenciales son incorrectas, cuando presiono «Ingresar», entonces el sistema muestra un mensaje de error claro sin revelar cuál de los dos datos es inválido.</li><li>Dado que no tengo usuario, cuando visualizo la pantalla, entonces veo el enlace «Crea tu usuario aquí» que me lleva a la creación de usuario.</li><li>El botón «Ingresar» muestra estado de carga mientras se valida y se deshabilita para evitar doble envío.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Diseño de la pantalla de ingreso aprobado; servicio de autenticación disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el servicio core de autenticación de usuario empresas.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">login</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.2 Registro de nuevo usuario</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/registro</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> representante de una empresa cliente,</p>
+            <p><strong>Quiero</strong> registrar un nuevo usuario para la banca web</p>
+            <p><strong>Para</strong> habilitar el acceso de mi empresa al canal.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que estoy en el registro, cuando completo los datos requeridos y continúo, entonces el sistema valida la información y avanza al siguiente paso.</li><li>Dado que un dato obligatorio está vacío o mal formado, cuando intento continuar, entonces el sistema lo marca en error y no avanza.</li><li>Al finalizar el registro, el sistema confirma el alta y guía al usuario hacia la creación de su clave.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Reglas de validación de identidad definidas.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de alta/registro de usuario empresas.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">registro</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.3 Creación de usuario y clave de acceso</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/crear-usuario</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario invitado,</p>
+            <p><strong>Quiero</strong> crear mi usuario y mi clave de acceso</p>
+            <p><strong>Para</strong> activar mi ingreso a la banca web.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que recibí la invitación, cuando defino una clave que cumple la política de seguridad, entonces el sistema la acepta y activa mi acceso.</li><li>Dado que la clave no cumple la política (longitud, complejidad), cuando intento guardarla, entonces el sistema muestra los requisitos incumplidos.</li><li>Dado que la confirmación de clave no coincide, cuando intento guardar, entonces el sistema lo indica y no permite continuar.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Política de contraseñas parametrizada.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de creación de credenciales.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">clave</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.4 Recuperar contraseña</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/recuperar</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario que olvidó su contraseña,</p>
+            <p><strong>Quiero</strong> recuperar el acceso a la banca web</p>
+            <p><strong>Para</strong> volver a ingresar sin perder la continuidad de mi operación.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que no recuerdo mi contraseña, cuando selecciono «Recuperar contraseña», entonces el sistema me guía por el flujo de recuperación.</li><li>Dado que completo la verificación de identidad, cuando continúo, entonces el sistema me permite definir una nueva contraseña.</li><li>El flujo redirige o instruye el canal correcto (app) según la política vigente.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Flujo de recuperación y canal definidos.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de recuperación de credenciales.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">recuperación</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.5 Recuperar datos de acceso</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/recuperar-datos</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario que olvidó su usuario,</p>
+            <p><strong>Quiero</strong> recuperar mis datos de acceso</p>
+            <p><strong>Para</strong> poder iniciar sesión nuevamente.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que olvidé mi usuario, cuando ingreso los datos de verificación, entonces el sistema me ayuda a recuperar mi identificador de acceso.</li><li>Dado que la verificación falla, cuando continúo, entonces el sistema muestra un mensaje con la vía de contacto o reintento.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Datos de verificación de identidad definidos.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de consulta de usuario por identidad.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">recuperación</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.6 Cambiar contraseña</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/cambiar-clave</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario autenticado,</p>
+            <p><strong>Quiero</strong> cambiar mi contraseña</p>
+            <p><strong>Para</strong> cumplir con las políticas de seguridad y proteger mi cuenta.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que estoy autenticado, cuando ingreso mi contraseña actual y una nueva válida, entonces el sistema actualiza la contraseña y confirma el cambio.</li><li>Dado que la contraseña actual es incorrecta, cuando intento guardar, entonces el sistema lo indica y no realiza el cambio.</li><li>Dado que la nueva contraseña no cumple la política, cuando intento guardar, entonces el sistema muestra los requisitos incumplidos.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Política de contraseñas parametrizada.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de actualización de credenciales.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">clave</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">1.7 Cierre de sesión</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">2 SP</span>
+            <span class="chip">#/logout</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario autenticado,</p>
+            <p><strong>Quiero</strong> cerrar mi sesión</p>
+            <p><strong>Para</strong> proteger mi información al terminar de usar la banca.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que estoy operando, cuando selecciono «Cerrar sesión», entonces el sistema finaliza la sesión y me lleva a la pantalla de ingreso.</li><li>Tras cerrar sesión, el sistema no permite regresar a pantallas privadas con el botón «atrás» del navegador.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Manejo de sesión definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Invalida el token de sesión.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C1: Accesos y Seguridades</span> <span class="tag">logout</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+  <section class="canal" id="C2">
+    <div class="canal__head"><span class="canal__id">C2</span><h2>Inicio</h2><span class="canal__tag">C2: Inicio</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">2.1 Encabezado de empresa y accesos rápidos en el Inicio</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/inicio</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario de una empresa con varias razones sociales,</p>
+            <p><strong>Quiero</strong> ver la empresa activa y tener accesos rápidos a las operaciones frecuentes</p>
+            <p><strong>Para</strong> identificar sobre qué empresa opero y actuar sin navegar de más.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que ingreso al Inicio, entonces veo el nombre de la empresa activa como título y el saludo «Hola, {nombre}».</li><li>Dado que tengo más de una empresa, cuando selecciono «Cambiar», entonces el sistema me permite elegir otra razón social.</li><li>En el encabezado veo accesos rápidos a Transferir, Pago masivo y Aprobaciones; Aprobaciones muestra un contador de pendientes.</li><li>Veo el acceso a ClubMiles con el saldo disponible.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Diseño del Inicio aprobado (specs/home.json).</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume datos de empresa, usuario y contadores de pendientes.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C2: Inicio</span> <span class="tag">home</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">2.2 Resumen de ventas (adquirencia) en el Inicio</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/inicio</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> comercio afiliado,</p>
+            <p><strong>Quiero</strong> ver un resumen de mis ventas en la portada</p>
+            <p><strong>Para</strong> conocer de un vistazo el desempeño de mi adquirencia.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que ingreso al Inicio, entonces veo tres tarjetas: «Ventas del mes» (destacada, con % de crecimiento), «Pagos recibidos» y «Total por cobrar».</li><li>Cada tarjeta muestra el importe con separador de miles y centavos en menor jerarquía, y su periodo.</li><li>Dado que selecciono «Mira el detalle» o cualquier tarjeta, entonces el sistema me lleva al detalle de Ventas.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Definición de indicadores de venta con negocio.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de resumen de adquirencia/ventas.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C2: Inicio</span> <span class="tag">ventas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">2.3 Tus productos: carrusel por categoría con Solicitar y Ver todo</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/inicio</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario con productos contratados,</p>
+            <p><strong>Quiero</strong> ver mis productos agrupados por categoría en el Inicio</p>
+            <p><strong>Para</strong> acceder rápido a cada producto y solicitar nuevos.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que tengo productos, entonces veo pestañas por categoría (Tarjetas, Cuentas, Créditos, Inversiones) y solo aparecen las categorías que efectivamente tengo.</li><li>Dado que selecciono una categoría, entonces veo mis productos en un carrusel horizontal donde todas las tarjetas mantienen el mismo alto.</li><li>Cada categoría muestra un resumen (total/cupo) y los botones «Solicitar {producto}» y «Ver todo»; el botón de solicitud nombra el producto de la categoría activa.</li><li>Dado que selecciono un producto, entonces el sistema abre su detalle.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Homologación de cards de producto aprobada (specs/card-carousel.json).</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el consolidado de productos del cliente.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C2: Inicio</span> <span class="tag">productos</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+  <section class="canal" id="C3">
+    <div class="canal__head"><span class="canal__id">C3</span><h2>Productos</h2><span class="canal__tag">C3: Productos</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.1 Listado de tarjetas propias y adicionales</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/tarjetas</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de tarjetas,</p>
+            <p><strong>Quiero</strong> ver mis tarjetas separadas entre propias y adicionales</p>
+            <p><strong>Para</strong> identificar cada tarjeta y entrar a su detalle.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que ingreso a Tarjetas, entonces veo los grupos «Tus tarjetas» y «Tus adicionales» con badge de estado por tarjeta.</li><li>Dado que selecciono una tarjeta, entonces el sistema abre su detalle.</li><li>Las tarjetas adicionales muestran el titular.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de tarjetas propio/adicional definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el listado de tarjetas del cliente.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">tarjetas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.2 Detalle de tarjeta de crédito</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/detalle-producto?id=diners</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de una tarjeta de crédito,</p>
+            <p><strong>Quiero</strong> ver el detalle de mi tarjeta con sus atajos</p>
+            <p><strong>Para</strong> consultar cupo, saldo y realizar acciones sobre la tarjeta.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro el detalle, entonces veo el arte de la tarjeta con «Saldo consumido» y «Total a pagar», y «Pagar hasta {fecha}» fuera del arte.</li><li>Veo el cupo disponible de la tarjeta.</li><li>Veo la barra de atajos: Diferir, Configurar, Bloquear, Beneficios, Spend Analyzer, Certificado y Solicitar adicional.</li><li>Dado que selecciono un atajo, entonces el sistema me lleva a la operación correspondiente.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Diseño de detalle de tarjeta aprobado.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume detalle, cupo y movimientos de la tarjeta.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">tarjetas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.3 Configurar tarjeta: canales, límite y alertas</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/config-tarjeta</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de una tarjeta,</p>
+            <p><strong>Quiero</strong> configurar los canales de uso, el límite diario y las alertas</p>
+            <p><strong>Para</strong> controlar cómo y dónde se usa mi tarjeta.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Configurar, entonces veo secciones «Uso en Ecuador», «Uso fuera de Ecuador», «Límite de consumo diario» y «Alertas».</li><li>Dado que un control es obligatorio, entonces se muestra marcado, deshabilitado y con la leyenda «· Obligatorio».</li><li>Dado que cambio el límite de consumo diario, cuando guardo, entonces el sistema confirma la actualización.</li><li>Cada cambio de canal o alerta muestra confirmación de la preferencia actualizada.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Reglas de canales y límites definidas.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicios de configuración de canales, límites y alertas.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">tarjetas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.4 Tarjetas adicionales</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/tarjetas-adicionales</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular principal,</p>
+            <p><strong>Quiero</strong> ver y gestionar las tarjetas adicionales</p>
+            <p><strong>Para</strong> administrar los accesos de mis adicionales.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Adicionales, entonces veo el listado con el titular de cada tarjeta adicional.</li><li>Dado que selecciono «Nueva adicional», entonces el sistema inicia la solicitud de tarjeta adicional.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de adicionales definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el listado de adicionales.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">tarjetas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.5 Solicitar tarjeta (flujo preaprobado)</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/onboarding-signature</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente con oferta preaprobada,</p>
+            <p><strong>Quiero</strong> solicitar una tarjeta en pocos pasos</p>
+            <p><strong>Para</strong> obtener el producto sin trámites extensos.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que tengo oferta preaprobada, cuando inicio la solicitud, entonces veo el bloque de preaprobado y un wizard corto (3 pasos).</li><li>Dado que completo Celular, Correo y el cupo solicitado, cuando el dato es obligatorio y está vacío, entonces el sistema lo marca en error.</li><li>Al finalizar, el sistema confirma la solicitud con un modal de éxito.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Motor de preaprobados disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume oferta preaprobada y servicio de solicitud de producto.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">contratación</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.6 Prepago: listado y búsqueda</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/prepago</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> administrador de tarjetas prepago,</p>
+            <p><strong>Quiero</strong> buscar y ver mis tarjetas prepago</p>
+            <p><strong>Para</strong> ubicar rápidamente una tarjeta por titular o número.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Prepago, entonces veo mis tarjetas prepago con su titular y saldo.</li><li>Dado que escribo en el buscador, cuando coincide el nombre del titular o los últimos 4 dígitos, entonces el listado se filtra.</li><li>Dado que selecciono una tarjeta, entonces veo su detalle.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de prepago con titular definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el listado de prepago del cliente.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">prepago</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.7 Detalle de cuenta</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/detalle-producto?id=ahorros</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de una cuenta,</p>
+            <p><strong>Quiero</strong> ver el detalle de mi cuenta con sus atajos</p>
+            <p><strong>Para</strong> consultar el saldo y operar sobre la cuenta.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro el detalle de cuenta, entonces veo el saldo disponible y los datos de la cuenta.</li><li>Veo la barra de atajos: Transferir, Pagar, Retirar, Configurar y Certificado.</li><li>Dado que selecciono «Certificado», entonces el sistema me lleva a Certificados bancarios.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Diseño de detalle de cuenta aprobado.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume saldo y movimientos de la cuenta.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">cuentas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.8 Detalle de crédito con tabla de amortización</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/detalle-producto?id=consumo</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de un crédito,</p>
+            <p><strong>Quiero</strong> ver el detalle de mi crédito y su tabla de amortización</p>
+            <p><strong>Para</strong> conocer el estado del crédito y mis cuotas.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro el detalle, entonces veo capital otorgado, capital pagado, saldo del capital, tasa nominal y efectiva, fecha de desembolso, fecha de finalización, deuda a la fecha y estado.</li><li>Dado que el crédito está en mora, entonces veo el botón «Pagar cuota»; si está al día, veo el estado «al día» sin botón de pago.</li><li>Veo la tabla de amortización con opción de exportar a Excel.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Datos de crédito y amortización disponibles.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume detalle de crédito y tabla de amortización.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">créditos</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.9 Pago de cuota de crédito</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/pago-credito?id=consumo</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de un crédito en mora,</p>
+            <p><strong>Quiero</strong> pagar la cuota del mes</p>
+            <p><strong>Para</strong> regularizar mi crédito.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro el pago, entonces veo la «Cuota del mes» a pagar y la cuenta de origen.</li><li>Dado que confirmo el pago, entonces el sistema registra la operación como «pendiente de autorizar».</li><li>El sistema me lleva a la pantalla de operación pendiente de autorizar.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Servicio de pago de crédito disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de pago de crédito y flujo de autorización.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">créditos</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.10 Simulador de crédito</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/sim-credito</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente interesado en un crédito,</p>
+            <p><strong>Quiero</strong> simular un crédito</p>
+            <p><strong>Para</strong> conocer la cuota estimada antes de solicitarlo.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que tengo un preaprobado, entonces veo el bloque de monto disponible.</li><li>Dado que ingreso el monto y selecciono el destino, cuando el destino es obligatorio y está vacío, entonces el sistema lo marca en error y no continúa.</li><li>Dado que la simulación es válida, cuando continúo, entonces el sistema muestra el resultado y confirma con un modal.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Motor de simulación disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de simulación de crédito.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">créditos</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.11 Detalle de inversión</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/detalle-producto?id=dpf</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de una inversión,</p>
+            <p><strong>Quiero</strong> ver el detalle de mi inversión</p>
+            <p><strong>Para</strong> conocer su rendimiento y condiciones.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro el detalle, entonces veo monto final a recibir, total de intereses, retención por rendimiento, plazo en días, fecha de emisión, fecha de finalización, tipo de pago de intereses, beneficiarios, tasa anual y estado.</li><li>Veo los atajos «Certificado» y «Renovar».</li><li>Veo el aviso de que al culminar la inversión la cuenta de la inversión se cierra.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Datos de inversión disponibles.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume detalle de inversión y movimientos.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">inversiones</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.12 Para ti: catálogo de productos</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/ofertas</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente,</p>
+            <p><strong>Quiero</strong> ver el catálogo de productos ofertados</p>
+            <p><strong>Para</strong> conocer y contratar nuevos productos.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro «Para ti», entonces veo el catálogo de productos disponibles para contratar.</li><li>Dado que selecciono un producto, entonces el sistema inicia su contratación.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Catálogo de ofertas definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el catálogo de productos ofertados.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">contratación</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">3.13 Abrir cuenta (BLU+)</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/onboarding-blu-plus</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente que desea una nueva cuenta,</p>
+            <p><strong>Quiero</strong> abrir una cuenta desde el catálogo</p>
+            <p><strong>Para</strong> contratar el producto en pocos pasos.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que inicio la apertura, entonces veo el catálogo de cuentas y una tarjeta lateral sin imagen tipo tarjeta.</li><li>Dado que defino el nombre de la cuenta y el monto objetivo, entonces el monto se ingresa como campo editable (sin meta de ahorro ni fecha objetivo).</li><li>El flujo tiene 4 pasos si soy cliente y 3 si no; al finalizar el sistema confirma la apertura.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Flujo de apertura BLU+ aprobado.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de apertura de cuenta.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C3: Productos</span> <span class="tag">contratación</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+  <section class="canal" id="C4">
+    <div class="canal__head"><span class="canal__id">C4</span><h2>Pagos y Transferencias</h2><span class="canal__tag">C4: Pagos y Transferencias</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.1 Transferir dinero a cuentas propias, terceros u otros bancos</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/transferencias</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario con permiso de operación,</p>
+            <p><strong>Quiero</strong> transferir dinero a distintos destinos</p>
+            <p><strong>Para</strong> mover fondos de mi empresa de forma ágil.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Transferir, entonces veo la flecha «Volver» y puedo elegir el origen, el destinatario y el monto.</li><li>Dado que confirmo la transferencia, entonces el sistema registra la operación como «pendiente de autorizar».</li><li>Dado que un dato obligatorio está vacío, cuando intento continuar, entonces el sistema lo marca en error.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Servicio de transferencias disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de transferencias y flujo de autorización.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">transferencias</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.2 Nuevo destinatario por tipo de banco</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/transferencias</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario que transfiere a un nuevo beneficiario,</p>
+            <p><strong>Quiero</strong> registrar un destinatario según el tipo de banco</p>
+            <p><strong>Para</strong> enviar dinero validando correctamente al beneficiario.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que elijo un destinatario nuevo, cuando selecciono Diners, entonces solo pido cuenta y verificación de nombre.</li><li>Dado que selecciono Banred, entonces pido cuenta, identificación y verificación de nombre.</li><li>Dado que selecciono SPI (otros bancos), entonces pido cuenta, identificación y nombre, sin verificación en línea.</li><li>Dado que verifico el nombre, entonces el sistema muestra el titular resuelto; puedo guardar el destinatario como favorito.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Reglas por tipo de banco definidas.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de validación de cuenta/beneficiario.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">transferencias</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.3 Pago de tarjeta</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/pago-tarjeta</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de una tarjeta,</p>
+            <p><strong>Quiero</strong> pagar mi tarjeta ahora</p>
+            <p><strong>Para</strong> mantener mi tarjeta al día.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro el pago de tarjeta, entonces selecciono la tarjeta a pagar, el monto y la cuenta de origen.</li><li>Dado que confirmo el pago, entonces el sistema registra la operación y confirma el resultado.</li><li>El flujo contempla únicamente el pago «ahora».</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Servicio de pago de tarjeta disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de pago de tarjeta.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">pagos</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.4 Pago masivo (carga de archivo)</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/carga-archivo</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> operador de pagos de la empresa,</p>
+            <p><strong>Quiero</strong> ejecutar un pago masivo cargando un archivo</p>
+            <p><strong>Para</strong> pagar a múltiples beneficiarios en una sola operación.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Pago masivo, entonces defino tipo de transferencia (directa/interbancaria), categoría, cuenta de origen, fecha de pago y descripción.</li><li>Veo el bloque «Formato para la carga» con Instructivo y plantilla, y una zona de carga de archivo acorde al tipo elegido.</li><li>Dado que cargo el archivo y presiono «Finalizar», entonces el sistema procesa la carga y me confirma.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Formato de archivo y plantillas definidos.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de carga y procesamiento de pagos masivos.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">pago masivo</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.5 Retiro sin tarjeta</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/retiro-atm</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de una cuenta,</p>
+            <p><strong>Quiero</strong> generar un código de retiro sin tarjeta</p>
+            <p><strong>Para</strong> retirar efectivo en cajero sin usar la tarjeta física.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Retiro sin tarjeta, entonces ingreso el monto y el número de celular.</li><li>Dado que genero el retiro, entonces el sistema abre la verificación por código (OTP) y confirma el envío del código.</li><li>Veo la nota de validez de 4 horas y el aviso de que la operación es exclusiva del titular.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Servicio de retiro sin tarjeta disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de generación de código de retiro y OTP.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">retiros</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.6 Contactos (administración de beneficiarios)</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/contactos</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario que transfiere con frecuencia,</p>
+            <p><strong>Quiero</strong> administrar mis contactos</p>
+            <p><strong>Para</strong> transferir más rápido y mantener mis beneficiarios ordenados.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Contactos, entonces veo mis contactos con su badge de producto (Cuentas/Tarjetas) y las acciones editar, eliminar y transferir.</li><li>Dado que selecciono «Nuevo contacto», entonces registro nombre/alias, producto, banco, número y favorito, con validación.</li><li>Dado que elimino un contacto, entonces el sistema pide confirmación antes de quitarlo.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de contactos definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de administración de beneficiarios.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">contactos</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">4.7 Operación pendiente de autorizar</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/pendiente-autorizar</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> operador que creó una operación,</p>
+            <p><strong>Quiero</strong> ver que mi operación quedó pendiente de autorizar</p>
+            <p><strong>Para</strong> saber que requiere la firma de un aprobador.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que confirmé una operación sujeta a doble firma, entonces veo la pantalla «Pendiente de autorizar» con el N° de operación, el estado y el perfil que debe autorizar.</li><li>Veo los accesos «Ir al inicio» y «Ver aprobaciones».</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Esquema de doble firma definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el estado de la operación pendiente.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C4: Pagos y Transferencias</span> <span class="tag">autorización</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+  <section class="canal" id="C5">
+    <div class="canal__head"><span class="canal__id">C5</span><h2>Empresa</h2><span class="canal__tag">C5: Empresa</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">5.1 Ventas / Establecimientos</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/caja</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> comercio afiliado,</p>
+            <p><strong>Quiero</strong> ver el detalle de mis ventas por canal</p>
+            <p><strong>Para</strong> analizar el desempeño de mi adquirencia.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Ventas, entonces veo los KPIs, el gráfico y la tabla de ventas por canal.</li><li>Dado que aplico filtros (periodo/canal), entonces los indicadores y la tabla se actualizan.</li><li>La liquidación del periodo y los desgloses se presentan con importes tabulares.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Definición de indicadores y filtros con negocio.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de ventas/adquirencia por canal.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C5: Empresa</span> <span class="tag">ventas</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">5.2 Aprobaciones de operaciones</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/aprobaciones</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> aprobador de la empresa,</p>
+            <p><strong>Quiero</strong> autorizar o rechazar las operaciones pendientes</p>
+            <p><strong>Para</strong> aplicar el esquema de doble firma sobre las operaciones.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Aprobaciones, entonces veo la lista de operaciones pendientes con la glosa del producto (sin indicador de prioridad).</li><li>Dado que apruebo una operación, cuando confirmo con mi token de seguridad, entonces el sistema la autoriza y la retira de la lista.</li><li>Dado que rechazo una operación, entonces el sistema la marca como rechazada y la retira de la lista.</li><li>Cuando no quedan operaciones, el sistema muestra el estado «Todo aprobado».</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Esquema de doble firma y token definidos.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de aprobación/rechazo de operaciones.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C5: Empresa</span> <span class="tag">aprobaciones</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">5.3 Administración de usuarios</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/admin-usuarios</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> administrador de la empresa,</p>
+            <p><strong>Quiero</strong> administrar los usuarios y sus roles</p>
+            <p><strong>Para</strong> controlar los accesos de mi empresa al canal.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Administración de usuarios, entonces veo la tabla de usuarios con las columnas Usuario, Rol y Estado (sin cupo de aprobación, sin último acceso y sin 2FA).</li><li>La pantalla no presenta los indicadores de usuarios activos, invitaciones pendientes ni roles configurados.</li><li>En la pestaña «Roles y permisos» veo cada rol con su descripción y permisos.</li><li>Dado que busco un usuario, entonces la tabla se filtra por nombre, correo o rol.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de usuarios/roles alineado con Blu1.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de administración de usuarios y roles.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C5: Empresa</span> <span class="tag">administración de usuarios</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">5.4 Creación de usuario</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/admin-usuarios</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> administrador de la empresa,</p>
+            <p><strong>Quiero</strong> crear un nuevo usuario con sus datos y perfiles</p>
+            <p><strong>Para</strong> habilitar su acceso a la banca con los permisos correctos.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que selecciono «Crear usuario», entonces el formulario «Creación de usuario» solicita: Número de identificación; Primer nombre, Segundo nombre (opcional), Primer apellido, Segundo apellido (opcional); Cargo; Correo electrónico; Teléfono celular; Perfil de usuario; y Estado del perfil.</li><li>El teléfono celular se solicita sin pedir la operadora.</li><li>Dado que selecciono el «Perfil de usuario», entonces puedo elegir uno o varios perfiles y consultar «Ver permisos».</li><li>El estado del perfil se define como Activo o Inactivo.</li><li>Dado que faltan datos obligatorios (nombre, apellido, correo o al menos un perfil), cuando presiono «Guardar», entonces el sistema los marca en error y no envía; al guardar correctamente, confirma que se envió la invitación de activación al correo del usuario.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Catálogo de perfiles y permisos definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de creación de usuario y envío de invitación.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C5: Empresa</span> <span class="tag">administración de usuarios</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+  <section class="canal" id="C6">
+    <div class="canal__head"><span class="canal__id">C6</span><h2>Servicios</h2><span class="canal__tag">C6: Servicios</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">6.1 Bloqueo y desbloqueo de tarjetas</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">8 SP</span>
+            <span class="chip">#/bloqueo</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de tarjetas adicionales o prepago,</p>
+            <p><strong>Quiero</strong> congelar, reactivar o reportar una tarjeta</p>
+            <p><strong>Para</strong> controlar la seguridad de mis tarjetas.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Bloqueo y desbloqueo, entonces solo veo tarjetas adicionales y prepago, agrupadas y con el titular de cada una.</li><li>Dado que busco, cuando escribo el nombre del titular o los últimos 4 dígitos, entonces el listado se filtra.</li><li>Dado que selecciono una tarjeta, entonces el detalle muestra el nombre del titular.</li><li>Dado que congelo o reactivo una tarjeta, entonces el sistema confirma el cambio; puedo reportar robo o pérdida con confirmación previa.</li><li>La pantalla no presenta controles de canal de la tarjeta.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Alcance alineado con Blu1 (adicionales y prepago).</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de bloqueo/desbloqueo y reporte de tarjeta.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C6: Servicios</span> <span class="tag">bloqueo</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">6.2 Certificados bancarios</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/certificados</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente que requiere un certificado,</p>
+            <p><strong>Quiero</strong> generar y descargar mis certificados bancarios</p>
+            <p><strong>Para</strong> disponer de documentos con validez oficial para mis trámites.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Certificados bancarios, entonces veo únicamente: Certificado bancario cuenta, Certificado bancario rendimientos financieros, Certificado bancario créditos, Certificado productos (Integral) y Certificado Tarjeta de Crédito.</li><li>Dado que genero un certificado, entonces el sistema lo emite y lo envía en PDF al correo registrado.</li><li>Cada certificado registra en People Soft según su tipo: Cuenta → «Emisión Certificado Cuenta Bancaria»; Rendimientos financieros → «Emisión Certificado Rendimientos Financieros»; Créditos → «Emisión Certificado Crédito»; Productos (Integral) → «Emisión Certificado Bancario»; Tarjeta de Crédito → «Emisión Certificado Tarjeta».</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Mapeo de certificados con People Soft confirmado.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de emisión de certificados; registra en People Soft el evento correspondiente por tipo.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C6: Servicios</span> <span class="tag">certificados</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">6.3 Documentos tributarios</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/tributarios</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente,</p>
+            <p><strong>Quiero</strong> descargar mis documentos tributarios</p>
+            <p><strong>Para</strong> cumplir con mis obligaciones ante el SRI.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Documentos tributarios, entonces veo únicamente: Comprobante de retención, Comprobante de pago y Factura.</li><li>Dado que descargo la Factura, entonces puedo obtenerla en formato XML y en PDF.</li><li>Los demás documentos se descargan en PDF.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Alcance de documentos alineado con negocio.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de documentos tributarios (PDF y XML de factura).</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C6: Servicios</span> <span class="tag">tributarios</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">6.4 Aviso de viaje</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/aviso-viaje</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> titular de tarjetas,</p>
+            <p><strong>Quiero</strong> registrar un aviso de viaje</p>
+            <p><strong>Para</strong> evitar bloqueos por consumos en el exterior.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Aviso de viaje, entonces defino destino, fechas desde/hasta y las tarjetas a notificar.</li><li>Dado que un campo obligatorio está vacío, cuando registro, entonces el sistema lo marca en error.</li><li>Dado que registro el aviso, entonces el sistema confirma que mis tarjetas funcionarán en el destino.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Servicio de aviso de viaje disponible.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de registro de aviso de viaje.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C6: Servicios</span> <span class="tag">aviso de viaje</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+  <section class="canal" id="C7">
+    <div class="canal__head"><span class="canal__id">C7</span><h2>Recompensas y Perfil</h2><span class="canal__tag">C7: Recompensas y Perfil</span></div>
+    
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">7.1 ClubMiles: saldo y acceso al portal</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/recompensas</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> cliente del programa ClubMiles,</p>
+            <p><strong>Quiero</strong> consultar mi saldo de ClubMiles</p>
+            <p><strong>Para</strong> conocer mis puntos y canjearlos en el portal de ClubMiles.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro ClubMiles, entonces veo mi saldo de ClubMiles disponibles y mi nivel.</li><li>Dado que selecciono «Ir al portal de ClubMiles», entonces el sistema me deriva al portal de ClubMiles.</li><li>La pantalla no presenta catálogo de canjes, cashback acumulado, «Multiplica tus ClubMiles» ni meta/barra de nivel.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">URL del portal de ClubMiles confirmada.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume el saldo de ClubMiles; el canje se realiza en el portal externo.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C7: Recompensas y Perfil</span> <span class="tag">clubmiles</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">7.2 Mi perfil: datos de contacto y seguridad</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">5 SP</span>
+            <span class="chip">#/perfil</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario autenticado,</p>
+            <p><strong>Quiero</strong> ver y editar mis datos de contacto y preferencias de seguridad</p>
+            <p><strong>Para</strong> mantener mi información al día y controlar mi seguridad.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que abro Mi perfil, entonces veo mis datos de contacto (correo verificado, teléfono) y puedo guardarlos.</li><li>Veo las preferencias de seguridad (biometría, notificaciones de consumo, token dinámico, privacidad de saldos) con sus interruptores.</li><li>Dado que selecciono «Cambiar contraseña», entonces el sistema me lleva al cambio de contraseña.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de perfil y seguridad definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicios de datos de contacto y preferencias de seguridad.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C7: Recompensas y Perfil</span> <span class="tag">perfil</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+      <article class="hu">
+        <header class="hu__head">
+          <div>
+            <div class="hu__type">User Story</div>
+            <h3 class="hu__title">7.3 Notificaciones</h3>
+          </div>
+          <div class="hu__meta">
+            <span class="chip chip--sp">3 SP</span>
+            <span class="chip">#/inicio</span>
+          </div>
+        </header>
+
+        <div class="hu__grid">
+          <div class="hu__block hu__block--desc">
+            <div class="hu__label">Descripción</div>
+            <p><strong>Como</strong> usuario autenticado,</p>
+            <p><strong>Quiero</strong> ver mis notificaciones</p>
+            <p><strong>Para</strong> enterarme de avisos y pendientes relevantes.</p>
+          </div>
+
+          <div class="hu__block hu__block--ac">
+            <div class="hu__label">Criterios de aceptación</div>
+            <ol class="ac">
+              <li>Dado que tengo notificaciones sin leer, entonces el ícono de notificaciones muestra un indicador.</li><li>Dado que abro el panel de notificaciones, entonces veo la lista de avisos.</li><li>Dado que selecciono una notificación con acción, entonces el sistema me lleva a la pantalla relacionada.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="hu__foot">
+          <div><span class="hu__k">Definition of Ready</span><span class="hu__v">Modelo de notificaciones definido.</span></div>
+          <div><span class="hu__k">Definition of Done</span><span class="hu__v">Cumplimiento de los criterios de aceptación.</span></div>
+          <div><span class="hu__k">Services</span><span class="hu__v">Consume servicio de notificaciones del usuario.</span></div>
+          <div><span class="hu__k">Tags</span><span class="hu__v"><span class="tag">C7: Recompensas y Perfil</span> <span class="tag">notificaciones</span></span></div>
+          <div><span class="hu__k">Value Area</span><span class="hu__v">Business</span></div>
+        </div>
+      </article>
+  </section>
+
+</div>
+</body>
+</html>

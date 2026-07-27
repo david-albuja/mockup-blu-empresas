@@ -24,6 +24,10 @@ Extienden el DS con la anatomía, CSS y datos de una pantalla concreta. Léelas 
 - Inicio → [`specs/home.json`](specs/home.json)
 - Carrusel de productos (caja, bordes, resize del arte de TC) → [`specs/card-carousel.json`](specs/card-carousel.json)
 
+### Historias de Usuario
+
+- HU de todo el mock (formato Diners Blu 2.0) → [`specs/historias-usuario.json`](specs/historias-usuario.json) · render en [`specs/historias-usuario.html`](specs/historias-usuario.html) (se genera con `node specs/build-hu.js`)
+
 ## Estructura
 
 | Ruta | Contenido |
