@@ -1,26 +1,27 @@
 /* BLU Web — Módulo Servicios */
 
-/* Bloqueo / desbloqueo de tarjetas — master-detail con controles (Azure: crédito/débito) */
+/* Bloqueo / desbloqueo de tarjetas — solo adicionales y prepago (Blu1). Sin controles de canal. */
 Screens['bloqueo'] = {
   title: 'Bloqueo de tarjetas',
   render(view) {
-    const credit = DB.cards.map(c => ({ id:c.id, name:c.name, last4:c.last4, variant:c.variant, kind:'Crédito' }));
-    const debit = [
-      { id:'deb-2205', name:'Débito BLU', last4:'2205', variant:'diners', kind:'Débito' },
-      { id:'deb-7781', name:'Débito Corriente', last4:'7781', variant:'indigo', kind:'Débito' },
-    ];
-    const all = [...credit, ...debit];
-    const S = {}; all.forEach(c => S[c.id] = { frozen:false, online:true, abroad:true, atm:true, reported:false });
-    let selId = credit[0].id;
+    // Solo tarjetas adicionales (crédito) y prepago; incluye el titular de cada una.
+    const adicionales = DB.cards.filter(c => !c.principal).map(c => ({ id:c.id, name:c.name, last4:c.last4, variant:c.variant, kind:'Adicional', titular:c.titular || '—' }));
+    const prepago = DB.prepaid.map(c => ({ id:c.id, name:c.name, last4:c.last4, variant:c.variant, kind:'Prepago', titular:c.titular || '—' }));
+    const all = [...adicionales, ...prepago];
+    const S = {}; all.forEach(c => S[c.id] = { frozen:false, reported:false });
+    let selId = all[0] ? all[0].id : null;
+    let query = '';
     const cardOf = id => all.find(c => c.id === id);
     const grad = v => CARD_GRAD[v] || CARD_GRAD.diners;
+    const match = c => (c.titular + ' ' + c.last4).toLowerCase().includes(query.toLowerCase());
 
     view.innerHTML = `
-    ${pageHead('Bloqueo y desbloqueo','Congela o reactiva tus tarjetas y controla sus canales.','inicio')}
+    ${pageHead('Bloqueo y desbloqueo','Congela o reactiva tus tarjetas adicionales y prepago.','inicio')}
+    <div class="control mb-6" style="max-width:420px">${icon('search')}<input id="blkSearch" placeholder="Busca por titular o últimos 4 dígitos"></div>
     <div class="grid" style="grid-template-columns:360px 1fr;gap:20px;align-items:start" id="blkWrap">
       <div class="grid" style="gap:20px">
-        <div><div class="eyebrow mb-2">Tarjetas de crédito</div><div id="blkCredit" class="grid" style="gap:10px"></div></div>
-        <div><div class="eyebrow mb-2">Tarjetas de débito</div><div id="blkDebit" class="grid" style="gap:10px"></div></div>
+        <div><div class="eyebrow mb-2">Tarjetas adicionales</div><div id="blkAdic" class="grid" style="gap:10px"></div></div>
+        <div><div class="eyebrow mb-2">Prepago</div><div id="blkPre" class="grid" style="gap:10px"></div></div>
       </div>
       <div id="blkPanel" style="position:sticky;top:calc(var(--topbar-h) + 24px)"></div>
     </div>`;
@@ -34,36 +35,30 @@ Screens['bloqueo'] = {
       const active = c.id === selId;
       return `<button class="pcard" data-blk="${c.id}" style="padding:12px 14px${active ? ';border-color:var(--blu-500);box-shadow:0 0 0 1px var(--blu-500)' : ''}">
         <div class="pcard__art" style="width:56px;height:36px;background:${grad(c.variant)}"><span class="mini-chip" style="top:7px;left:8px;width:11px;height:8px"></span></div>
-        <div class="pcard__body"><div class="pcard__name" style="font-size:13px">${c.name}</div><div class="pcard__num">···${c.last4}</div></div>
+        <div class="pcard__body"><div class="pcard__name" style="font-size:13px">${c.titular}</div><div class="pcard__num">${c.name} ···${c.last4}</div></div>
         ${stBadge(c.id)}
       </button>`;
     }
     function renderList() {
-      $('#blkCredit').innerHTML = credit.map(row).join('');
-      $('#blkDebit').innerHTML = debit.map(row).join('');
+      const adic = adicionales.filter(match), pre = prepago.filter(match);
+      $('#blkAdic').innerHTML = adic.length ? adic.map(row).join('') : `<div class="text-muted" style="font-size:13px;padding:4px 2px">Sin resultados</div>`;
+      $('#blkPre').innerHTML = pre.length ? pre.map(row).join('') : `<div class="text-muted" style="font-size:13px;padding:4px 2px">Sin resultados</div>`;
       view.querySelectorAll('[data-blk]').forEach(b => b.onclick = () => { selId = b.dataset.blk; renderList(); renderPanel(); });
-    }
-    function ctlRow(id, key, label, sub, ic) {
-      return `<div class="row between" style="padding:14px 0;border-bottom:1px solid var(--line-2)"><span class="row" style="gap:12px">${icon(ic)}<div><div style="font-weight:500;font-size:14px">${label}</div><div class="text-muted" style="font-size:12px">${sub}</div></div></span><label class="switch"><input type="checkbox" data-ctl="${key}" ${S[id][key]?'checked':''} ${S[id].reported?'disabled':''}><span class="track"></span></label></div>`;
     }
     function renderPanel() {
       const c = cardOf(selId), s = S[selId];
+      if (!c) { $('#blkPanel').innerHTML = ''; return; }
       $('#blkPanel').innerHTML = `
       <div class="card card--pad section">
         <div class="row" style="gap:14px;align-items:center">
           <div class="pcard__art" style="width:74px;height:48px;background:${grad(c.variant)}"><span class="mini-chip"></span><span class="mini-brand">blu</span></div>
-          <div><div class="h4">${c.name}</div><div class="text-muted" style="font-size:13px">${c.kind} · ···${c.last4}</div></div>
+          <div><div class="h4">${c.titular}</div><div class="text-muted" style="font-size:13px">${c.name} · ${c.kind} · ···${c.last4}</div></div>
           <span style="margin-left:auto">${stBadge(c.id)}</span>
         </div>
+        <div class="sum-row mt-4"><span class="k">Titular</span><span class="v">${c.titular}</span></div>
         ${s.reported ? `<div class="mt-4">${infoBanner('Esta tarjeta fue reportada y está en proceso de reposición (3-5 días hábiles).','clock')}</div>` : `
         <div class="card card--pad mt-6" style="background:var(--surface-2)">
           <div class="row between"><span class="row" style="gap:12px">${icon('lock')}<div><div style="font-weight:600">Congelar tarjeta</div><div class="text-muted" style="font-size:12px">Bloqueo temporal, reversible al instante</div></div></span><label class="switch"><input type="checkbox" data-ctl="frozen" ${s.frozen?'checked':''}><span class="track"></span></label></div>
-        </div>
-        <div class="mt-4">
-          <div class="eyebrow mb-2">Controles de la tarjeta</div>
-          ${ctlRow(c.id,'online','Compras por internet','Pagos en comercios en línea','bolt')}
-          ${ctlRow(c.id,'abroad','Compras en el exterior','Consumos fuera del país','plane')}
-          ${ctlRow(c.id,'atm','Retiros en cajero','Avances y retiros en ATM','atm')}
         </div>
         <button class="btn btn--ghost btn--block mt-6" style="color:var(--error);justify-content:center;border:1px solid var(--error-bg)" data-report>${icon('alert')} Reportar robo o pérdida</button>`}
       </div>`;
@@ -72,15 +67,15 @@ Screens['bloqueo'] = {
     function wirePanel() {
       const s = S[selId], c = cardOf(selId);
       const frozen = $('#blkPanel [data-ctl="frozen"]');
-      if (frozen) frozen.onchange = () => { s.frozen = frozen.checked; toast({ title: s.frozen ? 'Tarjeta congelada' : 'Tarjeta reactivada', msg: `${c.name} ···${c.last4}`, type: 'success' }); renderList(); renderPanel(); };
-      view.querySelectorAll('#blkPanel [data-ctl]:not([data-ctl="frozen"])').forEach(t => t.onchange = () => { s[t.dataset.ctl] = t.checked; toast({ title: 'Preferencia actualizada', type: 'success' }); });
+      if (frozen) frozen.onchange = () => { s.frozen = frozen.checked; toast({ title: s.frozen ? 'Tarjeta congelada' : 'Tarjeta reactivada', msg: `${c.titular} · ${c.name} ···${c.last4}`, type: 'success' }); renderList(); renderPanel(); };
       const rep = $('#blkPanel [data-report]');
       if (rep) rep.onclick = () => {
-        const ov = openModal(`<div class="modal__head"><h3 class="h3">Reportar tarjeta</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><div class="state__art" style="margin:0 auto 12px;background:var(--error-bg);color:var(--error)">${icon('alert')}</div><p class="text-slate" style="text-align:center">Bloquearás <strong>${c.name} ···${c.last4}</strong> de forma <strong>definitiva</strong> y solicitaremos una reposición. Esta acción no se puede deshacer.</p></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--danger" id="confRep">Reportar y reponer</button></div>`);
+        const ov = openModal(`<div class="modal__head"><h3 class="h3">Reportar tarjeta</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><div class="state__art" style="margin:0 auto 12px;background:var(--error-bg);color:var(--error)">${icon('alert')}</div><p class="text-slate" style="text-align:center">Bloquearás <strong>${c.name} ···${c.last4}</strong> (${c.titular}) de forma <strong>definitiva</strong> y solicitaremos una reposición. Esta acción no se puede deshacer.</p></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--danger" id="confRep">Reportar y reponer</button></div>`);
         ov.querySelectorAll('[data-close]').forEach(x => x.onclick = () => closeModal(ov));
         ov.querySelector('#confRep').onclick = (e) => { e.currentTarget.classList.add('is-loading'); setTimeout(() => { closeModal(ov); s.reported = true; renderList(); renderPanel(); toast({ title: 'Tarjeta reportada', msg: 'Emitiremos una nueva en 3-5 días hábiles.', type: 'success' }); }, 900); };
       };
     }
+    const srch = $('#blkSearch'); if (srch) srch.oninput = () => { query = srch.value; renderList(); };
     renderList(); renderPanel();
   }
 };
@@ -111,11 +106,18 @@ Screens['aviso-viaje'] = {
 Screens['certificados'] = {
   title: 'Certificados',
   render(view) {
-    const certs=[['Certificado de cuenta','Saldos y estado de tu cuenta','wallet'],['Certificado de tarjeta','Cupo y comportamiento','card'],['Certificado de no adeudo','Sin obligaciones pendientes','check'],['Referencia bancaria','Para trámites y visas','certificate']];
+    // [nombre, descripción, icono, registro en People Soft]
+    const certs=[
+      ['Certificado bancario cuenta','Saldos y estado de tu cuenta','wallet','Emisión Certificado Cuenta Bancaria'],
+      ['Certificado bancario rendimientos financieros','Intereses y rendimientos ganados','coins','Emisión Certificado Rendimientos Financieros'],
+      ['Certificado bancario créditos','Estado de tus créditos','receipt','Emisión Certificado Crédito'],
+      ['Certificado productos (Integral)','Todos tus productos en un solo documento','certificate','Emisión Certificado Bancario'],
+      ['Certificado Tarjeta de Crédito','Cupo y comportamiento de tus tarjetas','card','Emisión Certificado Tarjeta'],
+    ];
     view.innerHTML = `
     ${pageHead('Certificados bancarios','Genera y descarga tus certificados al instante.','inicio')}
     <div class="grid grid-2">
-      ${certs.map(c=>`<div class="card card--pad card--hover section row between"><div class="row" style="gap:14px"><span class="prod__ic prod__ic--acct">${icon(c[2])}</span><div><div class="h4">${c[0]}</div><div class="text-muted" style="font-size:13px">${c[1]}</div></div></div><button class="btn btn--secondary btn--sm" data-cert="${c[0]}">${icon('download')} Generar</button></div>`).join('')}
+      ${certs.map(c=>`<div class="card card--pad card--hover section row between" data-ps="${c[3]}"><div class="row" style="gap:14px"><span class="prod__ic prod__ic--acct">${icon(c[2])}</span><div><div class="h4">${c[0]}</div><div class="text-muted" style="font-size:13px">${c[1]}</div></div></div><button class="btn btn--secondary btn--sm" data-cert="${c[0]}">${icon('download')} Generar</button></div>`).join('')}
     </div>
     ${infoBanner('Los certificados tienen validez oficial y se envían en PDF a tu correo registrado. Algunos pueden tener costo.','info')}`;
     view.querySelectorAll('[data-cert]').forEach(b=> b.onclick=(e)=>{ e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ e.target.classList.remove('is-loading'); toast({title:'Certificado generado', msg:`${b.dataset.cert} enviado a tu correo.`, type:'success'}); },900); });
@@ -130,7 +132,7 @@ Screens['tributarios'] = {
     ${pageHead('Documentos tributarios','Comprobantes y retenciones para el SRI.','inicio')}
     <div class="scroll-x mb-6">${['2026','2025','2024'].map((y,i)=>`<button class="chip ${i===0?'is-active':''}">${y}</button>`).join('')}</div>
     <div class="list-card"><div class="list-card__body" style="padding-top:8px">
-      ${[['Comprobante de retención','Junio 2026','file'],['Certificado de intereses','2025','file'],['Anexo gastos personales','2025','file'],['Estado de cuenta anual','2025','receipt']].map(d=>`<div class="prod"><span class="prod__ic prod__ic--credit">${icon(d[2])}</span><div class="prod__main"><div class="prod__title">${d[0]}</div><div class="prod__sub">${d[1]}</div></div><button class="btn btn--ghost btn--sm" onclick="toast({title:'Descargando…',type:'info'})">${icon('download')} PDF</button></div>`).join('')}
+      ${[['Comprobante de retención','Junio 2026','file',false],['Comprobante de pago','Junio 2026','receipt',false],['Factura','Junio 2026','file',true]].map(d=>`<div class="prod"><span class="prod__ic prod__ic--credit">${icon(d[2])}</span><div class="prod__main"><div class="prod__title">${d[0]}</div><div class="prod__sub">${d[1]}</div></div><div class="row" style="gap:6px">${d[3]?`<button class="btn btn--ghost btn--sm" onclick="toast({title:'Descargando XML…',type:'info'})">${icon('download')} XML</button>`:''}<button class="btn btn--ghost btn--sm" onclick="toast({title:'Descargando PDF…',type:'info'})">${icon('download')} PDF</button></div></div>`).join('')}
     </div></div>`;
   }
 };

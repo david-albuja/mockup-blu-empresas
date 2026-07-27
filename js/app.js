@@ -1076,24 +1076,19 @@ Screens['nuevo-contacto'] = {
 Screens.recompensas = {
   title: 'Recompensas',
   render(view) {
-    const r = DB.rewards; const pct = Math.round(r.points/(r.points+r.toNext)*100);
+    const r = DB.rewards;
     view.innerHTML = `
-    <div class="page-head section"><h1>Tus ClubMiles</h1><p>Acumula ClubMiles y canjéalos por lo que quieras.</p></div>
-    <div class="grid dash-grid">
-      <div class="grid" style="gap:20px">
-        <div class="bank-card section" style="aspect-ratio:auto;background:var(--grad-sky)">
-          <div class="row between"><div><div class="bank-card__type">Programa</div><div class="bank-card__brand">Club ${r.tier}</div></div>${icon('star','')}</div>
-          <div style="margin-top:20px"><div style="font-size:13px;opacity:.85">ClubMiles disponibles</div><div class="num" style="font-size:38px;font-weight:800">${r.points.toLocaleString('es-EC')}</div></div>
-          <div style="margin-top:16px"><div class="row between" style="font-size:12px;opacity:.9"><span>Nivel ${r.tier}</span><span>${r.toNext.toLocaleString('es-EC')} ClubMiles para ${r.next}</span></div><div class="progress mt-2" style="background:rgba(255,255,255,.3)"><span style="width:${pct}%;background:#fff"></span></div></div>
-        </div>
-        <div class="card card--pad section"><h2 class="h4 mb-4">Catálogo de canjes</h2><div class="grid grid-2">${r.catalog.map(c=>`<button class="card card--pad card--hover" data-redeem="${c.id}" style="text-align:left"><span class="prod__ic prod__ic--card">${icon(c.icon)}</span><div class="mt-4" style="font-weight:600">${c.name}</div><div class="text-muted" style="font-size:12px">${c.sub}</div><div class="row between mt-4"><span class="badge badge--info">${c.cost.toLocaleString('es-EC')} ClubMiles</span><span class="prod__chev">${icon('chevron')}</span></div></button>`).join('')}</div></div>
+    ${pageHead('Tus ClubMiles','Consulta tus ClubMiles y canjéalos en el portal de ClubMiles.','inicio')}
+    <div style="max-width:520px">
+      <div class="bank-card section" style="aspect-ratio:auto;background:var(--grad-sky)">
+        <div class="row between"><div><div class="bank-card__type">Programa</div><div class="bank-card__brand">Club ${r.tier}</div></div>${icon('star','')}</div>
+        <div style="margin-top:20px"><div style="font-size:13px;opacity:.85">ClubMiles disponibles</div><div class="num" style="font-size:38px;font-weight:800">${r.points.toLocaleString('es-EC')}</div></div>
+        <div style="margin-top:12px;font-size:12px;opacity:.9">Nivel ${r.tier}</div>
       </div>
-      <div class="grid" style="gap:20px">
-        <div class="card card--pad section"><div class="kpi"><div class="kpi__label">${icon('cash')} Cashback acumulado</div><div class="kpi__value num" style="font-size:26px">${money(r.cashback)}</div></div><button class="btn btn--secondary btn--block mt-4">Transferir a mi cuenta</button></div>
-        <div class="card card--pad section" style="background:var(--blu-50);border-color:var(--blu-100)"><div class="row" style="gap:10px;align-items:flex-start">${icon('sparkles','')}<div><div style="font-weight:600;font-size:14px">Multiplica tus ClubMiles</div><div class="text-muted" style="font-size:13px">Paga con tu Diners Club en supermercados y gana 3x este mes.</div></div></div></div>
-      </div>
+      <button class="btn btn--primary btn--lg btn--block mt-6" id="goMiles">${icon('gift')} Ir al portal de ClubMiles</button>
+      ${infoBanner('El canje de tus ClubMiles se realiza en el portal de ClubMiles. Te llevaremos allí de forma segura.','info')}
     </div>`;
-    view.querySelectorAll('[data-redeem]').forEach(b=> b.onclick=()=>{ const c=r.catalog.find(x=>x.id===b.dataset.redeem); redeemModal(c); });
+    const gm = $('#goMiles'); if(gm) gm.onclick = () => toast({title:'Redirigiendo a ClubMiles', msg:'Abriremos el portal de ClubMiles en una nueva pestaña.', type:'info'});
   }
 };
 function redeemModal(c) {
@@ -1161,7 +1156,7 @@ const NAV_GROUPS = [
   { label:'Productos', items:[ ['tarjetas','card','Tarjetas de crédito'], ['prepago','card','Prepago'], ['cuentas?cat=cuenta','wallet','Cuentas'], ['cuentas?cat=credito','coins','Créditos'], ['cuentas?cat=inversion','chart','Inversiones'], ['ofertas','sparkles','Para ti'] ] },
   { label:'Pagos', items:[ ['transferencias','send','Transferencias'], ['pago-tarjeta','card','Pago de tarjeta'], ['retiro-atm','atm','Retiro sin tarjeta'], ['contactos','contacts','Contactos'] ] },
   { label:'Servicios', items:[ ['bloqueo','lock','Bloqueo de tarjetas'], ['certificados','certificate','Certificados'], ['tributarios','file','Doc. tributarios'] ] },
-  { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'], ['cash-mng','cash','Cash management'] ] },
+  { label:'Empresa', items:[ ['caja','store','Ventas'], ['aprobaciones','approve','Aprobaciones'], ['admin-usuarios','users','Admin. usuarios'] ] },
   { label:'Más', items:[ ['recompensas','gift','Recompensas Club'], ['perfil','user','Mi perfil'] ] },
 ];
 const BOTTOM = [ ['inicio','home','Inicio'], ['tarjetas','card','Tarjetas'], ['transferencias','send','Enviar'], ['recompensas','gift','Club'], ['perfil','user','Perfil'] ];
