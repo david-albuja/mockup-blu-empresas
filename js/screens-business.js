@@ -236,76 +236,6 @@ Screens['caja'] = {
   }
 };
 
-/* Cash management */
-Screens['cash-mng'] = {
-  title: 'Cash management',
-  render(view) {
-    view.innerHTML = `
-    ${premiumHead('Cash management','Posición de liquidez y flujos de tu empresa.','inicio','','Empresa')}
-    <div class="grid grid-4 mb-6">
-      ${[['Saldo consolidado','$248.500','wallet'],['Ingresos hoy','$32.100','arrowDown'],['Egresos hoy','$18.640','arrowUp'],['Por aprobar','7','approve']].map(k=>`<div class="card card--pad section"><div class="kpi"><div class="kpi__label">${icon(k[2])} ${k[0]}</div><div class="kpi__value num" style="font-size:22px">${k[1]}</div></div></div>`).join('')}
-    </div>
-    <div class="grid dash-grid">
-      <div class="card card--pad section">
-        <div class="row between wrap mb-2" style="gap:10px">
-          <div><h2 class="h4">Flujo de caja</h2><span class="text-muted" style="font-size:12px" id="cfSub">Últimos 7 días</span></div>
-          <div class="segmented" id="cfRange"><button class="is-active" data-r="semana">Semana</button><button data-r="mes">Mes</button></div>
-        </div>
-        <div class="row wrap" style="gap:16px;margin-bottom:6px">
-          <span class="row" style="gap:6px;font-size:12px;color:var(--slate)"><span style="width:10px;height:10px;border-radius:3px;background:#2C55F5"></span>Ingresos</span>
-          <span class="row" style="gap:6px;font-size:12px;color:var(--slate)"><span style="width:10px;height:10px;border-radius:3px;background:#C2CADF"></span>Egresos</span>
-          <span class="row" style="gap:6px;font-size:12px;font-weight:700;margin-left:auto" id="cfNet"></span>
-        </div>
-        <div id="bars"></div>
-      </div>
-      <div class="grid" style="gap:20px">
-        <div class="list-card section"><div class="list-card__head"><h2 class="h4">Cuentas</h2></div><div class="list-card__body">${[['Operativa ···4410','$182.300'],['Nómina ···9921','$44.200'],['Recaudo ···1180','$22.000']].map(a=>`<div class="prod" style="padding:12px 0"><span class="prod__ic prod__ic--acct">${icon('wallet')}</span><div class="prod__main"><div class="prod__title" style="font-size:13px">${a[0]}</div></div><div class="prod__amt num">${a[1]}</div></div>`).join('')}</div></div>
-        ${panel('Acciones', `<div class="grid grid-2" style="gap:10px"><button class="qa" data-nav="carga-archivo"><span class="qa__ic">${icon('upload')}</span><span class="qa__label">Pago masivo</span></button><button class="qa" data-nav="aprobaciones"><span class="qa__ic">${icon('approve')}</span><span class="qa__label">Aprobar</span></button></div>`)}
-      </div>
-    </div>`;
-    drawBars($('#bars'));
-    view.querySelectorAll('#cfRange [data-r]').forEach(b => b.onclick = () => {
-      view.querySelectorAll('#cfRange [data-r]').forEach(x=>x.classList.remove('is-active'));
-      b.classList.add('is-active');
-      drawBars($('#bars'), CASH_FLOW[b.dataset.r]);
-    });
-  }
-};
-/* Datos de flujo de caja (miles USD): ingresos vs egresos por rango */
-const CASH_FLOW = {
-  semana: { sub:'Últimos 7 días', labels:['L','M','X','J','V','S','D'], inn:[24.2,32.1,18.4,38.6,26.3,34.0,22.5], out:[15.8,21.4,12.1,26.9,18.2,22.7,14.3] },
-  mes:    { sub:'Últimas 4 semanas', labels:['Sem 1','Sem 2','Sem 3','Sem 4'], inn:[142.5,168.2,155.9,181.4], out:[98.3,120.6,104.2,131.8] },
-};
-/* Gráfico de flujo de caja: barras agrupadas ingresos/egresos con ejes, grilla y valores */
-function drawBars(host, d = CASH_FLOW.semana){
-  if(!host) return;
-  const w=560, h=230, padL=44, padB=26, padT=18, iw=w-padL-10, ih=h-padT-padB;
-  const n=d.labels.length, max=Math.ceil(Math.max(...d.inn, ...d.out)*1.15/10)*10;
-  const groupW=iw/n, bw=Math.min(22, groupW*0.28), gapIn=4;
-  const y=v=>padT+ih-(v/max)*ih;
-  const fmtK=v=>'$'+(v>=1000?(v/1000).toFixed(1)+'M':Math.round(v)+'k');
-  // grilla + eje Y con escala
-  const ticks=[0,.25,.5,.75,1].map(t=>{const val=max*t, yy=y(val);
-    return `<line x1="${padL}" x2="${w-8}" y1="${yy}" y2="${yy}" stroke="var(--line-2)" stroke-width="1"/><text x="${padL-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="var(--muted)">${fmtK(val)}</text>`;}).join('');
-  const bars=d.labels.map((lb,i)=>{
-    const cx=padL+groupW*i+groupW/2;
-    const xi=cx-bw-gapIn/2, xo=cx+gapIn/2;
-    const hi=ih*(d.inn[i]/max), ho=ih*(d.out[i]/max);
-    return `<g>
-      <rect x="${xi}" y="${y(d.inn[i])}" width="${bw}" height="${hi}" rx="5" fill="url(#cfIn)"><title>${lb} · Ingresos: ${fmtK(d.inn[i])}</title></rect>
-      <rect x="${xo}" y="${y(d.out[i])}" width="${bw}" height="${ho}" rx="5" fill="#C2CADF"><title>${lb} · Egresos: ${fmtK(d.out[i])}</title></rect>
-      <text x="${xi+bw/2}" y="${y(d.inn[i])-5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--slate)">${fmtK(d.inn[i])}</text>
-      <text x="${cx}" y="${h-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${lb}</text>
-    </g>`;}).join('');
-  const totIn=d.inn.reduce((a,b)=>a+b,0), totOut=d.out.reduce((a,b)=>a+b,0), net=totIn-totOut;
-  const netEl=document.querySelector('#cfNet'); if(netEl) netEl.innerHTML=`<span class="text-muted" style="font-weight:400">Neto</span> <span class="num" style="color:var(--success)">+${fmtK(net)}</span>`;
-  const subEl=document.querySelector('#cfSub'); if(subEl) subEl.textContent=d.sub;
-  host.innerHTML=`<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Flujo de caja: ingresos ${fmtK(totIn)}, egresos ${fmtK(totOut)}, neto +${fmtK(net)}">
-    <defs><linearGradient id="cfIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C55F5"/><stop offset="1" stop-color="#4C71FC"/></linearGradient></defs>
-    ${ticks}<line x1="${padL}" x2="${w-8}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)" stroke-width="1.5"/>${bars}
-  </svg>`;
-}
-
 /* Aprobaciones */
 Screens['aprobaciones'] = {
   title: 'Aprobaciones',
@@ -347,24 +277,16 @@ Screens['admin-usuarios'] = {
 
     view.innerHTML = `
     ${premiumHead('Administración de usuarios','Gestiona accesos, roles y límites de tu empresa.','perfil', `<button class="btn btn--primary btn--sm" id="uaNew">${icon('plus')} Crear usuario</button>`, 'Empresa')}
-    <div class="stat-tiles section mb-6">
-      ${statTile('users','navy','Usuarios activos', USERS.filter(u=>u.status==='active').length)}
-      ${statTile('clock','graphite','Invitaciones pendientes', USERS.filter(u=>u.status==='pending').length)}
-      ${statTile('shield','indigo','Roles configurados', ROLES.length)}
-    </div>
     <div class="segmented section mb-6" id="uaTabs"><button class="is-active" data-t="usuarios">Usuarios</button><button data-t="roles">Roles y permisos</button></div>
     <div id="uaBody"></div>`;
 
     function usuarios() {
       return `<div class="list-card section">
         <div class="list-card__head"><h2 class="h4">Usuarios · ${USERS.length}</h2><div class="control" style="height:40px;width:240px">${icon('search')}<input placeholder="Buscar usuario" id="uaSearch"></div></div>
-        <div style="padding:0 12px 12px;overflow-x:auto"><table class="tbl"><thead><tr><th>Usuario</th><th>Rol</th><th>Cupo de aprobación</th><th>Último acceso</th><th>2FA</th><th>Estado</th><th></th></tr></thead><tbody id="uaRows">
+        <div style="padding:0 12px 12px;overflow-x:auto"><table class="tbl"><thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody id="uaRows">
           ${USERS.map(u=>`<tr>
             <td><div class="row" style="gap:10px"><span class="avatar" style="width:34px;height:34px;font-size:12px">${u.name.split(' ').map(x=>x[0]).join('')}</span><div><div style="font-weight:600">${u.name}</div><div class="text-muted" style="font-size:12px">${u.email}</div></div></div></td>
             <td>${roleBadge(u.role)}</td>
-            <td class="num" style="font-weight:600">${u.limit}</td>
-            <td class="text-muted">${u.last}</td>
-            <td>${u.mfa ? `<span class="badge badge--success">${icon('check')} Activo</span>` : `<span class="badge badge--warning">Sin 2FA</span>`}</td>
             <td>${stBadge(u.status)}</td>
             <td class="num"><div class="row" style="gap:2px;justify-content:flex-end"><button class="icon-btn" aria-label="Editar" onclick="toast({title:'Editar ${u.name}',msg:'Rol, cupo y permisos.',type:'info'})">${icon('services')}</button><button class="icon-btn" aria-label="Bloquear" style="color:var(--error)" onclick="toast({title:'Acceso bloqueado',msg:'${u.name} ya no puede ingresar.',type:'info'})">${icon('lock')}</button></div></td>
           </tr>`).join('')}
@@ -383,17 +305,55 @@ Screens['admin-usuarios'] = {
       if (s) s.oninput = () => { const q = s.value.toLowerCase(); view.querySelectorAll('#uaRows tr').forEach((tr,i) => tr.style.display = (USERS[i].name+USERS[i].email+USERS[i].role).toLowerCase().includes(q) ? '' : 'none'); };
     }
     view.querySelectorAll('#uaTabs [data-t]').forEach(b => b.onclick = () => { view.querySelectorAll('#uaTabs [data-t]').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); tab = b.dataset.t; mount(); });
+    // Ver permisos: lista los perfiles y sus permisos (reutiliza ROLES)
+    function permisosModal() {
+      const ov = openModal(`<div class="modal__head"><h3 class="h3">Permisos por perfil</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
+        <div class="modal__body"><div class="grid" style="gap:16px">
+          ${ROLES.map(r=>`<div><div class="row between mb-2"><span class="badge badge--${r.color}">${r.name}</span><span class="text-muted" style="font-size:12px">${r.desc}</span></div>${r.perms.map(p=>`<div class="row" style="gap:10px;padding:4px 0"><span style="color:var(--success)">${icon('check')}</span><span class="text-slate" style="font-size:13px">${p}</span></div>`).join('')}</div>`).join('')}
+        </div></div>
+        <div class="modal__foot"><button class="btn btn--primary btn--block" data-close>Entendido</button></div>`, { wide:true });
+      ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(ov));
+    }
+
     $('#uaNew').onclick = () => {
-      const ov = openModal(`<div class="modal__head"><h3 class="h3">Crear usuario</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
+      const ov = openModal(`<div class="modal__head"><h3 class="h3">Creación de usuario</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
         <div class="modal__body">
-          <div class="grid grid-2" style="gap:0 16px"><div class="field" style="margin:0"><label>Nombres</label><div class="control">${icon('user')}<input placeholder="Nombres"></div></div><div class="field" style="margin:0"><label>Apellidos</label><div class="control">${icon('user')}<input placeholder="Apellidos"></div></div></div>
-          <div class="field mt-4"><label>Correo corporativo</label><div class="control">${icon('receipt')}<input type="email" placeholder="usuario@robles.com"></div></div>
-          <div class="grid grid-2" style="gap:0 16px"><div class="field" style="margin:0"><label>Rol</label><div class="control">${icon('shield')}<select>${ROLES.map(r=>`<option>${r.name}</option>`).join('')}</select>${icon('chevronDown')}</div></div><div class="field" style="margin:0"><label>Cupo de aprobación</label><div class="control"><span class="prefix">$</span><input inputmode="decimal" placeholder="10.000"></div></div></div>
+          <div class="field"><label>Número de identificación</label><div class="control">${icon('user')}<input id="cuId" inputmode="numeric" placeholder="Cédula o RUC del usuario"></div><div class="hint">Dato de referencia (cédula/RUC).</div></div>
+          <div class="eyebrow mt-4 mb-2">Nombre del usuario</div>
+          <div class="grid grid-2" style="gap:0 16px">
+            <div class="field" style="margin:0 0 12px"><label>Primer nombre <span class="req">*</span></label><div class="control"><input id="cuN1" placeholder="Escribe el primer nombre"></div></div>
+            <div class="field" style="margin:0 0 12px"><label>Segundo nombre <span class="text-muted" style="font-weight:400">(opcional)</span></label><div class="control"><input placeholder="Escribe el segundo nombre"></div></div>
+            <div class="field" style="margin:0"><label>Primer apellido <span class="req">*</span></label><div class="control"><input id="cuA1" placeholder="Apellido paterno"></div></div>
+            <div class="field" style="margin:0"><label>Segundo apellido <span class="text-muted" style="font-weight:400">(opcional)</span></label><div class="control"><input placeholder="Apellido materno"></div></div>
+          </div>
+          <div class="field mt-4"><label>Cargo</label><div class="control">${icon('building')}<input placeholder="Cargo que ocupa el usuario"></div><div class="hint">Cargo que ocupa dentro de la empresa.</div></div>
+          <div class="field"><label>Correo electrónico <span class="req">*</span></label><div class="control">${icon('receipt')}<input id="cuMail" type="email" placeholder="usuario@robles.com"></div></div>
+          <div class="field"><label>Teléfono celular</label><div class="control">${icon('phone')}<input inputmode="tel" placeholder="Ingresa un número de contacto"></div></div>
+          <div class="field"><label>Perfil de usuario <span class="req">*</span></label>
+            <div class="grid grid-2" style="gap:8px" id="cuPerfiles">
+              ${ROLES.map(r=>`<label class="row" style="gap:10px;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${r.name}"><span style="font-weight:600;font-size:13px">${r.name}</span></label>`).join('')}
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:6px"><button type="button" class="btn btn--ghost btn--sm" id="cuVerPerm">${icon('eye')} Ver permisos</button></div>
+          </div>
+          <div class="field"><label>Estado del perfil</label>
+            <div class="segmented" id="cuEstado" style="width:100%"><button class="is-active" data-e="Activo" style="flex:1">Activo</button><button data-e="Inactivo" style="flex:1">Inactivo</button></div>
+          </div>
           ${infoBanner('El usuario recibirá una invitación por correo para configurar su clave y 2FA.','info')}
         </div>
-        <div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="uaSend">Enviar invitación</button></div>`, { wide:true });
+        <div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="uaSend">Guardar</button></div>`, { wide:true });
       ov.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(ov));
-      ov.querySelector('#uaSend').onclick = (e) => { e.currentTarget.classList.add('is-loading'); setTimeout(()=>{ closeModal(ov); toast({title:'Invitación enviada', msg:'El usuario recibirá el correo de activación.', type:'success'}); },900); };
+      ov.querySelector('#cuVerPerm').onclick = permisosModal;
+      ov.querySelectorAll('#cuEstado [data-e]').forEach(b=>b.onclick=()=>{ ov.querySelectorAll('#cuEstado [data-e]').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); });
+      ov.querySelector('#uaSend').onclick = (e) => {
+        const n1=ov.querySelector('#cuN1'), a1=ov.querySelector('#cuA1'), mail=ov.querySelector('#cuMail');
+        const perfiles=[...ov.querySelectorAll('#cuPerfiles input:checked')];
+        let ok=true;
+        [n1,a1,mail].forEach(f=>{ const fld=f.closest('.field'); const bad=!f.value.trim(); fld.classList.toggle('has-error',bad); if(bad) ok=false; });
+        if(!perfiles.length){ toast({title:'Selecciona un perfil', msg:'El usuario necesita al menos un perfil.', type:'error'}); ok=false; }
+        if(!ok) return;
+        e.currentTarget.classList.add('is-loading');
+        setTimeout(()=>{ closeModal(ov); toast({title:'Usuario creado', msg:'Enviamos la invitación de activación a su correo.', type:'success'}); },900);
+      };
     };
     mount();
   }

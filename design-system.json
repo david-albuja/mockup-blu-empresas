@@ -43,7 +43,7 @@
     "cacheBusting": {
       "pattern": "?v=N",
       "files": ["index.html", "design-system.html"],
-      "current": 57,
+      "current": 58,
       "rule": "Incrementar en cada commit que toque css/ o js/."
     }
   },
