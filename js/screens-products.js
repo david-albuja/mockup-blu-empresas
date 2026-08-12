@@ -85,20 +85,20 @@ Screens['detalle-producto'] = {
       const rate = p.tasa ? kv('Tasa de interés', `<span class="text-success" style="font-weight:700">${p.tasa}</span>`) : '';
       const estadoCtaJs = `toast({title:'Estado de cuenta',msg:'Generado y enviado a tu correo.',type:'info'})`;
       view.innerHTML = `
-      ${pageHead(p.name, `${p.type} · ${p.num}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="${estadoCtaJs}">${icon('download')} Estado de cuenta</button>`)}
+      ${pageHead(p.alias || p.name, `${p.type} · ${p.num}`, 'inicio', `<button class="btn btn--secondary btn--sm" onclick="${estadoCtaJs}">${icon('download')} Estado de cuenta</button>`)}
       <div class="grid" style="grid-template-columns:340px 1fr;gap:20px;align-items:start">
         <div class="grid" style="gap:16px">
           <div class="prod-xl acct-card-plain" style="width:100%">
             <div class="prod-xl__body">
               <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
-              <div class="prod-xl__name">${p.name}</div>
+              <div class="prod-xl__name">${p.alias || p.name}</div>
               <div class="prod-xl__id num">${p.type} · ${p.num}</div>
               <div class="prod-xl__amt num" style="font-size:32px;margin-top:16px">${State.masked?'$ ••••••':money(p.saldo)}</div>
               <div class="prod-xl__sub">Saldo disponible</div>
               ${p.interesMes ? `<div class="acct-interes">${icon('arrowUp')} <strong class="num">${money(p.interesMes, true)}</strong> este mes</div>` : (p.tasa ? `<div class="acct-interes">${icon('arrowUp')} ${p.tasa}</div>` : '')}
             </div>
           </div>
-          ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['services','Configurar','',"toast({title:'Configurar cuenta',msg:'Alias, alertas y preferencias.',type:'info'})"],['certificate','Certificado','certificados']])}
+          ${actBar([['send','Transferir','transferencias'],['receipt','Pagar','pagos'],['atm','Retirar','retiro-atm'],['services','Configurar',`config-cuenta?id=${p.id}`],['certificate','Certificado','certificados']])}
         </div>
         <div class="grid" style="gap:20px">
           ${panel('Detalle de la cuenta', kv('Tipo de cuenta',p.type)+kv('Número',p.num)+rate+kv('Estado','<span class="badge badge--success"><span class="dot"></span>Activa</span>')
@@ -296,6 +296,80 @@ Screens['config-tarjeta'] = {
       };
     }
     renderList(); renderPanel();
+  }
+};
+
+/* Configurar cuenta — alias, redes (Portal Web / App) y montos diarios por canal. */
+Screens['config-cuenta'] = {
+  title: 'Configuración de cuenta',
+  render(view) {
+    const DEFAULT_LIMIT = 15000;
+    const acc = DB.accounts.find(a => a.id === getParam('id')) || DB.accounts[0];
+    if (acc.limWeb === undefined) acc.limWeb = DEFAULT_LIMIT;
+    if (acc.limApp === undefined) acc.limApp = DEFAULT_LIMIT;
+    const backRoute = `detalle-producto?id=${acc.id}`;
+    const nameVal = acc.alias || acc.name;
+
+    const canal = (id, ic, label, sub, val) => `
+      <div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">
+        <span class="prod__ic prod__ic--acct" style="margin-top:2px">${icon(ic)}</span>
+        <div style="flex:1"><div style="font-weight:600;font-size:14px">${label}</div><div class="text-muted" style="font-size:12px">${sub}</div></div>
+        <span class="num" id="${id}Val" style="font-weight:700;font-size:15px">${money(val)}</span>
+      </div>
+      ${slider(id, 0, 15000, val, 50)}
+      <div class="row between mt-2" style="font-size:12px;color:var(--muted)"><span>$0,00</span><span>$15.000,00</span></div>`;
+
+    view.innerHTML = `
+    ${pageHead('Configuración de cuenta', 'Configura el nombre de tu cuenta, redes y montos de consumo.', backRoute)}
+    <div class="grid" style="grid-template-columns:1fr 320px;gap:20px;align-items:start">
+      <div class="grid" style="gap:20px">
+        ${panel('', `
+          <div class="field" style="margin:0">
+            <label for="ccName">Personaliza el nombre de tu cuenta</label>
+            <div class="control"><input id="ccName" maxlength="35" value="${nameVal}" aria-describedby="ccCount"></div>
+            <div class="hint" id="ccCount" style="text-align:right">${nameVal.length}/35</div>
+          </div>`)}
+        ${infoBanner(`<div>Para deshabilitar la red usar el monto $ 0.00.</div><div class="mt-2">Si requieres seleccionar montos superiores al límite, comunícate al <strong style="color:var(--ink)">(02) 2984-400</strong>.</div>`, 'info')}
+        ${panel('Montos por canal', `
+          <div class="row between mb-4"><span class="text-muted" style="font-size:13px">Límite diario permitido por canal de consumo.</span><button class="btn btn--secondary btn--sm" id="ccReset">${icon('back')} Restaurar montos</button></div>
+          ${canal('ccWeb', 'grid', 'Portal Web', 'Monto diario permitido para transacciones web', acc.limWeb)}
+          <div class="divider"></div>
+          ${canal('ccApp', 'phone', 'App Diners Club', 'Monto diario permitido para transacciones App', acc.limApp)}`)}
+      </div>
+      <div class="grid" style="gap:12px">
+        <div class="card card--pad row" style="gap:12px">
+          <span class="prod__ic prod__ic--acct">${icon('wallet')}</span>
+          <div><div style="font-weight:600">${acc.name}</div><div class="text-muted" style="font-size:12px">${acc.type} · ${acc.num}</div></div>
+        </div>
+        <button class="btn btn--primary btn--lg btn--block" id="ccSave">Guardar</button>
+        <a class="row" style="justify-content:center;color:var(--primary);font-weight:600;font-size:14px;cursor:pointer;padding:8px 0" onclick="goBack('${backRoute}')">Cancelar</a>
+      </div>
+    </div>`;
+
+    const nameInput = $('#ccName'), countEl = $('#ccCount');
+    nameInput.oninput = () => { countEl.textContent = `${nameInput.value.length}/35`; };
+
+    const webSlider = $('#ccWeb'), webVal = $('#ccWebVal');
+    const appSlider = $('#ccApp'), appVal = $('#ccAppVal');
+    webSlider.oninput = () => webVal.textContent = money(+webSlider.value);
+    appSlider.oninput = () => appVal.textContent = money(+appSlider.value);
+
+    $('#ccReset').onclick = () => {
+      webSlider.value = DEFAULT_LIMIT; webVal.textContent = money(DEFAULT_LIMIT);
+      appSlider.value = DEFAULT_LIMIT; appVal.textContent = money(DEFAULT_LIMIT);
+      toast({ title: 'Montos restaurados', msg: 'Se aplicó el límite máximo permitido en ambos canales.', type: 'info' });
+    };
+
+    $('#ccSave').onclick = (e) => {
+      e.currentTarget.classList.add('is-loading');
+      setTimeout(() => {
+        e.target.classList.remove('is-loading');
+        acc.alias = nameInput.value.trim() || acc.name;
+        acc.limWeb = +webSlider.value;
+        acc.limApp = +appSlider.value;
+        successModal('Configuración guardada', `Actualizamos los datos de ${acc.alias}.`, backRoute);
+      }, 700);
+    };
   }
 };
 
