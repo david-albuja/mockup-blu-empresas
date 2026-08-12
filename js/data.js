@@ -60,15 +60,16 @@ const DB = {
     { id: 'fondo', name: 'Fondo de Inversión blu', tipo: 'Fondo de inversión', last4: '5518', monto: 3200, tasa: '6.10%', interesGanado: 48.80, interesMes: 16.27, plazoDias: 0, emision: '01 may 2026', pagoInteres: 'Mensual', beneficiario: 'Robles Comercial S.A.', montoFinal: 3248.80, retencion: 0.98, estadoInv: 'vigente', vence: 'Sin plazo fijo' },
   ],
 
+  /* tipo/contacto/cuenta/banco/ref alimentan el modal de detalle de movimiento (ver movementModal en app.js). */
   movements: [
-    { id: 1, merchant: 'Supermaxi', cat: 'Supermercado', date: 'Hoy · 14:20', amount: -84.32, icon: 'store', card: 'Diners Club' },
-    { id: 2, merchant: 'Transferencia recibida', cat: 'Juan P.', date: 'Hoy · 09:12', amount: 250.00, icon: 'transfer', card: 'Ahorros' },
-    { id: 3, merchant: 'Netflix', cat: 'Suscripción', date: 'Ayer · 22:01', amount: -13.99, icon: 'bolt', card: 'Diners Club' },
-    { id: 4, merchant: 'Primax', cat: 'Combustible', date: 'Ayer · 18:45', amount: -40.00, icon: 'store', card: 'Visa blu' },
-    { id: 5, merchant: 'Pago servicio · EEQ', cat: 'Luz eléctrica', date: '12 jul', amount: -46.70, icon: 'bolt', card: 'Ahorros' },
-    { id: 6, merchant: 'Farmacias Cruz Azul', cat: 'Salud', date: '11 jul', amount: -22.15, icon: 'store', card: 'Diners Club' },
-    { id: 7, merchant: 'Uber', cat: 'Movilidad', date: '10 jul', amount: -8.40, icon: 'store', card: 'Visa blu' },
-    { id: 8, merchant: 'Depósito nómina', cat: 'Ingreso', date: '05 jul', amount: 1850.00, icon: 'cash', card: 'Ahorros' },
+    { id: 1, merchant: 'Supermaxi', cat: 'Supermercado', date: 'Hoy · 14:20', amount: -84.32, icon: 'store', card: 'Diners Club', tipo: 'Compra', contacto: 'Supermaxi C.A.', cuenta: 'Diners Club ··· 4417', banco: 'blu · Diners Club', ref: '000184552201' },
+    { id: 2, merchant: 'Transferencia recibida', cat: 'Juan P.', date: 'Hoy · 09:12', amount: 250.00, icon: 'transfer', card: 'Ahorros', tipo: 'Transferencia recibida', contacto: 'Juan Pérez', cuenta: 'Ahorros ··· 2205', banco: 'Banco Pichincha', ref: '000284471190' },
+    { id: 3, merchant: 'Netflix', cat: 'Suscripción', date: 'Ayer · 22:01', amount: -13.99, icon: 'bolt', card: 'Diners Club', tipo: 'Suscripción', contacto: 'Netflix International', cuenta: 'Diners Club ··· 4417', banco: 'blu · Diners Club', ref: '000184552144' },
+    { id: 4, merchant: 'Primax', cat: 'Combustible', date: 'Ayer · 18:45', amount: -40.00, icon: 'store', card: 'Visa blu', tipo: 'Compra', contacto: 'Primax Comercial', cuenta: 'Visa blu ··· 8890', banco: 'blu · Diners Club', ref: '000489012337' },
+    { id: 5, merchant: 'Pago servicio · EEQ', cat: 'Luz eléctrica', date: '12 jul', amount: -46.70, icon: 'bolt', card: 'Ahorros', tipo: 'Pago de servicio', contacto: 'Empresa Eléctrica Quito', cuenta: 'Ahorros ··· 2205', banco: 'blu · Diners Club', ref: '000584223301' },
+    { id: 6, merchant: 'Farmacias Cruz Azul', cat: 'Salud', date: '11 jul', amount: -22.15, icon: 'store', card: 'Diners Club', tipo: 'Compra', contacto: 'Farmacias Cruz Azul', cuenta: 'Diners Club ··· 4417', banco: 'blu · Diners Club', ref: '000184552389' },
+    { id: 7, merchant: 'Uber', cat: 'Movilidad', date: '10 jul', amount: -8.40, icon: 'store', card: 'Visa blu', tipo: 'Compra', contacto: 'Uber Ecuador', cuenta: 'Visa blu ··· 8890', banco: 'blu · Diners Club', ref: '000489012501' },
+    { id: 8, merchant: 'Depósito nómina', cat: 'Ingreso', date: '05 jul', amount: 1850.00, icon: 'cash', card: 'Ahorros', tipo: 'Depósito', contacto: 'Robles Comercial S.A.', cuenta: 'Ahorros ··· 2205', banco: 'blu · Diners Club', ref: '000584223255' },
   ],
 
   spend: [ { cat: 'Supermercado', pct: 34, val: 420.5, color: '#4C71FC' }, { cat: 'Servicios', pct: 22, val: 272.0, color: '#32C5FF' }, { cat: 'Combustible', pct: 18, val: 222.0, color: '#2C55F5' }, { cat: 'Salud', pct: 14, val: 173.0, color: '#44AAFF' }, { cat: 'Otros', pct: 12, val: 148.0, color: '#B9C8FF' } ],

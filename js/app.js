@@ -61,7 +61,7 @@ const UI = {
   },
   txRow(m) {
     const isIn = m.amount > 0;
-    return `<div class="tx"><span class="tx__ic">${icon(m.icon)}</span>
+    return `<div class="tx" data-mv="${m.id}" role="button" tabindex="0" aria-label="Ver detalle de ${m.merchant}"><span class="tx__ic">${icon(m.icon)}</span>
       <div class="tx__main"><div class="tx__title">${m.merchant}</div><div class="tx__meta">${m.cat} · ${m.date} · ${m.card}</div></div>
       <div class="tx__amt ${isIn?'is-in':''} num">${money(m.amount, true)}</div></div>`;
   },
@@ -286,10 +286,10 @@ function homeTarjetaCard(c) {
    con el saldo y un pill de interés del mes destacado. */
 function homeAcctRow(a) {
   const cancelada = a.estado === 'cancelada';
-  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.name}">
+  return `<button class="prod-xl acct-card-plain" data-nav="detalle-producto?id=${a.id}" aria-label="Abrir ${a.alias || a.name}">
     <div class="prod-xl__body">
       <span class="prod__ic prod__ic--acct" style="margin:0 auto 8px">${icon('wallet')}</span>
-      <div class="prod-xl__name">${a.name}</div>
+      <div class="prod-xl__name">${a.alias || a.name}</div>
       <div class="prod-xl__id num">${a.type} · ${a.num}${cancelada?' · Cancelada':''}</div>
       <div class="prod-xl__amt num" style="font-size:22px;margin-top:10px">${State.masked?'$ ••••••':money(a.saldo)}</div>
       <div class="prod-xl__sub">${cancelada?'Saldo por retirar · cuenta cerrada':'Saldo disponible'}</div>
@@ -488,7 +488,7 @@ function acctRow(item, kind) {
   let cfg;
   if (kind === 'account') {
     const cancelada = item.estado === 'cancelada';
-    cfg = { ic:'wallet', name:item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'Saldo por retirar':'Saldo disponible', mask:true };
+    cfg = { ic:'wallet', name:item.alias || item.name, sub:`${item.type} · ${item.num}${cancelada?' · Cancelada':''}`, amt:money(item.saldo), lbl:cancelada?'Saldo por retirar':'Saldo disponible', mask:true };
   } else if (kind === 'credit') {
     const e = creditEstado(item.estado);
     cfg = { ic:'coins', name:item.name, sub:`Crédito · ${item.num}`, amt:e.consultarDiners?'Consultar':money(item.saldo), lbl:e.consultarDiners?'Consulta con Diners':'Saldo pendiente', mask:false, pill:e };
@@ -845,6 +845,33 @@ function successModal(title, msg, back) {
     <div class="modal__foot"><button class="btn btn--secondary" id="dl">${icon('download')} Comprobante</button><button class="btn btn--primary" id="ok">Finalizar</button></div>`);
   ov.querySelector('#dl').onclick=()=>toast({title:'Comprobante descargado', type:'success'});
   ov.querySelector('#ok').onclick=()=>{ closeModal(ov); if(back) location.hash='#/'+back; };
+}
+
+/* Detalle de movimiento: monto, tipo, contacto y datos de la transferencia. */
+function movementModal(id) {
+  const m = DB.movements.find(x => x.id == id);
+  if (!m) return;
+  const isOut = m.amount < 0;
+  const ov = openModal(`
+    <div class="modal__head"><h3 class="h3">Detalle de movimiento</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
+    <div class="modal__body" style="text-align:center">
+      <div style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;background:${isOut?'var(--error-bg)':'var(--success-bg)'};color:${isOut?'var(--error)':'var(--success)'}" aria-hidden="true">${icon(isOut?'arrowUp':'arrowDown')}</div>
+      <div class="text-muted" style="font-size:13px">${m.tipo || m.cat}</div>
+      <div class="num" style="font-size:28px;font-weight:800;margin-top:2px;color:${isOut?'var(--ink)':'var(--success)'}">${money(m.amount, true)}</div>
+      <div class="text-muted" style="font-size:13px;margin-top:2px">${m.date}</div>
+      <div class="card card--pad mt-6" style="text-align:left;background:var(--surface-2)">
+        <div class="eyebrow mb-2">Datos del contacto</div>
+        ${kv('Nombre', m.contacto || m.merchant)}
+        <div class="divider"></div>
+        <div class="eyebrow mb-2 mt-4">Detalles de transferencia</div>
+        ${kv('Cuenta', m.cuenta || m.card)}
+        ${kv('Banco', m.banco || 'blu · Diners Club')}
+        ${kv('Número de transacción', m.ref || m.id, 1)}
+      </div>
+    </div>
+    <div class="modal__foot"><button class="btn btn--secondary" data-close>Cerrar</button><button class="btn btn--ghost" id="mvDownload">${icon('file')} Descarga</button></div>`);
+  ov.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeModal(ov));
+  ov.querySelector('#mvDownload').onclick = () => toast({ title: 'Comprobante descargado', msg: `Movimiento ${m.merchant} · ${money(m.amount, true)}`, type: 'success' });
 }
 
 /* Soft token — paso obligatorio del login (usuario + contraseña + token) */
@@ -1280,11 +1307,15 @@ function setupSearch() {
 function setupNavDelegation() {
   if (window.__bluNav) return; window.__bluNav = true;
   document.addEventListener('click', (e) => {
+    const mv = e.target.closest('[data-mv]');
+    if (mv) { e.preventDefault(); movementModal(mv.dataset.mv); return; }
     const n = e.target.closest('[data-nav]');
     if (n && n.dataset.nav) { e.preventDefault(); location.hash = '#/' + n.dataset.nav; }
   });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
+    const mv = e.target.closest('[data-mv]');
+    if (mv && (mv.getAttribute('role') === 'button' || mv.tabIndex === 0)) { e.preventDefault(); movementModal(mv.dataset.mv); return; }
     const n = e.target.closest('[data-nav]');
     if (n && n.dataset.nav && (n.getAttribute('role') === 'button' || n.tabIndex === 0)) { e.preventDefault(); location.hash = '#/' + n.dataset.nav; }
   });
