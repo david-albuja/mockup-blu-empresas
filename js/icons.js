@@ -9,6 +9,7 @@ const ICONS = {
   transfer:  '<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>',
   send:      '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
   services:  '<path d="M12 3v2"/><path d="m18.36 5.64-1.42 1.42"/><path d="M21 12h-2"/><path d="M5 12H3"/><path d="m7.06 7.06-1.42-1.42"/><circle cx="12" cy="12" r="4"/><path d="M12 16v5"/>',
+  edit:      '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
   bolt:      '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
   receipt:   '<path d="M5 3v18l2-1.2L9 21l2-1.2L13 21l2-1.2L17 21l2-1.2V3l-2 1.2L15 3l-2 1.2L11 3 9 4.2 7 3z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/>',
   atm:       '<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 20h10"/><path d="M9 8h6v4H9z"/>',

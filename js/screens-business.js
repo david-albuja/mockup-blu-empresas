@@ -236,21 +236,95 @@ Screens['caja'] = {
   }
 };
 
-/* Aprobaciones */
+/* Aprobaciones — cards de Pagos individuales, Cash Management, Anticipos de facturación y Anticipos.
+   Aprobar/rechazar queda registrado en DB.approvals (no se elimina sin guardarse). */
 Screens['aprobaciones'] = {
   title: 'Aprobaciones',
   render(view) {
-    // Glosa enfocada en los productos de la empresa (sin estados de prioridad)
-    const items=[['Anticipo de facturación','Adquirencia · lote #LOTE-2287 · $12.480,50','receipt'],['Pago de tarjeta','Diners Club ···4417 · $2.340,18','card'],['Pago de cuentas','Servicios EEQ + Agua · $312,40','wallet'],['Transferencia a proveedor','Distribuidora XYZ · $6.360,00','send']];
+    const A = DB.approvals;
+    let tab = 'pending';      // pending | approved | rejected
+    let perfil = 'aprobador'; // aprobador/administrador ven Aprobar/Rechazar · operador solo ve el estado
+
+    const statusBadge = (s) => s === 'approved'
+      ? `<span class="badge badge--success"><span class="dot"></span>Aprobado</span>`
+      : s === 'rejected'
+        ? `<span class="badge badge--error"><span class="dot"></span>Rechazado</span>`
+        : `<span class="badge badge--warning"><span class="dot"></span>Pendiente</span>`;
+
+    // Sin ícono circular: la observación pide quitarlo, no aporta valor a la fila.
+    const row = (it, status) => `<div class="card card--pad section row between wrap" data-appr="${it.id}" style="gap:16px">
+      <div><div class="h4">${it.tipo}</div><div class="text-muted" style="font-size:13px">${it.detalle}</div></div>
+      <div class="row" style="gap:10px">${
+        status === 'pending'
+          ? (perfil === 'operador' ? statusBadge('pending') : `<button class="btn btn--secondary btn--sm" data-rej="${it.id}">Rechazar</button><button class="btn btn--primary btn--sm" data-app="${it.id}">${icon('check')} Aprobar</button>`)
+          : statusBadge(status)
+      }</div>
+    </div>`;
+
+    const fileToast = (fmt, name) => `toast({title:'Generando ${fmt}…',msg:'${name} se descargará en unos segundos.',type:'info'})`;
+    const downloadBtns = (name) => `<div class="row" style="gap:8px">
+      <button class="chip" onclick="${fileToast('TXT', name + '.txt')}">${icon('download')} TXT</button>
+      <button class="chip" onclick="${fileToast('PDF', name + '.pdf')}">${icon('download')} PDF</button>
+    </div>`;
+
     view.innerHTML = `
     ${premiumHead('Aprobaciones','Autoriza operaciones pendientes de tu empresa.','inicio','','Empresa')}
-    <div class="scroll-x mb-6">${['Pendientes ('+items.length+')','Aprobadas','Rechazadas'].map((t,i)=>`<button class="chip ${i===0?'is-active':''}">${t}</button>`).join('')}</div>
-    <div class="grid" style="gap:16px" id="apprList">
-      ${items.map((it,idx)=>`<div class="card card--pad section row between wrap" data-appr="${idx}" style="gap:16px"><div class="row" style="gap:14px"><span class="prod__ic prod__ic--card">${icon(it[2])}</span><div><div class="h4">${it[0]}</div><div class="text-muted" style="font-size:13px">${it[1]}</div></div></div><div class="row" style="gap:10px"><button class="btn btn--secondary btn--sm" data-rej="${idx}">Rechazar</button><button class="btn btn--primary btn--sm" data-app="${idx}">${icon('check')} Aprobar</button></div></div>`).join('')}
-    </div>`;
-    function resolve(idx,ok){ const card=view.querySelector(`[data-appr="${idx}"]`); card.style.transition='opacity .3s, transform .3s'; card.style.opacity='0'; card.style.transform='translateX(20px)'; setTimeout(()=>{ card.remove(); if(!view.querySelector('[data-appr]')) $('#apprList').innerHTML=emptyState('Todo aprobado','No tienes operaciones pendientes.','check'); },300); toast({title:ok?'Operación aprobada':'Operación rechazada', type:ok?'success':'info'}); }
-    view.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>{ const ov=openModal(`<div class="modal__head"><h3 class="h3">Confirmar aprobación</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><p class="text-slate">Autorizarás esta operación con tu token de seguridad.</p><div class="field mt-4"><label>Token</label><div class="control" style="justify-content:center;gap:8px">${[0,0,0,0,0,0].map(()=>'<input maxlength="1" inputmode="numeric" style="width:38px;text-align:center;font-size:18px;font-weight:700">').join('')}</div></div></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="ca">Aprobar</button></div>`); ov.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>closeModal(ov)); ov.querySelector('#ca').onclick=(e)=>{e.currentTarget.classList.add('is-loading');setTimeout(()=>{closeModal(ov);resolve(b.dataset.app,true);},800);}; });
-    view.querySelectorAll('[data-rej]').forEach(b=>b.onclick=()=>resolve(b.dataset.rej,false));
+    <div class="row between wrap mb-4" style="gap:12px">
+      <div class="scroll-x">${['Pendientes','Aprobadas','Rechazadas'].map((t,i)=>{ const k=['pending','approved','rejected'][i]; return `<button class="chip ${i===0?'is-active':''}" data-tab="${k}" ${k==='pending'?'id="apprTabPending"':''}>${t}</button>`; }).join('')}</div>
+      <div class="segmented" id="apprPerfil"><button class="is-active" data-p="aprobador">Aprobador / Admin.</button><button data-p="operador">Operador</button></div>
+    </div>
+    <div id="apprSearchHost" class="mb-4"></div>
+    <div class="grid" style="gap:16px" id="apprList"></div>`;
+
+    function mount() {
+      view.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('is-active', b.dataset.tab === tab));
+      $('#apprTabPending').textContent = `Pendientes (${A.pending.length})`;
+      $('#apprPerfil').style.display = tab === 'pending' ? '' : 'none';
+
+      if (tab === 'pending') {
+        $('#apprSearchHost').innerHTML = '';
+        $('#apprList').innerHTML = A.pending.length ? A.pending.map(it => row(it, 'pending')).join('') : emptyState('Todo al día','No tienes operaciones pendientes de aprobación.','check');
+        wirePending();
+        return;
+      }
+
+      const list = tab === 'approved' ? A.approved : A.rejected;
+      const status = tab === 'approved' ? 'approved' : 'rejected';
+      const label = tab === 'approved' ? 'aprobaciones' : 'rechazados';
+      $('#apprSearchHost').innerHTML = `<div class="row between wrap" style="gap:12px">
+        <div class="control" style="height:40px;width:280px">${icon('search')}<input placeholder="Buscar ${label}…" id="apprSearch"></div>
+        ${downloadBtns(label)}
+      </div>`;
+      const draw = (items) => { $('#apprList').innerHTML = items.length ? items.map(it => row(it, status)).join('') : emptyState(tab==='approved'?'Sin aprobaciones':'Sin rechazos', `Aún no hay operaciones ${tab==='approved'?'aprobadas':'rechazadas'}.`, 'search'); };
+      draw(list);
+      $('#apprSearch').oninput = (e) => { const q = e.target.value.toLowerCase(); draw(list.filter(it => (it.tipo + it.detalle).toLowerCase().includes(q))); };
+    }
+
+    function resolve(id, ok) {
+      const card = view.querySelector(`[data-appr="${id}"]`);
+      if (card) { card.style.transition = 'opacity .3s, transform .3s'; card.style.opacity = '0'; card.style.transform = 'translateX(20px)'; }
+      toast({ title: ok ? 'Operación aprobada' : 'Operación rechazada', msg: `Quedó registrada en el historial de ${ok?'aprobadas':'rechazadas'}.`, type: ok ? 'success' : 'info' });
+      setTimeout(() => {
+        const idx = A.pending.findIndex(x => x.id == id);
+        if (idx < 0) return;
+        const [it] = A.pending.splice(idx, 1);
+        (ok ? A.approved : A.rejected).unshift({ ...it, resolvedAt: 'Hoy' });
+        mount();
+      }, 300);
+    }
+
+    function wirePending() {
+      view.querySelectorAll('[data-app]').forEach(b => b.onclick = () => {
+        const ov = openModal(`<div class="modal__head"><h3 class="h3">Confirmar aprobación</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><p class="text-slate">Autorizarás esta operación con tu token de seguridad.</p><div class="field mt-4"><label>Token</label><div class="control" style="justify-content:center;gap:8px">${[0,0,0,0,0,0].map(()=>'<input maxlength="1" inputmode="numeric" style="width:38px;text-align:center;font-size:18px;font-weight:700">').join('')}</div></div></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="ca">Aprobar</button></div>`);
+        ov.querySelectorAll('[data-close]').forEach(x => x.onclick = () => closeModal(ov));
+        ov.querySelector('#ca').onclick = (e) => { e.currentTarget.classList.add('is-loading'); setTimeout(() => { closeModal(ov); resolve(b.dataset.app, true); }, 800); };
+      });
+      view.querySelectorAll('[data-rej]').forEach(b => b.onclick = () => resolve(b.dataset.rej, false));
+    }
+
+    view.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; mount(); });
+    view.querySelectorAll('#apprPerfil [data-p]').forEach(b => b.onclick = () => { view.querySelectorAll('#apprPerfil [data-p]').forEach(x => x.classList.remove('is-active')); b.classList.add('is-active'); perfil = b.dataset.p; mount(); });
+    mount();
   }
 };
 
