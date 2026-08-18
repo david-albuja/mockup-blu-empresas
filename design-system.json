@@ -637,7 +637,7 @@
     "set": [
       "alert", "approve", "arrowDown", "arrowUp", "atm", "back", "bell", "bolt", "building",
       "calendar", "card", "cash", "certificate", "chart", "check", "checkCircle", "chevron",
-      "chevronDown", "clock", "close", "coins", "contacts", "copy", "download", "eye", "eyeOff",
+      "chevronDown", "clock", "close", "coins", "contacts", "copy", "download", "edit", "eye", "eyeOff",
       "file", "filter", "fingerprint", "gift", "grid", "headset", "home", "info", "key", "lock",
       "logout", "map", "menu", "moon", "phone", "plane", "plus", "receipt", "search", "send",
       "services", "shield", "sparkles", "star", "store", "sun", "swap", "transfer", "upload",

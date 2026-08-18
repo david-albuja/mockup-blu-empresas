@@ -1060,14 +1060,62 @@ Screens.contactos = {
     <div class="list-card"><div class="list-card__body" style="padding-top:16px" id="cList">${renderContacts(DB.contacts)}</div></div>`;
     function wire() {
       view.querySelectorAll('#cList [data-transfer]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); location.hash='#/transferencias'; });
-      view.querySelectorAll('#cList [data-edit]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const c=DB.contacts.find(x=>x.id===b.dataset.edit); toast({title:'Editar contacto', msg:`Actualiza los datos de ${c.name}.`, type:'info'}); });
+      view.querySelectorAll('#cList [data-edit]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); editContactModal(b.dataset.edit, () => { $('#cList').innerHTML = DB.contacts.length?renderContacts(DB.contacts):emptyState('Sin contactos','Agrega tu primer destinatario.','contacts'); wire(); }); });
       view.querySelectorAll('#cList [data-del]').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const c=DB.contacts.find(x=>x.id===b.dataset.del); const ov=openModal(`<div class="modal__head"><h3 class="h3">Eliminar contacto</h3><button class="icon-btn" data-close>${icon('close')}</button></div><div class="modal__body"><p class="text-slate">¿Seguro que quieres eliminar a <strong>${c.name}</strong> de tus contactos?</p></div><div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--danger" id="delDo">Eliminar</button></div>`); ov.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>closeModal(ov)); ov.querySelector('#delDo').onclick=()=>{ const i=DB.contacts.findIndex(x=>x.id===c.id); if(i>=0)DB.contacts.splice(i,1); closeModal(ov); $('#cList').innerHTML = DB.contacts.length?renderContacts(DB.contacts):emptyState('Sin contactos','Agrega tu primer destinatario.','contacts'); wire(); toast({title:'Contacto eliminado',type:'success'}); }; });
     }
     $('#cSearch').oninput=(e)=>{ const q=e.target.value.toLowerCase(); const f=DB.contacts.filter(c=>c.name.toLowerCase().includes(q)||c.bank.toLowerCase().includes(q)); $('#cList').innerHTML = f.length?renderContacts(f):emptyState('Sin resultados','No encontramos contactos con ese nombre.','search'); wire(); };
     wire();
   }
 };
-function renderContacts(list) { return list.map(c=>`<div class="prod"><span class="avatar">${c.initials}</span><div class="prod__main"><div class="prod__title">${c.name} ${c.fav?icon('star',''):''}</div><div class="prod__sub">${c.bank} · ${c.acc} · <span class="badge badge--neutral" style="padding:1px 8px;font-size:11px">${c.producto==='tarjetas'?'Tarjetas':'Cuentas'}</span></div></div><div class="row" style="gap:4px"><button class="icon-btn" aria-label="Editar contacto" data-edit="${c.id}">${icon('services')}</button><button class="icon-btn" aria-label="Eliminar contacto" data-del="${c.id}" style="color:var(--error)">${icon('close')}</button><button class="btn btn--secondary btn--sm" data-transfer="${c.id}">Transferir</button></div></div>`).join(''); }
+function renderContacts(list) { return list.map(c=>`<div class="prod"><span class="avatar">${c.initials}</span><div class="prod__main"><div class="prod__title">${c.name} ${c.fav?icon('star',''):''}</div><div class="prod__sub">${c.bank} · ${c.acc} · <span class="badge badge--neutral" style="padding:1px 8px;font-size:11px">${c.producto==='tarjetas'?'Tarjetas':'Cuentas'}</span></div></div><div class="row" style="gap:4px"><button class="icon-btn" aria-label="Editar contacto" data-edit="${c.id}">${icon('edit')}</button><button class="icon-btn" aria-label="Eliminar contacto" data-del="${c.id}" style="color:var(--error)">${icon('close')}</button><button class="btn btn--secondary btn--sm" data-transfer="${c.id}">Transferir</button></div></div>`).join(''); }
+
+/* Editar contacto: pop-up con todos los datos guardados, editables. Guardar se habilita solo si hubo cambios. */
+const CONTACT_BANKS = ['blu · Diners', 'blu · Ahorros', 'Banco Pichincha', 'Produbanco', 'Banco Guayaquil', 'Otro (BANRED / SPI)'];
+function editContactModal(id, onSaved) {
+  const c = DB.contacts.find(x => x.id === id);
+  if (!c) return;
+  const original = { name: c.name, producto: c.producto, bank: c.bank, num: c.acc.replace('••• ', ''), fav: c.fav };
+  const bankOptions = CONTACT_BANKS.includes(c.bank) ? CONTACT_BANKS : [c.bank, ...CONTACT_BANKS];
+  const ov = openModal(`
+    <div class="modal__head"><h3 class="h3">Editar contacto</h3><button class="icon-btn" data-close>${icon('close')}</button></div>
+    <div class="modal__body">
+      <div class="field" id="ecNombreF"><label>Nombre / alias <span class="req">*</span></label><div class="control">${icon('user')}<input id="ecNombre" value="${c.name}"></div><span class="error-text">${icon('alert')} Ingresa un nombre o alias.</span></div>
+      <div class="field"><label>Producto</label><div class="control">${icon('grid')}<select id="ecProd"><option value="cuentas" ${c.producto==='cuentas'?'selected':''}>Cuentas</option><option value="tarjetas" ${c.producto==='tarjetas'?'selected':''}>Tarjetas</option></select>${icon('chevronDown')}</div></div>
+      <div class="field"><label>Banco</label><div class="control">${icon('building')}<select id="ecBank">${bankOptions.map(b=>`<option ${b===c.bank?'selected':''}>${b}</option>`).join('')}</select>${icon('chevronDown')}</div></div>
+      <div class="field" id="ecNumF"><label>Número de cuenta <span class="req">*</span></label><div class="control">${icon('wallet')}<input id="ecNum" inputmode="numeric" value="${original.num}"></div><span class="error-text">${icon('alert')} Ingresa el número de cuenta.</span></div>
+      <label class="row" style="gap:10px;cursor:pointer;align-items:center;margin-top:6px"><input type="checkbox" id="ecFav" ${c.fav?'checked':''}><span class="text-slate" style="font-size:13px">Marcar como favorito</span></label>
+    </div>
+    <div class="modal__foot"><button class="btn btn--secondary" data-close>Cancelar</button><button class="btn btn--primary" id="ecSave" disabled>Guardar contacto</button></div>`);
+  ov.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeModal(ov));
+
+  const nombre = ov.querySelector('#ecNombre'), prod = ov.querySelector('#ecProd'), bank = ov.querySelector('#ecBank'), num = ov.querySelector('#ecNum'), fav = ov.querySelector('#ecFav'), save = ov.querySelector('#ecSave');
+  const checkDirty = () => {
+    const dirty = nombre.value.trim() !== original.name || prod.value !== original.producto || bank.value !== original.bank || num.value.trim() !== original.num || fav.checked !== original.fav;
+    save.disabled = !dirty;
+  };
+  [nombre, num].forEach(el => el.oninput = () => { el.closest('.field').classList.remove('has-error'); checkDirty(); });
+  [prod, bank].forEach(el => el.onchange = checkDirty);
+  fav.onchange = checkDirty;
+
+  save.onclick = (e) => {
+    let ok = true;
+    if (!nombre.value.trim()) { ov.querySelector('#ecNombreF').classList.add('has-error'); ok = false; }
+    if (!num.value.trim()) { ov.querySelector('#ecNumF').classList.add('has-error'); ok = false; }
+    if (!ok) return;
+    e.currentTarget.classList.add('is-loading');
+    setTimeout(() => {
+      c.name = nombre.value.trim();
+      c.producto = prod.value;
+      c.bank = bank.value;
+      c.acc = '••• ' + num.value.trim().slice(-4);
+      c.initials = c.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      c.fav = fav.checked;
+      closeModal(ov);
+      toast({ title: 'Contacto actualizado', msg: `${c.name} quedó guardado con los nuevos datos.`, type: 'success' });
+      if (onSaved) onSaved();
+    }, 700);
+  };
+}
 
 /* Nuevo contacto (pantalla propia) */
 Screens['nuevo-contacto'] = {

@@ -81,6 +81,18 @@ const DB = {
     { id: 'c4', name: 'Lucía Torres', bank: 'blu · Ahorros', acc: '••• 9902', initials: 'LT', fav: false, producto: 'cuentas' },
   ],
 
+  /* Operaciones de aprobación (Empresas): quedan registradas al aprobar/rechazar, no se eliminan. */
+  approvals: {
+    pending: [
+      { id: 1, tipo: 'Pago individual', detalle: 'Proveedor Distribuidora XYZ · $6.360,00', icon: 'send' },
+      { id: 2, tipo: 'Cash Management', detalle: 'Consolidación de saldos · $18.240,00', icon: 'wallet' },
+      { id: 3, tipo: 'Anticipo de facturación', detalle: 'Adquirencia · lote #LOTE-2287 · $12.480,50', icon: 'receipt' },
+      { id: 4, tipo: 'Anticipo', detalle: 'Anticipo de nómina · $4.500,00', icon: 'cash' },
+    ],
+    approved: [],
+    rejected: [],
+  },
+
   services: [
     { id: 'luz', name: 'Empresa Eléctrica Quito', cat: 'Luz', icon: 'bolt', due: 46.70, ref: 'Suministro 8841002' },
     { id: 'agua', name: 'Agua Potable EPMAPS', cat: 'Agua', icon: 'services', due: 18.20, ref: 'Cuenta 55201' },
